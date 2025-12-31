@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3Dwork - 3D Printing Calibration tools</title>
+    <link rel="icon" type="image/png"
+        href="https://3dwork.io/wp-content/uploads/2025/09/cropped-image-removebg-preview-2-32x32.png">
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body>
+    <header>
+        <nav id="top-nav">
+            <a href="#" class="logo-container">
+                <img src="https://3dwork.io/wp-content/uploads/2023/07/3dwork_white_logo.png" alt="3Dwork Logo"
+                    class="logo-img">
+            </a>
+            <ul class="nav-links">
+                <li><a href="#" id="nav-home">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" id="nav-calibration-menu" class="dropdown-trigger">3D Calibration <i
+                            data-lucide="chevron-down"></i></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#esteps" id="nav-esteps">E-steps Calibration</a></li>
+                        <li><a href="#rotation" id="nav-rotation">Rotation Distance</a></li>
+                        <li><a href="#skew" id="nav-skew">Skew Calibration</a></li>
+                    </ul>
+                </li>
+                <li><a href="#price" id="nav-price">3D Price Calculator</a></li>
+            </ul>
+            <div class="lang-switch">
+                <button id="btn-en" class="active">EN</button>
+                <button id="btn-es">ES</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div id="content"></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 3Dwork.io - All Rights Reserved</p>
+    </footer>
+
+    <!-- Scripts included in order to avoid module issues over file:// -->
+    <script src="src/i18n.js"></script>
+    <script src="src/components/home.js"></script>
+    <script src="src/components/esteps.js"></script>
+    <script src="src/components/rotation.js"></script>
+    <script src="src/components/skew.js"></script>
+    <script src="src/components/priceCalculator.js"></script>
+    <script src="src/main.js"></script>
+</body>
+
+</html>
