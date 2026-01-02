@@ -73,6 +73,8 @@ function updateUILabels() {
     if (navRotation) navRotation.textContent = t.rotation;
     if (navSkew) navSkew.textContent = t.skew;
     if (navPrice) navPrice.textContent = t.priceCalculator;
+    const navBedMesh = document.getElementById('nav-bedmesh');
+    if (navBedMesh) navBedMesh.textContent = t.bedMeshTitle;
 
     if (window.lucide) {
         window.lucide.createIcons();
@@ -120,6 +122,8 @@ function renderView() {
         window.renderSkew(content, t);
     } else if (currentView === 'price' && window.renderPriceCalculator) {
         window.renderPriceCalculator(content, t);
+    } else if (currentView === 'bedmesh' && window.renderBedMesh) {
+        window.renderBedMesh(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);

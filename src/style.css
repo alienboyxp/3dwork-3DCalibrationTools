@@ -974,4 +974,228 @@ footer {
         display: block;
         overflow-x: auto;
     }
+}/* Bed Mesh Tool Styles */
+.mesh-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.mesh-sidebar {
+    width: 350px;
+    flex-shrink: 0;
+}
+
+.mesh-viz-area {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    padding: 1.5rem;
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.file-upload-zone {
+    border: 2px dashed var(--glass-border);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.file-upload-zone:hover,
+.file-upload-zone.drag-over {
+    border-color: var(--primary);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.file-upload-zone input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.viz-container {
+    display: none;
+    flex: 1;
+}
+
+.viz-container.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.mesh-grid {
+    display: grid;
+    gap: 4px;
+    /* Using gap for visual separation */
+    aspect-ratio: 1;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--glass-border);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.grid-cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.8rem;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    transition: transform 0.2s;
+}
+
+.grid-cell:hover {
+    transform: scale(1.1);
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Tape Grid Colors */
+.tape-cell {
+    background: rgba(255, 255, 255, 0.05);
+    /* Default */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tape-0 {
+    background: rgba(16, 185, 129, 0.2);
+    /* Green tint */
+    color: var(--secondary);
+}
+
+.tape-low {
+    background: rgba(250, 204, 21, 0.3);
+    /* Yellow tint */
+    color: #fca5a5;
+    /* ? */
+}
+
+.tape-low .tape-count {
+    color: #facc15;
+}
+
+.tape-high {
+    background: rgba(239, 68, 68, 0.3);
+    /* Red tint */
+}
+
+.tape-high .tape-count {
+    color: #f87171;
+    font-size: 1.2em;
+}
+
+.tape-count {
+    font-size: 1.2em;
+    margin-bottom: 2px;
+}
+
+.z-val {
+    font-size: 0.7em;
+    opacity: 0.7;
+    font-weight: normal;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.stat-card .label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.stat-card .value {
+    font-weight: bold;
+    color: var(--primary-light);
+    font-size: 1.1rem;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.legend span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.legend .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.placeholder-msg {
+    grid-column: 1 / -1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.gradient-bar {
+    width: 200px;
+    height: 10px;
+    background: linear-gradient(to right,
+            hsl(240, 70%, 50%),
+            hsl(180, 70%, 50%),
+            hsl(120, 70%, 50%),
+            hsl(60, 70%, 50%),
+            hsl(0, 70%, 50%));
+    border-radius: 5px;
+}
+
+.legend-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 900px) {
+    .mesh-layout {
+        flex-direction: column;
+    }
+
+    .mesh-sidebar {
+        width: 100%;
+    }
+
+    .mobile-hidden {
+        display: none;
+    }
 }

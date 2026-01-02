@@ -46,6 +46,19 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
 
+                <a href="#bedmesh" class="tool-card" id="card-bedmesh">
+                    <div class="tool-icon">
+                        <i data-lucide="grid-3x3"></i>
+                    </div>
+                    <div class="tool-info">
+                        <h3>${t.bedMeshTitle}</h3>
+                        <p>${t.bedMeshSummary}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="chevron-right"></i>
+                    </div>
+                </a>
+
                 <a href="#price" class="tool-card col-span-full" id="card-price">
                     <div class="tool-icon">
                         <i data-lucide="calculator"></i>
