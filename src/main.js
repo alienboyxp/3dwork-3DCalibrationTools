@@ -76,6 +76,12 @@ function updateUILabels() {
     const navBedMesh = document.getElementById('nav-bedmesh');
     if (navBedMesh) navBedMesh.textContent = t.bedMeshTitle;
 
+    const navBedLeveling = document.getElementById('nav-bedleveling');
+    if (navBedLeveling) navBedLeveling.textContent = t.manualLevelingTitle;
+
+    const footerText = document.getElementById('footer-contact-text');
+    if (footerText) footerText.innerHTML = t.footerContact;
+
     if (window.lucide) {
         window.lucide.createIcons();
     }
@@ -124,6 +130,8 @@ function renderView() {
         window.renderPriceCalculator(content, t);
     } else if (currentView === 'bedmesh' && window.renderBedMesh) {
         window.renderBedMesh(content, t);
+    } else if (currentView === 'bedleveling' && window.renderBedLeveling) {
+        window.renderBedLeveling(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Printing Cost Calculator</title>
+    <style>
+        .results-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+            border: 1px solid #dee2e6;
+            cursor: pointer;
+        }
+        
+        .color-picker-popup {
+            position: absolute;
+            z-index: 1000;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+        
+        .color-input {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .color-input input[type="color"] {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        
+        .color-input input[type="text"] {
+            margin-left: 8px;
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .pricing-tiers {
+            font-size: 0.9rem;
+        }
+        
+        .pricing-tiers .badge {
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .pricing-tiers .form-range::-webkit-slider-thumb {
+            background: var(--bs-primary);
+        }
+        
+        .pricing-tiers .form-range::-moz-range-thumb {
+            background: var(--bs-primary);
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .color-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .cost-breakdown {
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        .result-total {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 2px solid var(--border);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary: #6b7280;
+            --light: #f9fafb;
+            --dark: #111827;
+            --border: #e5e7eb;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        .calculator-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-section {
+            margin-bottom: 1.5rem;
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .section-header {
+            cursor: pointer;
+            padding: 0.5rem 0;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .section-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #374151;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 1.5rem;
+        }
+
+        .calculator-header {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calculator-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .form-section {
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+
+        .section-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--dark);
+        }
+
+        .section-content {
+            display: block;
+        }
+
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            height: auto;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .input-group-text {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .btn-outline-secondary {
+            color: var(--secondary);
+            border-color: var(--border);
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .results-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .results-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            text-align: center;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-item.total {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.125rem;
+        }
+
+        /* Consistent pricing option sizes */
+        .pricing-option {
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .pricing-option:hover {
+            border-color: #cbd5e0;
+            background-color: #f8fafc;
+        }
+        
+        .pricing-option .form-check {
+            flex: 1;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .pricing-option .form-check-input {
+            margin-top: 0;
+            margin-right: 0.75rem;
+        }
+        
+        .pricing-option .form-check-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            margin: 0;
+        }
+        
+        .pricing-option .badge {
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .material-row {
+            background: #f9fafb;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .remove-material {
+            color: #ef4444;
+            background: none;
+            border: none;
+            padding: 0.25rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .remove-material:hover {
+            color: #dc2626;
+        }
+
+        .toggle-icon {
+            transition: transform 0.2s;
+        }
+
+        .collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: #f9fafb;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body onload="initApp()">
+    <div class="container py-4">
+        <div class="row g-4">
+            <!-- Main Form Column -->
+            <div class="col-lg-8">
+                <div class="calculator-container h-100">
+                    <div class="calculator-header">
+                        <h1 data-i18n="app-title">3D Printing Cost Calculator</h1>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="language-toggle" class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-language me-1"></i> <span data-i18n="language">EN/ES</span>
+                            </button>
+                            <button type="button" id="unit-toggle" class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-ruler me-1"></i> <span data-i18n="units">g/ml</span>
+                            </button>
+                        </div>
+                    </div>
+                    <form id="calculator-form" class="h-100 d-flex flex-column" name="calculator-form">
+                        <!-- Printer Settings -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3><i class="fas fa-print me-2"></i><span data-i18n="printer-settings">Printer Settings</span></h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="mb-3">
+                                    <label for="printer-select" class="form-label" data-i18n="printer-label">Printer Model</label>
+                                    <select id="printer-select" name="printer-select" class="form-select">
+                                        <option value="fdm_generic" selected>FDM Generic Custom</option>
+                                        
+                                        <!-- FDM Printers -->
+                                        <optgroup label="⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ FDM Printers ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯">
+                                            <option value="fdm_generic">FDM Generic Custom</option>
+                                            <option value="bambu_x1">Bambu Lab X1 Carbon</option>
+                                            <option value="bambu_p1p">Bambu Lab P1P</option>
+                                            <option value="prusa_mk4">Prusa i3 MK4</option>
+                                            <option value="prusa_mk3s">Prusa i3 MK3S+</option>
+                                            <option value="ender3_v3">Creality Ender-3 V3 SE</option>
+                                            <option value="ender3">Creality Ender-3 V2</option>
+                                            <option value="ender3_s1">Creality Ender-3 S1</option>
+                                            <option value="sovol_sv06">Sovol SV06</option>
+                                            <option value="elegoo_neptune4">Elegoo Neptune 4 Pro</option>
+                                            <option value="anycubic_kobra2">Anycubic Kobra 2</option>
+                                        </optgroup>
+                                        
+                                        <!-- Resin Printers -->
+                                        <optgroup label="⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Resin Printers ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯">
+                                            <option value="sla_generic">SLA Generic Custom</option>
+                                            <option value="elegoo_mars4">Elegoo Mars 4 Ultra</option>
+                                            <option value="elegoo_mars3">Elegoo Mars 3</option>
+                                            <option value="elegoo_saturn3">Elegoo Saturn 3 Ultra</option>
+                                            <option value="anycubic_photon_m3">Anycubic Photon M3 Max</option>
+                                            <option value="anycubic_photon_m3_plus">Anycubic Photon M3 Plus</option>
+                                            <option value="photon_mono_x">Anycubic Photon Mono X</option>
+                                            <option value="formlabs_form3">Formlabs Form 3+</option>
+                                            <option value="phrozen_sonic_mighty8k">Phrozen Sonic Mighty 8K</option>
+                                            <option value="creality_halot_one">Creality Halot-One Pro</option>
+                                            <option value="creality_ld006">Creality LD-006</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="printer-power" class="form-label" data-i18n="power-label">Power Consumption</label>
+                                        <div class="input-group">
+                                            <input type="number" id="printer-power" name="printer-power" class="form-control" value="200" min="0" step="1">
+                                            <span class="input-group-text">W</span>
+                                        </div>
+                                        <div class="form-text">Power usage during printing</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Print Information -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3><i class="fas fa-info-circle me-2"></i><span data-i18n="print-information">Print Information</span></h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="print-time" class="form-label" data-i18n="print-time-label">Print Time</label>
+                                        <div class="input-group">
+                                            <input type="number" id="print-time" name="print-time" class="form-control" value="5" min="0" step="0.1">
+                                            <span class="input-group-text">hours</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="quantity" class="form-label" data-i18n="quantity-label">Quantity</label>
+                                        <input type="number" id="quantity" name="quantity" class="form-control" value="1" min="1" step="1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="failure-rate" class="form-label" data-i18n="failure-rate">Failure Rate</label>
+                                        <div class="input-group">
+                                            <input type="number" id="failure-rate" name="failure-rate" class="form-control" value="5" min="0" max="100" step="1">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Materials -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3><i class="fas fa-cube me-2"></i><span data-i18n="materials">Materials</span></h3>
+                            </div>
+                            <div class="section-content">
+                                <div id="materials-container">
+                                    <!-- Material rows will be added here by JavaScript -->
+                                </div>
+                                <button type="button" id="add-material" class="btn btn-outline-primary btn-sm mt-2">
+                                    <i class="fas fa-plus me-1"></i> <span data-i18n="add-material">Add Material</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Cost Settings -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3><i class="fas fa-euro-sign me-2"></i><span data-i18n="cost-settings">Others</span></h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="row g-3">
+                                    <!-- Electricity Cost -->
+                                    <div class="col-12">
+                                        <label for="electricity-cost" class="form-label" data-i18n="electricity-cost">Electricity Cost</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">€</span>
+                                            <input type="number" id="electricity-cost" name="electricity-cost" class="form-control" value="0.25" min="0" step="0.01">
+                                            <span class="input-group-text">/kWh</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Labor Cost Section -->
+                                    <div class="col-12">
+                                        <div class="row g-2">
+                                            <!-- Labor Rate -->
+                                            <div class="col-md-4">
+                                                <label for="labor-rate" class="form-label" data-i18n="labor-rate">Labor Rate</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">€</span>
+                                                    <input type="number" id="labor-rate" name="labor-rate" class="form-control" value="15" min="0" step="0.01">
+                                                    <span class="input-group-text">/h</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Labor Hours -->
+                                            <div class="col-md-3">
+                                                <label for="labor-hours" class="form-label" data-i18n="labor-hours">Hours</label>
+                                                <div class="input-group">
+                                                    <input type="number" id="labor-hours" name="labor-hours" class="form-control" value="1" min="0" step="0.1">
+                                                    <span class="input-group-text">h</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Calculation Type -->
+                                            <div class="col-md-5">
+                                                <label for="labor-calculation-type" class="form-label" data-i18n="calculation-type">Calculation</label>
+                                                <select id="labor-calculation-type" name="labor-calculation-type" class="form-select">
+                                                    <option value="total" data-i18n="total-hours">Total Hours (×1)</option>
+                                                    <option value="per-piece" data-i18n="per-piece">Per Piece (×Qty)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Packaging and Shipping Costs -->
+                                <div class="mt-3 pt-3 border-top">
+                                    <!-- Packaging Cost -->
+                                    <div class="row g-2 mb-3">
+                                        <div class="col-md-4">
+                                            <label for="packaging-cost" class="form-label" data-i18n="packaging-cost">Packaging Cost</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">€</span>
+                                                <input type="number" id="packaging-cost" name="packaging-cost" class="form-control" value="0" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 offset-md-3">
+                                            <label for="packaging-calculation-type" class="form-label" data-i18n="calculation-type">Calculation</label>
+                                            <select id="packaging-calculation-type" name="packaging-calculation-type" class="form-select">
+                                                <option value="total" data-i18n="total-amount">Total Amount (×1)</option>
+                                                <option value="per-piece" data-i18n="per-piece">Per Piece (×Qty)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Shipping Cost -->
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <label for="shipping-cost" class="form-label" data-i18n="shipping-cost">Shipping Cost</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">€</span>
+                                                <input type="number" id="shipping-cost" name="shipping-cost" class="form-control" value="0" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5 offset-md-3">
+                                            <label for="shipping-calculation-type" class="form-label" data-i18n="calculation-type">Calculation</label>
+                                            <select id="shipping-calculation-type" name="shipping-calculation-type" class="form-select">
+                                                <option value="total" data-i18n="total-amount">Total Amount (×1)</option>
+                                                <option value="per-piece" data-i18n="per-piece">Per Piece (×Qty)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- PDF Settings -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3><i class="fas fa-file-pdf me-2"></i><span>PDF Settings</span></h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label for="company-name" class="form-label">Company Name</label>
+                                        <input type="text" class="form-control" id="company-name" value="3Dwork" placeholder="Your company name">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="company-email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="company-email" value="info@3dwork.io" placeholder="your.email@example.com">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="company-website" class="form-label">Website</label>
+                                        <input type="url" class="form-control" id="company-website" value="https://3dwork.io" placeholder="https://yourwebsite.com">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions mt-auto d-flex gap-2">
+                            <button type="button" id="reset-btn" class="btn btn-outline-secondary flex-grow-1" data-i18n="reset">
+                                <i class="fas fa-redo me-1"></i> <span data-i18n="reset">Reset</span>
+                            </button>
+                            <button type="button" id="export-pdf-btn" class="btn btn-outline-primary flex-grow-1" data-i18n="export-pdf">
+                                <i class="fas fa-file-pdf me-1"></i> <span data-i18n="export-pdf">Export PDF</span>
+                            </button>
+                            <button type="button" id="calculate-btn" class="btn btn-primary flex-grow-1" data-i18n="calculate">
+                                <i class="fas fa-calculator me-1"></i> <span data-i18n="calculate">Calculate</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Results Column -->
+            <div class="col-lg-4">
+                <div class="calculator-container h-100">
+                    <div class="calculator-header">
+                        <h3><i class="fas fa-calculator me-2"></i><span data-i18n="cost-summary">Cost Summary</span></h3>
+                    </div>
+                    <div class="p-3">
+                        <div class="results-card" id="results-card">
+                            <div class="result-item">
+                                <span data-i18n="material-cost">Material Cost</span>:
+                                <span id="material-cost">€0.00</span>
+                            </div>
+                            <div class="result-item">
+                                <span data-i18n="electricity-cost">Electricity Cost</span>:
+                                <span id="electricity-cost-result">€0.00</span>
+                            </div>
+                            <div class="result-item">
+                                <span data-i18n="labor-cost">Labor Cost</span>:
+                                <span id="labor-cost-result">€0.00</span>
+                            </div>
+                            <div class="result-item">
+                                <span data-i18n="packaging-cost">Packaging Cost</span>:
+                                <span id="packaging-cost-result">€0.00</span>
+                            </div>
+                            <div class="result-item">
+                                <span data-i18n="shipping-cost">Shipping Cost</span>:
+                                <span id="shipping-cost-result">€0.00</span>
+                            </div>
+                            <div class="result-item border-top mt-2 pt-2">
+                                <span class="fw-bold" data-i18n="base-cost">Base Cost</span>:
+                                <span id="base-cost" class="fw-bold">€0.00</span>
+                            </div>
+                            
+                            <!-- Pricing Tiers -->
+                            <div class="pricing-tiers mt-4 pt-3 border-top">
+                                <h6 class="mb-3" data-i18n="suggested-pricing">Select Pricing Option</h6>
+                                
+                                <div class="pricing-options">
+                                    <!-- Competitive Tier -->
+                                    <div class="pricing-option d-flex justify-content-between align-items-center mb-2 p-2 rounded">
+                                        <div class="form-check">
+                                            <input class="form-check-input pricing-radio" type="radio" name="pricingOption" id="pricing-competitive" value="competitive" checked>
+                                            <label class="form-check-label d-flex align-items-center" for="pricing-competitive">
+                                                <span class="badge bg-primary me-2" data-i18n="competitive">Competitive (10%)</span>
+                                            </label>
+                                        </div>
+                                        <span id="competitive-price" class="fw-bold">€0.00</span>
+                                    </div>
+                                    
+                                    <!-- Standard Tier -->
+                                    <div class="pricing-option d-flex justify-content-between align-items-center mb-2 p-2 rounded">
+                                        <div class="form-check">
+                                            <input class="form-check-input pricing-radio" type="radio" name="pricingOption" id="pricing-standard" value="standard">
+                                            <label class="form-check-label d-flex align-items-center" for="pricing-standard">
+                                                <span class="badge bg-success me-2" data-i18n="standard">Standard (15%)</span>
+                                            </label>
+                                        </div>
+                                        <span id="standard-price" class="fw-bold">€0.00</span>
+                                    </div>
+                                    
+                                    <!-- Urgent Tier -->
+                                    <div class="pricing-option d-flex justify-content-between align-items-center mb-2 p-2 rounded">
+                                        <div class="form-check">
+                                            <input class="form-check-input pricing-radio" type="radio" name="pricingOption" id="pricing-urgent" value="urgent">
+                                            <label class="form-check-label d-flex align-items-center" for="pricing-urgent">
+                                                <span class="badge bg-warning me-2" data-i18n="urgent">Urgent (25%)</span>
+                                            </label>
+                                        </div>
+                                        <span id="urgent-price" class="fw-bold">€0.00</span>
+                                    </div>
+                                    
+                                    <!-- Crazy Tier -->
+                                    <div class="pricing-option d-flex justify-content-between align-items-center mb-2 p-2 rounded">
+                                        <div class="form-check">
+                                            <input class="form-check-input pricing-radio" type="radio" name="pricingOption" id="pricing-crazy" value="crazy">
+                                            <label class="form-check-label d-flex align-items-center" for="pricing-crazy">
+                                                <span class="badge bg-danger me-2" data-i18n="crazy">Crazy (50%)</span>
+                                            </label>
+                                        </div>
+                                        <span id="crazy-price" class="fw-bold">€0.00</span>
+                                    </div>
+                                    
+                                    <!-- Custom Tier -->
+                                    <div class="pricing-option d-flex justify-content-between align-items-center mb-2 p-2 rounded">
+                                        <div class="form-check">
+                                            <input class="form-check-input pricing-radio" type="radio" name="pricingOption" id="pricing-custom" value="custom">
+                                            <label class="form-check-label d-flex align-items-center" for="pricing-custom">
+                                                <span class="badge bg-secondary me-2" data-i18n="custom">Custom</span>
+                                                <div class="input-group input-group-sm ms-2" style="width: 100px;">
+                                                    <input type="number" class="form-control form-control-sm text-end" id="custom-margin" min="0" max="200" value="25">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <span id="custom-price" class="fw-bold">€0.00</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Total Cost -->
+                                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                    <span class="fw-bold" data-i18n="total-cost">Total Cost:</span>
+                                    <span id="total-cost" class="fw-bold fs-5">€0.00</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Cost Allocation Chart -->
+                            <div class="mt-4 pt-3 border-top">
+                                <h6 class="mb-3" data-i18n="cost-allocation">Cost Allocation</h6>
+                                <div class="chart-container" style="position: relative; height: 220px;">
+                                    <canvas id="costAllocationChart"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="button" id="export-pdf" class="btn btn-primary" data-i18n="export-pdf">
+                                    <i class="fas fa-file-pdf me-1"></i> <span data-i18n="export-pdf">Export PDF</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        // Make jsPDF available globally
+        window.jsPDF = window.jspdf.jsPDF;
+        
+        // Initialize the app when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load the main script
+            const script = document.createElement('script');
+            script.src = 'js/script.js';
+            script.onload = function() {
+                if (window.initApp && typeof window.initApp === 'function') {
+                    window.initApp();
+                } else {
+                    console.error('initApp function not found after script load');
+                }
+            };
+            script.onerror = function() {
+                console.error('Failed to load script.js');
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html>

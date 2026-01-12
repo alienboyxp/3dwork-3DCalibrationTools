@@ -1,0 +1,306 @@
+/* Base Styles */
+:root {
+    --primary-color: #e74c3c;
+    --primary-hover: #c0392b;
+    --secondary-color: #95a5a6;
+    --success-color: #27ae60;
+    --border-color: #e0e0e0;
+    --text-color: #333;
+    --text-muted: #7f8c8d;
+    --white: #ffffff;
+    --light-bg: #f5f6f7;
+    --border-radius: 4px;
+    --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: #f8f9fa;
+    font-size: 14px;
+    padding: 20px;
+    margin: 0;
+}
+
+/* Main Container */
+.calculator-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.calculator-form {
+    flex: 2;
+    min-width: 0;
+}
+
+.calculator-results {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Collapsible Sections */
+.form-section-collapsible {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.section-header {
+    background-color: #f8f9fa;
+    padding: 12px 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+
+.section-header:hover {
+    background-color: #f1f3f5;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.toggle-icon {
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.section-content {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.section-content.active {
+    padding: 15px;
+    max-height: 2000px; /* Adjust based on content */
+}
+
+.section-content > *:last-child {
+    margin-bottom: 0;
+}
+
+.section-header.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* Form Styles */
+.form-section {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+h3 {
+    font-size: 1.2rem;
+    margin: 0 0 20px 0;
+    color: var(--text-color);
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+}
+
+.input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-right: none;
+}
+
+.input-group .form-control {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.input-group .form-control:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.input-group .input-group-text:last-child {
+    border-right: 1px solid var(--border-color);
+    border-left: none;
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -8px;
+}
+
+.form-row > .form-group {
+    flex: 1;
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.form-row > .form-group.half {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 10px 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.btn i {
+    margin-right: 8px;
+}
+
+.btn-primary {
+    color: var(--white);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    width: 100%;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Form Actions */
+.btn-primary {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Results Card */
+.results-card {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+}
+
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.result-label {
+    color: var(--text-muted);
+}
+
+.result-value {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.result-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid var(--border-color);
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+/* Responsive Styles */
+
+@media (max-width: 768px) {
+    .form-row > .form-group.half {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .calculator-form,
+    .calculator-results {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
