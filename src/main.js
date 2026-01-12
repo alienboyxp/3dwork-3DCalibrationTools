@@ -117,6 +117,9 @@ function renderView() {
 
     // Clear content first
     content.innerHTML = '';
+    // Reset any view-specific style overrides
+    content.style.maxWidth = '';
+    content.style.width = '';
 
     if (currentView === 'home' && window.renderHome) {
         window.renderHome(content, t);
