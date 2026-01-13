@@ -82,6 +82,21 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
 
+                <a href="#vref" class="tool-card" id="card-vref">
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon">
+                                <i data-lucide="zap"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.vrefTitle}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.vrefSummary}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="chevron-right"></i>
+                    </div>
+                </a>
+
                 <a href="#price" class="tool-card col-span-full" id="card-price">
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">

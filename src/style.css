@@ -974,7 +974,9 @@ footer {
         display: block;
         overflow-x: auto;
     }
-}/* Bed Mesh Tool Styles */
+}
+
+/* Bed Mesh Tool Styles */
 .mesh-layout {
     display: flex;
     gap: 2rem;
@@ -1198,4 +1200,81 @@ footer {
     .mobile-hidden {
         display: none;
     }
+}
+
+/* Vref Specific Styles */
+.vref-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+.grid-span-all {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+    .vref-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.results-display {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 24px;
+    padding: 2rem;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.result-item.highlight .value {
+    color: var(--secondary);
+    font-size: 1.8rem;
+}
+
+.result-item.highlight .label {
+    font-size: 0.9rem;
+}
+
+.config-code {
+    background: rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 16px !important;
+    padding: 1.25rem !important;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+    font-size: 0.95rem !important;
+    color: var(--primary-light) !important;
+    margin: 0 !important;
+    white-space: pre-wrap !important;
+    line-height: 1.5 !important;
+}
+
+.doc-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+}
+
+.doc-link:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: var(--primary);
+    transform: translateX(8px);
+    color: var(--primary-light);
+}
+
+.doc-link .lucide {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
 }

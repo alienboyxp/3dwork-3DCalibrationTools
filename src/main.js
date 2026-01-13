@@ -79,6 +79,9 @@ function updateUILabels() {
     const navBedLeveling = document.getElementById('nav-bedleveling');
     if (navBedLeveling) navBedLeveling.textContent = t.manualLevelingTitle;
 
+    const navVref = document.getElementById('nav-vref');
+    if (navVref) navVref.textContent = t.vrefTitle;
+
     const footerText = document.getElementById('footer-contact-text');
     if (footerText) footerText.innerHTML = t.footerContact;
 
@@ -135,6 +138,8 @@ function renderView() {
         window.renderBedMesh(content, t);
     } else if (currentView === 'bedleveling' && window.renderBedLeveling) {
         window.renderBedLeveling(content, t);
+    } else if (currentView === 'vref' && window.renderVref) {
+        window.renderVref(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);
