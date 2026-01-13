@@ -82,6 +82,9 @@ function updateUILabels() {
     const navVref = document.getElementById('nav-vref');
     if (navVref) navVref.textContent = t.vrefTitle;
 
+    const navShaper = document.getElementById('nav-shaper');
+    if (navShaper) navShaper.textContent = t.shaperTitle;
+
     const footerText = document.getElementById('footer-contact-text');
     if (footerText) footerText.innerHTML = t.footerContact;
 
@@ -140,6 +143,8 @@ function renderView() {
         window.renderBedLeveling(content, t);
     } else if (currentView === 'vref' && window.renderVref) {
         window.renderVref(content, t);
+    } else if (currentView === 'shaper' && window.renderShaper) {
+        window.renderShaper(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);
