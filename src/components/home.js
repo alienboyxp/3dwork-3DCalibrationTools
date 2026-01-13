@@ -1,4 +1,7 @@
 window.renderHome = function (container, t) {
+    const MARLIN_LOGO = 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Marlin_logo.svg';
+    const KLIPPER_LOGO = 'https://raw.githubusercontent.com/Klipper3d/klipper/master/docs/img/klipper.svg';
+
     container.innerHTML = `
         <div class="home-container">
             <div class="home-header">
@@ -8,6 +11,10 @@ window.renderHome = function (container, t) {
 
             <div class="tool-grid">
                 <a href="#esteps" class="tool-card" id="card-esteps">
+                    <div class="badge-container">
+                        <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -23,6 +30,9 @@ window.renderHome = function (container, t) {
                 </a>
 
                 <a href="#rotation" class="tool-card" id="card-rotation">
+                    <div class="badge-container">
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -38,6 +48,10 @@ window.renderHome = function (container, t) {
                 </a>
 
                 <a href="#skew" class="tool-card" id="card-skew">
+                    <div class="badge-container">
+                        <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -53,6 +67,9 @@ window.renderHome = function (container, t) {
                 </a>
 
                 <a href="#bedmesh" class="tool-card" id="card-bedmesh">
+                    <div class="badge-container">
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -68,6 +85,9 @@ window.renderHome = function (container, t) {
                 </a>
 
                 <a href="#bedleveling" class="tool-card" id="card-bedleveling">
+                    <div class="badge-container">
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -83,6 +103,10 @@ window.renderHome = function (container, t) {
                 </a>
 
                 <a href="#vref" class="tool-card" id="card-vref">
+                    <div class="badge-container">
+                        <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -98,6 +122,9 @@ window.renderHome = function (container, t) {
                 </a>
 
                 <a href="#shaper" class="tool-card" id="card-shaper">
+                    <div class="badge-container">
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon">
@@ -133,7 +160,4 @@ window.renderHome = function (container, t) {
     if (window.lucide) {
         window.lucide.createIcons();
     }
-
-    // Add click events for local navigation if needed, 
-    // but main.js should handle hashchanges.
 };
