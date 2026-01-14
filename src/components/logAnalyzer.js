@@ -153,6 +153,11 @@ window.renderLogAnalyzer = function (container, t) {
                                 <h4 style="margin-bottom: 1rem; color: var(--secondary); font-size: 0.9rem;">${t.loadGraph}</h4>
                                 <canvas id="chart-load" style="width: 100%; height: 100%;"></canvas>
                             </div>
+                            
+                            <div id="comm-chart-container" style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); position: relative; height: 300px;">
+                                <h4 style="margin-bottom: 1rem; color: #f59e0b; font-size: 0.9rem;">MCU Communications</h4>
+                                <canvas id="chart-comm" style="width: 100%; height: 100%;"></canvas>
+                            </div>
                         </div>
 
                         <!-- TAB: SYSTEM INFO (Accordions) -->
@@ -223,6 +228,7 @@ window.renderLogAnalyzer = function (container, t) {
     // Chart instances
     let tempChart = null;
     let loadChart = null;
+    let commChart = null;
 
     // Tabs
     const tabObjects = [
@@ -364,8 +370,27 @@ window.renderLogAnalyzer = function (container, t) {
 
         // 2. Error Extraction
         const errors = [];
+        const errorPatterns = [
+            /^!! /, // Critical errors start with !!
+            /Transition to shutdown state:/,
+            /MCU '.*' shutdown:/,
+            /Heater .* not heating/,
+            /ADC out of range/,
+            /TMC '.*' reports error:/,
+            /Unable to open serial port/,
+            /Timer too close/,
+            /Missed scheduling of next .* event/,
+            /MCU error during connect/
+        ];
+
+        let inConfig = false;
         currentLogData.klippy.split('\n').forEach(line => {
-            if (line.includes('!!') || (line.toLowerCase().includes('error') && !line.includes('stats:')) || line.includes('Unable to open serial')) {
+            // Filter out config dumps (macros often contain "error" text)
+            if (line.includes('===== Config file')) { inConfig = true; return; }
+            if (inConfig && line.includes('=======================')) { inConfig = false; return; }
+            if (inConfig) return;
+
+            if (errorPatterns.some(p => p.test(line))) {
                 errors.push(line.trim());
             }
         });
@@ -374,8 +399,9 @@ window.renderLogAnalyzer = function (container, t) {
             : '<p style="color: var(--text-muted);">No critical errors found.</p>';
 
         // 3. Process Sessions & Graphs
-        const sessions = parseSessions(currentLogData.klippy);
-        populateSessionSelect(sessions, currentLogData.klippy);
+        const allLines = currentLogData.klippy.split('\n');
+        const sessions = parseSessions(allLines);
+        populateSessionSelect(sessions, allLines);
 
         // 4. Debug Accordions
         const debugCont = document.getElementById('debug-info-container');
@@ -413,14 +439,20 @@ window.renderLogAnalyzer = function (container, t) {
         // 6. Default Logs View
         setActiveLog(btnLogKlippy, currentLogData.klippy);
 
-        // 7. AI Trigger
+        // 7. Reset AI Status
+        const statusEl = document.getElementById('ai-status');
+        if (statusEl) {
+            statusEl.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> ${t.analyzing}`;
+            statusEl.style.color = "var(--text-muted)";
+        }
+
+        // 8. AI Trigger
         setTimeout(() => runAiAnalysis(data, errors, kversion[0]), 1200);
 
         if (window.lucide) window.lucide.createIcons();
     }
 
-    function parseSessions(logText) {
-        const lines = logText.split('\n');
+    function parseSessions(lines) {
         const sessionStarts = [];
         lines.forEach((line, index) => {
             if (line.includes('Starting Klippy...')) {
@@ -449,7 +481,7 @@ window.renderLogAnalyzer = function (container, t) {
         return sessions.reverse(); // Newest first
     }
 
-    function populateSessionSelect(sessions, logText) {
+    function populateSessionSelect(sessions, allLines) {
         sessionSelect.innerHTML = '';
 
         // Add "All Sessions" option
@@ -469,32 +501,26 @@ window.renderLogAnalyzer = function (container, t) {
             const val = sessionSelect.value;
             let linesToRender;
             if (val === 'all') {
-                linesToRender = logText.split('\n');
+                linesToRender = allLines;
             } else {
                 const s = sessions[parseInt(val)];
-                linesToRender = logText.split('\n').slice(s.start, s.end);
+                linesToRender = allLines.slice(s.start, s.end);
             }
             updateGraphs(linesToRender);
         };
 
-        // Load first session by default
-        if (sessions.length > 0) {
-            const s = sessions[0];
-            updateGraphs(logText.split('\n').slice(s.start, s.end));
-            sessionSelect.value = 0;
-        } else {
-            updateGraphs(logText.split('\n'));
-            sessionSelect.value = 'all';
-        }
+        // Load All Sessions by default
+        updateGraphs(allLines);
+        sessionSelect.value = 'all';
     }
 
     function updateGraphs(lines) {
         // destroy old charts
-        if (tempChart) tempChart.destroy();
-        if (loadChart) loadChart.destroy();
-        // Remove old comm chart to reset state/canvas
-        const commContainer = document.getElementById('comm-chart-container');
-        if (commContainer) commContainer.remove();
+        try {
+            if (tempChart) tempChart.destroy();
+            if (loadChart) loadChart.destroy();
+            if (commChart) commChart.destroy();
+        } catch (e) { console.error("Chart destroy error:", e); }
 
         // 1. Data Structures for parsing
         const times = [];
@@ -688,7 +714,7 @@ window.renderLogAnalyzer = function (container, t) {
             tempDatasets.push({ label: `${mcu} Temp`, data: datasets.temps.mcus[mcu], borderColor: color, borderWidth: 1, pointRadius: 0 });
         });
 
-        new Chart(document.getElementById('chart-temp').getContext('2d'), {
+        tempChart = new Chart(document.getElementById('chart-temp').getContext('2d'), {
             type: 'line',
             data: { labels: times, datasets: tempDatasets },
             options: { ...commonOptions },
@@ -722,7 +748,7 @@ window.renderLogAnalyzer = function (container, t) {
             });
         });
 
-        new Chart(document.getElementById('chart-load').getContext('2d'), {
+        loadChart = new Chart(document.getElementById('chart-load').getContext('2d'), {
             type: 'line',
             data: { labels: times, datasets: loadDatasets },
             options: {
@@ -742,16 +768,6 @@ window.renderLogAnalyzer = function (container, t) {
         });
 
         // --- CHART 3: COMMUNICATIONS ---
-        // Dynamically create this canvas if it doesn't exist
-        const graphsDiv = document.getElementById('content-graphs');
-        if (!document.getElementById('chart-comm')) {
-            const div = document.createElement('div');
-            div.id = 'comm-chart-container';
-            div.style.cssText = "background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border); position: relative; height: 300px; margin-top: 20px;";
-            div.innerHTML = `<h4 style="margin-bottom: 1rem; color: #f59e0b; font-size: 0.9rem;">MCU Communications</h4><canvas id="chart-comm" style="width: 100%; height: 100%;"></canvas>`;
-            graphsDiv.appendChild(div);
-        }
-
         const commDatasets = [];
         const colors = ['#10b981', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6'];
 
@@ -797,24 +813,12 @@ window.renderLogAnalyzer = function (container, t) {
             }
         });
 
-        if (document.getElementById('chart-comm')) {
-            new Chart(document.getElementById('chart-comm').getContext('2d'), {
+        const commCanvas = document.getElementById('chart-comm');
+        if (commCanvas) {
+            commChart = new Chart(commCanvas.getContext('2d'), {
                 type: 'line',
                 data: { labels: times, datasets: commDatasets },
-                options: {
-                    ...commonOptions,
-                    scales: {
-                        ...commonOptions.scales,
-                        y: { ...commonOptions.scales.y, title: { display: true, text: 'Bytes' } },
-                        y1: {
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
-                            ticks: { color: '#ef4444' },
-                            title: { display: true, text: 'Errors' },
-                            min: 0 // Errors start at 0
-                        }
-                    }
-                },
+                options: { ...commonOptions, scales: { ...commonOptions.scales, y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Errors' }, min: 0 } } },
                 plugins: [eventPlugin]
             });
         }
@@ -850,30 +854,71 @@ window.renderLogAnalyzer = function (container, t) {
         aiLoading.style.display = 'none';
         aiContent.style.display = 'flex';
 
-        let reportTitle = "System Health Optimal";
-        let recommendationHtml = `<p>No critical failures detected. Ensure your firmware version (${version}) matches your Klipper host installation for continued stability.</p>`;
+        // Detect Language
+        const lang = document.querySelector('.lang-switch .active')?.id === 'btn-es' ? 'es' : 'en';
+
+        // Localized Strings
+        const txt = {
+            done: lang === 'es' ? 'Análisis Completado' : 'Analysis Done',
+            optimal: lang === 'es' ? 'Estado del Sistema Óptimo' : 'System Health Optimal',
+            optimalBody: lang === 'es'
+                ? `<p>No se detectaron fallos críticos. Asegúrese de que su versión de firmware (${version}) coincida con la instalación de host de Klipper para una estabilidad continua.</p>`
+                : `<p>No critical failures detected. Ensure your firmware version (${version}) matches your Klipper host installation for continued stability.</p>`,
+            mcuFail: lang === 'es' ? 'Fallo Crítico: Comunicación MCU Perdida' : 'Critical Failure: MCU Communication Lost',
+            coreFault: lang === 'es' ? 'Fallo Central' : 'Core Fault',
+            coreFaultBody: lang === 'es'
+                ? 'El sistema operativo no puede encontrar el dispositivo serie definido en su configuración. Esto suele ser un problema de hardware.'
+                : 'The host OS cannot find the serial device defined in your configuration. This is usually hardware-related.',
+            steps: lang === 'es' ? 'Pasos de Resolución' : 'Resolution Steps',
+            checkUsb: lang === 'es' ? 'Verificar USB:' : 'Check USB Link:',
+            checkUsbBody: lang === 'es'
+                ? 'Reemplace el cable USB. Klipper es sensible a cables de alta resistencia.'
+                : 'Replace the USB cable. Klipper is sensitive to high-resistance cables.',
+            idVer: lang === 'es' ? 'Verificación de ID:' : 'ID Verification:',
+            idVerBody: lang === 'es'
+                ? 'Verifique la pestaña <em>Entorno del Sistema</em> bajo <code>find /dev/serial</code>. Si la lista está vacía, la MCU no está alimentada o el bootloader está atascado.'
+                : 'Check the <em>System Environment</em> tab under <code>find /dev/serial</code>. If the list is empty, the MCU is not powered or the bootloader is stuck.',
+            perfAlert: lang === 'es' ? 'Alerta de Rendimiento: Cuello de Botella' : 'Performance Alert: Processing Bottleneck',
+            diag: lang === 'es' ? 'Diagnóstico' : 'Diagnosis',
+            diagBody: lang === 'es'
+                ? 'Klipper no pudo enviar comandos a la MCU a tiempo. Esto indica alta carga de CPU o demasiados micropasos para la frecuencia de la MCU.'
+                : 'Klipper failed to send commands to the MCU in time. This points to high CPU load or too many microsteps for the MCU\'s frequency.',
+            promptTitle: lang === 'es' ? 'SOLICITUD DE ANÁLISIS EXPERTO KLIPPER' : 'EXPERT KLIPPER ANALYSIS REQUEST',
+            promptInst: lang === 'es' ? 'Analice estos registros y proporcione una guía de resolución a nivel técnico en Español.' : 'Analyze these logs and provide a technician-level resolution guide.',
+            copied: lang === 'es' ? '¡Prompt AI Copiado!' : 'AI Prompt Copied!'
+        };
+
+        // Update Status Indicator
+        const statusEl = document.getElementById('ai-status');
+        if (statusEl) {
+            statusEl.innerHTML = `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> ${txt.done}`;
+            statusEl.style.color = "#10b981";
+        }
+
+        let reportTitle = txt.optimal;
+        let recommendationHtml = txt.optimalBody;
 
         if (errors.some(e => e.includes('Unable to open serial port'))) {
-            reportTitle = "Critical Failure: MCU Communication Lost";
+            reportTitle = txt.mcuFail;
             recommendationHtml = `
                 <div class="ai-step-card">
-                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="search" style="width: 16px; color: var(--primary-light);"></i> Core Fault</h4>
-                    <p style="font-size: 0.85rem; color: #94a3b8;">The host OS cannot find the serial device defined in your configuration. This is usually hardware-related.</p>
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="search" style="width: 16px; color: var(--primary-light);"></i> ${txt.coreFault}</h4>
+                    <p style="font-size: 0.85rem; color: #94a3b8;">${txt.coreFaultBody}</p>
                 </div>
                 <div class="ai-step-card" style="border-left: 4px solid var(--primary);">
-                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="wrench" style="width: 16px; color: var(--primary-light);"></i> Resolution Steps</h4>
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="wrench" style="width: 16px; color: var(--primary-light);"></i> ${txt.steps}</h4>
                     <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <li><strong>Check USB Link:</strong> Replace the USB cable. Klipper is sensitive to high-resistance cables.</li>
-                        <li><strong>ID Verification:</strong> Check the <em>System Environment</em> tab under <code>find /dev/serial</code>. If the list is empty, the MCU is not powered or the bootloader is stuck.</li>
+                        <li><strong>${txt.checkUsb}</strong> ${txt.checkUsbBody}</li>
+                        <li><strong>${txt.idVer}</strong> ${txt.idVerBody}</li>
                     </ul>
                 </div>
             `;
         } else if (currentLogData.klippy.includes('Timer too close')) {
-            reportTitle = "Performance Alert: Processing Bottleneck";
+            reportTitle = txt.perfAlert;
             recommendationHtml = `
                     <div class="ai-step-card">
-                        <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="activity" style="width: 16px; color: #fbbf24;"></i> Diagnosis</h4>
-                        <p style="font-size: 0.85rem; color: #94a3b8;">Klipper failed to send commands to the MCU in time. This points to high CPU load or too many microsteps for the MCU's frequency.</p>
+                        <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="activity" style="width: 16px; color: #fbbf24;"></i> ${txt.diag}</h4>
+                        <p style="font-size: 0.85rem; color: #94a3b8;">${txt.diagBody}</p>
                     </div>
                 `;
         }
@@ -886,11 +931,11 @@ window.renderLogAnalyzer = function (container, t) {
         `;
 
         btnAiPrompt.onclick = () => {
-            const prompt = `EXPERT KLIPPER ANALYSIS REQUEST
+            const prompt = `${txt.promptTitle}
 Logs: ${currentLogData.klippy.slice(-2000)}
 Errors: ${errors.join('\n')}
-Analyze these logs and provide a technician-level resolution guide.`;
-            navigator.clipboard.writeText(prompt).then(() => alert('AI Prompt Copied!'));
+${txt.promptInst}`;
+            navigator.clipboard.writeText(prompt).then(() => alert(txt.copied));
         };
 
         if (window.lucide) window.lucide.createIcons();
