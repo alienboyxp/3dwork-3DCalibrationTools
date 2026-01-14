@@ -139,6 +139,24 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
 
+                <a href="#loganalyzer" class="tool-card" id="card-loganalyzer">
+                    <div class="badge-container">
+                        <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
+                    </div>
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon">
+                                <i data-lucide="file-search"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.logAnalyzerTitle}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.logAnalyzerSummary}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="chevron-right"></i>
+                    </div>
+                </a>
+
                 <a href="#price" class="tool-card col-span-full" id="card-price">
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
