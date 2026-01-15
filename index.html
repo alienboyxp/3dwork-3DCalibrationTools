@@ -65,7 +65,18 @@
 
     <!-- Scripts included in order to avoid module issues over file:// -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="src/i18n.js?v=1.1"></script>
+    <script src="src/components/geminiWidget.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.renderGeminiWidget) {
+                renderGeminiWidget();
+            }
+
+            // Set the mascot logo
+            window.setMascotLogo('./src/assets/mascot.png');
+        });
+    </script>
+    <script src="src/i18n.js"></script>
     <script src="src/components/home.js?v=1.1"></script>
     <script src="src/components/esteps.js?v=1.1"></script>
     <script src="src/components/rotation.js?v=1.1"></script>
