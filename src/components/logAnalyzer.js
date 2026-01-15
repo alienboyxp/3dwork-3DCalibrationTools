@@ -74,9 +74,26 @@ window.renderLogAnalyzer = function (container, t) {
                             <h3 style="display: flex; align-items: center; gap: 0.6rem; color: var(--primary-light); margin: 0; font-size: 1.2rem;">
                                 <i data-lucide="sparkles" style="width: 24px; height: 24px;"></i> ${t.aiAnalysisTitle}
                             </h3>
-                            <div id="ai-status" style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
-                                <span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> ${t.analyzing}
+                            <div id="ai-status" style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.8rem;">
+                                <div id="ai-status-text" style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> ${t.analyzing}
+                                </div>
+                                <button id="btn-ai-config" class="btn-secondary" style="padding: 0.2rem 0.4rem; border-radius: 6px;" title="Configure AI Model">
+                                    <i data-lucide="settings" style="width: 14px; height: 14px;"></i>
+                                </button>
                             </div>
+                        </div>
+
+                        <!-- API Key Input (Hidden by default) -->
+                        <div id="ai-config-panel" style="display: none; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--glass-border);">
+                            <label style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Google Gemini API Key (Optional)</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="password" id="gemini-key-input" placeholder="AIzaSy..." style="flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 0.5rem; color: white; border-radius: 6px; font-family: monospace; font-size: 0.8rem;">
+                                <button id="btn-save-key" class="btn-primary" style="font-size: 0.75rem;">Save</button>
+                            </div>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.5rem;">
+                                <i data-lucide="lock" style="width: 10px; height: 10px;"></i> Key is stored securely in your browser's local storage.
+                            </p>
                         </div>
                         
                         <div id="ai-response-container" style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -91,9 +108,6 @@ window.renderLogAnalyzer = function (container, t) {
 
                         <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
                             <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Accuracy: Heuristic-High | Model: KlipperTech-v2</p>
-                            <button id="btn-ai-prompt" class="btn-secondary" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
-                                <i data-lucide="copy"></i> ${t.copyPrompt}
-                            </button>
                         </div>
                     </div>
 
@@ -214,21 +228,64 @@ window.renderLogAnalyzer = function (container, t) {
     const dropZone = document.getElementById('log-drop-zone');
     const input = document.getElementById('log-input');
     const btnCopy = document.getElementById('btn-copy-cmd');
-    const btnAiPrompt = document.getElementById('btn-ai-prompt');
+    // const btnAiPrompt = document.getElementById('btn-ai-prompt'); // Removed
     const btnDemo = document.getElementById('btn-load-demo-log');
     const fileName = document.getElementById('log-file-name');
     const resultsContainer = document.getElementById('log-results');
     const noLogMsg = document.getElementById('no-log-msg');
     const sessionSelect = document.getElementById('session-select');
 
+    // AI Configuration Elements
+    const btnAiConfig = document.getElementById('btn-ai-config');
+    const configPanel = document.getElementById('ai-config-panel');
+    const keyInput = document.getElementById('gemini-key-input');
+    const btnSaveKey = document.getElementById('btn-save-key');
+
+    // Load saved key
+    const savedKey = localStorage.getItem('3dwork_gemini_key');
+    if (savedKey) {
+        keyInput.value = savedKey;
+        btnAiConfig.style.color = '#10b981'; // Green config icon if key exists
+    }
+
+    // State
+    const currentLogData = { klippy: "", moonraker: "", dmesg: "", debug: "" };
+    let currentErrors = [];
+    let charts = { temp: null, load: null, comm: null };
+    let tempChart = null; // Track instances
+    let loadChart = null;
+    let commChart = null;
+
+    btnAiConfig.onclick = () => {
+        configPanel.style.display = configPanel.style.display === 'none' ? 'block' : 'none';
+    };
+
+    btnSaveKey.onclick = () => {
+        const key = keyInput.value.trim();
+        const kversion = currentLogData.klippy.match(/v\d+\.\d+\.\d+-\d+-\w+/) || ["Unknown"];
+        if (key) {
+            localStorage.setItem('3dwork_gemini_key', key);
+            btnAiConfig.style.color = '#10b981';
+            configPanel.style.display = 'none';
+            // Trigger Re-analysis with persisted errors
+            if (currentLogData.klippy) {
+                runAiAnalysis(currentLogData, currentErrors, kversion[0]);
+            } else {
+                alert('API Key Saved! Future analyses will use Gemini 1.5 Flash.');
+            }
+        } else {
+            localStorage.removeItem('3dwork_gemini_key');
+            btnAiConfig.style.color = '';
+            configPanel.style.display = 'none';
+            alert('API Key Removed. Reverting to local heuristic mode.');
+        }
+    };
+
     // AI Section Elements
     const aiLoading = document.getElementById('ai-loading');
     const aiContent = document.getElementById('ai-content');
 
-    // Chart instances
-    let tempChart = null;
-    let loadChart = null;
-    let commChart = null;
+    // Chart instances (Already declard above)
 
     // Tabs
     const tabObjects = [
@@ -258,7 +315,7 @@ window.renderLogAnalyzer = function (container, t) {
     const rawLogView = document.getElementById('raw-log-view');
     const logBtns = [btnLogKlippy, btnLogMoonraker, btnLogDmesg, btnLogDebug];
 
-    let currentLogData = { klippy: "", moonraker: "", dmesg: "", debug: "" };
+
 
     function setActiveLog(btn, content) {
         logBtns.forEach(b => b.classList.remove('active'));
@@ -390,10 +447,23 @@ window.renderLogAnalyzer = function (container, t) {
             if (inConfig && line.includes('=======================')) { inConfig = false; return; }
             if (inConfig) return;
 
+            // 1. Specific Patterns
             if (errorPatterns.some(p => p.test(line))) {
+                errors.push(line.trim());
+                return;
+            }
+
+            // 2. Generic "Error/Warning" Catch-all
+            const lower = line.toLowerCase();
+            if ((lower.includes('error') || lower.includes('warning') || lower.includes('!!')) &&
+                !lower.includes('stats:') &&
+                !lower.includes('check_fan_speed')) {
                 errors.push(line.trim());
             }
         });
+
+        currentErrors = errors; // Persist for AI re-run (e.g. key change)
+
         document.getElementById('error-list').innerHTML = errors.length > 0
             ? errors.slice(-10).map(e => `<div style="margin-bottom: 0.5rem; color: #FDA4AF; padding-left: 0.5rem; border-left: 2px solid var(--secondary);">${e}</div>`).join('')
             : '<p style="color: var(--text-muted);">No critical errors found.</p>';
@@ -439,15 +509,24 @@ window.renderLogAnalyzer = function (container, t) {
         // 6. Default Logs View
         setActiveLog(btnLogKlippy, currentLogData.klippy);
 
-        // 7. Reset AI Status
-        const statusEl = document.getElementById('ai-status');
-        if (statusEl) {
-            statusEl.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> ${t.analyzing}`;
-            statusEl.style.color = "var(--text-muted)";
+        // 7. Reset AI Status (Text Only)
+        const statusText = document.getElementById('ai-status-text');
+        if (statusText) {
+            statusText.style.color = "var(--text-muted)";
+            statusText.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> ${t.analyzing}`;
+        } else {
+            // Fallback for safety (though structure should guarantee text element)
+            const statusEl = document.getElementById('ai-status');
+            if (statusEl) {
+                statusEl.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> ${t.analyzing}`;
+                statusEl.style.color = "var(--text-muted)";
+            }
         }
 
         // 8. AI Trigger
-        setTimeout(() => runAiAnalysis(data, errors, kversion[0]), 1200);
+        // 8. AI Trigger
+        // Run async analysis
+        runAiAnalysis(data, errors, kversion[0]);
 
         if (window.lucide) window.lucide.createIcons();
     }
@@ -850,12 +929,24 @@ window.renderLogAnalyzer = function (container, t) {
         }
     }
 
-    function runAiAnalysis(data, errors, version) {
-        aiLoading.style.display = 'none';
-        aiContent.style.display = 'flex';
+    async function runAiAnalysis(data, errors, version) {
+        // Reset UI for loading
+        aiLoading.style.display = 'block';
+        aiContent.style.display = 'none';
 
-        // Detect Language
+        const statusContainer = document.getElementById('ai-status');
+        const statusText = document.getElementById('ai-status-text');
+
+        if (statusText) {
+            statusText.style.color = "var(--text-muted)";
+            statusText.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> Comparing patterns...`;
+        } else if (statusContainer) {
+            // Fallback if structure is different
+            statusContainer.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: var(--secondary); border-radius: 50%;"></span> Comparing patterns...`;
+        }
+
         const lang = document.querySelector('.lang-switch .active')?.id === 'btn-es' ? 'es' : 'en';
+        const apiKey = localStorage.getItem('3dwork_gemini_key');
 
         // Localized Strings
         const txt = {
@@ -883,20 +974,91 @@ window.renderLogAnalyzer = function (container, t) {
             diagBody: lang === 'es'
                 ? 'Klipper no pudo enviar comandos a la MCU a tiempo. Esto indica alta carga de CPU o demasiados micropasos para la frecuencia de la MCU.'
                 : 'Klipper failed to send commands to the MCU in time. This points to high CPU load or too many microsteps for the MCU\'s frequency.',
-            promptTitle: lang === 'es' ? 'SOLICITUD DE ANÁLISIS EXPERTO KLIPPER' : 'EXPERT KLIPPER ANALYSIS REQUEST',
-            promptInst: lang === 'es' ? 'Analice estos registros y proporcione una guía de resolución a nivel técnico en Español.' : 'Analyze these logs and provide a technician-level resolution guide.',
-            copied: lang === 'es' ? '¡Prompt AI Copiado!' : 'AI Prompt Copied!'
+            adcError: lang === 'es' ? 'Error de Sensor: ADC fuera de rango' : 'Sensor Error: ADC Out of Range',
+            adcBody: lang === 'es' ? 'Klipper detectó una lectura de temperatura inválida. Esto significa que el termistor está desconectado (circuito abierto) o los cables están en cortocircuito.' : 'Klipper detected an invalid temperature reading. This means the thermistor is unplugged (open circuit) or the wires are shorted.',
+            verifyWiring: lang === 'es' ? 'Verificar Cableado:' : 'Verify Wiring:',
+            verifyWiringBody: lang === 'es' ? 'Revise el conector del termistor en la placa base y busque cables rotos cerca del bloque calefactor.' : 'Check the thermistor plug on the mainboard and look for broken wires near the heater block.',
+            heaterError: lang === 'es' ? 'Fuga Térmica: Calentador No Calienta' : 'Thermal Runaway: Heater Not Heating',
+            heaterBody: lang === 'es' ? 'El calentador está encendido pero la temperatura no aumenta como se esperaba. Esto es una característica de seguridad para prevenir incendios.' : 'The heater is enabled but temperature is not rising as expected. This is a safety feature to prevent fires.',
+            tmcError: lang === 'es' ? 'Fallo de Controlador: Error TMC' : 'Driver Fault: TMC Error',
+            tmcBody: lang === 'es' ? 'El controlador paso a paso no responde o ha detectado un problema eléctrico (bobina abierta/corto).' : 'The stepper driver is not responding or has detected an electrical issue (open coil/short).',
+            canError: lang === 'es' ? 'Inestabilidad de Bus CAN' : 'CAN Bus Instability',
+            canBody: lang === 'es' ? 'Se detectó un alto número de "bytes_invalid" o retransmisiones en el bus CAN. Esto indica problemas físicos en el cableado o terminación.' : 'A high number of "bytes_invalid" or retransmits detected on the CAN bus. This points to physical wiring or termination issues.'
         };
-
-        // Update Status Indicator
-        const statusEl = document.getElementById('ai-status');
-        if (statusEl) {
-            statusEl.innerHTML = `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> ${txt.done}`;
-            statusEl.style.color = "#10b981";
-        }
 
         let reportTitle = txt.optimal;
         let recommendationHtml = txt.optimalBody;
+
+        // --- BRANCH: GEMINI API ---
+        if (apiKey) {
+            try {
+                if (statusEl) statusEl.innerHTML = `<span class="pulse" style="width: 8px; height: 8px; background: #8b5cf6; border-radius: 50%;"></span> Asking Gemini...`;
+
+                // Construct Prompt
+                const systemPrompt = `You are a 3D Printer Technician Expert in Klipper firmware.
+Analyze the provided log snippets.
+Respond with pure HTML content that exactly matches this structure (no markdown code blocks, no <html> or <body> tags, just the inner divs):
+
+<div>
+    <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 12px; border-left: 4px solid var(--primary); margin-bottom: 1rem;">
+        <h4 style="color: white; margin: 0; font-size: 1rem;">{Short Summary Title Here}</h4>
+    </div>
+    <div class="ai-step-card">
+        <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="search" style="width: 16px; color: var(--primary-light);"></i> Diagnosis</h4>
+        <p style="font-size: 0.85rem; color: #94a3b8;">{Detailed explanation of what went wrong}</p>
+    </div>
+    <div class="ai-step-card" style="border-left: 4px solid var(--primary); margin-top: 1rem;">
+         <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="wrench" style="width: 16px; color: var(--primary-light);"></i> Resolution Steps</h4>
+         <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <li>{Step 1}</li>
+            <li>{Step 2}</li>
+         </ul>
+    </div>
+</div>
+
+Language: ${lang === 'es' ? 'Spanish (Español)' : 'English'}
+Keep it concise. If no errors are found, say "System Optimal" and advise to check mechanicals.
+`;
+                const userMsg = `Firmware: ${version}\nErrors Found: ${errors.join('\n')}\nLast 50 Lines: ${currentLogData.klippy.slice(-3000)}`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt + "\n\n" + userMsg }] }] })
+                });
+
+                const json = await response.json();
+                if (json.error) throw new Error(json.error.message);
+
+                const rawHtml = json.candidates[0].content.parts[0].text
+                    .replace(/```html/g, '').replace(/```/g, '').trim(); // Cleanup MD
+
+                aiContent.innerHTML = rawHtml;
+
+                // Success State
+                // Success State
+                if (statusText) {
+                    statusText.innerHTML = `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> Gemini Analysis Done`;
+                    statusText.style.color = "#10b981";
+                } else if (statusContainer) {
+                    statusContainer.innerHTML = `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> Gemini Analysis Done`;
+                    statusContainer.style.color = "#10b981";
+                }
+                aiLoading.style.display = 'none';
+                aiContent.style.display = 'flex';
+                if (window.lucide) window.lucide.createIcons();
+                return; // Exit, do not use local fallback logic used below
+
+            } catch (apiError) {
+                console.error("Gemini Error:", apiError);
+                if (statusEl) statusEl.innerHTML += ` <span style="font-size:0.7em; color: #ef4444;">(API Fail: ${apiError.message})</span>`;
+                // Fall through to local logic below...
+            }
+        }
+
+        // --- BRANCH: LOCAL HEURISTICS (Fallback) ---
+        // Artificial delay for UX
+        await new Promise(r => setTimeout(r, 800));
 
         if (errors.some(e => e.includes('Unable to open serial port'))) {
             reportTitle = txt.mcuFail;
@@ -921,6 +1083,41 @@ window.renderLogAnalyzer = function (container, t) {
                         <p style="font-size: 0.85rem; color: #94a3b8;">${txt.diagBody}</p>
                     </div>
                 `;
+        } else if (errors.some(e => e.includes('ADC out of range'))) {
+            reportTitle = txt.adcError;
+            recommendationHtml = `
+                <div class="ai-step-card">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="thermometer" style="width: 16px; color: #ef4444;"></i> ${txt.diag}</h4>
+                    <p style="font-size: 0.85rem; color: #94a3b8;">${txt.adcBody}</p>
+                </div>
+                <div class="ai-step-card" style="border-left: 4px solid var(--primary); margin-top: 1rem;">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="wrench" style="width: 16px; color: var(--primary-light);"></i> ${txt.steps}</h4>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem;">
+                        <li><strong>${txt.verifyWiring}</strong> ${txt.verifyWiringBody}</li>
+                    </ul>
+                </div>`;
+        } else if (errors.some(e => e.includes('Heater') && e.includes('not heating'))) {
+            reportTitle = txt.heaterError;
+            recommendationHtml = `
+                <div class="ai-step-card">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="flame" style="width: 16px; color: #ef4444;"></i> ${txt.diag}</h4>
+                    <p style="font-size: 0.85rem; color: #94a3b8;">${txt.heaterBody}</p>
+                </div>`;
+        } else if (errors.some(e => e.includes('TMC') && e.includes('reports error'))) {
+            reportTitle = txt.tmcError;
+            recommendationHtml = `
+                <div class="ai-step-card">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="cpu" style="width: 16px; color: #ef4444;"></i> ${txt.diag}</h4>
+                    <p style="font-size: 0.85rem; color: #94a3b8;">${txt.tmcBody}</p>
+                </div>`;
+        } else if (currentLogData.klippy.match(/bytes_invalid=[1-9]/)) {
+            // Check if specifically high invalid bytes (naive check for presence for now)
+            reportTitle = txt.canError;
+            recommendationHtml = `
+                <div class="ai-step-card">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="network" style="width: 16px; color: #f59e0b;"></i> ${txt.diag}</h4>
+                    <p style="font-size: 0.85rem; color: #94a3b8;">${txt.canBody}</p>
+                </div>`;
         }
 
         aiContent.innerHTML = `
@@ -930,13 +1127,16 @@ window.renderLogAnalyzer = function (container, t) {
             ${recommendationHtml}
         `;
 
-        btnAiPrompt.onclick = () => {
-            const prompt = `${txt.promptTitle}
-Logs: ${currentLogData.klippy.slice(-2000)}
-Errors: ${errors.join('\n')}
-${txt.promptInst}`;
-            navigator.clipboard.writeText(prompt).then(() => alert(txt.copied));
-        };
+        if (statusText) {
+            statusText.innerHTML = `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> ${txt.done}`;
+            statusText.style.color = "#10b981";
+        } else if (statusContainer) {
+            statusContainer.innerHTML = `<span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span> ${txt.done}`;
+            statusContainer.style.color = "#10b981";
+        }
+
+        aiLoading.style.display = 'none';
+        aiContent.style.display = 'flex';
 
         if (window.lucide) window.lucide.createIcons();
     }
