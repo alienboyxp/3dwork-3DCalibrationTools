@@ -14,13 +14,13 @@ window.renderLogAnalyzer = function (container, t) {
                 <!-- LOG RETRIEVAL OPTIONS -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                     <!-- OPTION A: AUTOMATED -->
-                    <div class="info-box" style="background: rgba(139, 92, 246, 0.05); border: 1px solid var(--primary); margin: 0; display: flex; flex-direction: column; height: 100%;">
+                    <div class="info-box" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); margin: 0; display: flex; flex-direction: column; height: 100%;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h3 style="margin: 0; font-size: 1rem; color: var(--primary-light); display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">A</span>
+                            <h3 style="margin: 0; font-size: 1rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="background: var(--glass-border); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">A</span>
                                 ${t.optionA}
                             </h3>
-                            <span class="badge badge-klipper" style="font-size: 0.7rem;">${t.recommended}</span>
+                            <span class="badge" style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid #fbbf24; padding: 2px 8px; border-radius: 12px; margin-left: 0.5rem;">UNDER DEVELOPMENT</span>
                         </div>
                         <p style="font-size: 0.85rem; margin-bottom: 1.5rem; color: var(--text-muted); flex-grow: 1;">
                             ${t.logRetrieveDesc}
@@ -34,12 +34,13 @@ window.renderLogAnalyzer = function (container, t) {
                     </div>
 
                     <!-- OPTION B: MANUAL -->
-                    <div class="info-box" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); margin: 0; display: flex; flex-direction: column; height: 100%;">
+                    <div class="info-box" style="background: rgba(139, 92, 246, 0.05); border: 1px solid var(--primary); margin: 0; display: flex; flex-direction: column; height: 100%;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                            <h3 style="margin: 0; font-size: 1rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="background: var(--glass-border); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">B</span>
+                            <h3 style="margin: 0; font-size: 1rem; color: var(--primary-light); display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="background: var(--primary); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem;">B</span>
                                 ${t.optionB}
                             </h3>
+                            <span class="badge badge-klipper" style="font-size: 0.7rem; margin-left: 0.5rem;">${t.recommended}</span>
                         </div>
                         <p style="font-size: 0.85rem; margin-bottom: 1rem; color: var(--text-muted); flex-grow: 1;">
                             ${t.logUploadDesc}
