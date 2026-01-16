@@ -23,6 +23,15 @@ function handleRouting() {
     renderView();
     updateActiveNavItem();
 
+    // Google Analytics Tracking
+    if (typeof gtag === 'function') {
+        gtag('event', 'page_view', {
+            page_title: currentView.charAt(0).toUpperCase() + currentView.slice(1),
+            page_path: '/' + currentView,
+            page_location: window.location.href
+        });
+    }
+
     // Auto-scroll to top on navigation
     window.scrollTo(0, 0);
 }
