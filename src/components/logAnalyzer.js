@@ -414,9 +414,23 @@ window.renderLogAnalyzer = function (container, t) {
         document.getElementById('sum-klipper').textContent = kversion[0];
 
         // MCU Status
-        const mcuFail = currentLogData.klippy.includes('mcu \'\')') || currentLogData.klippy.includes('Unable to open serial port');
-        document.getElementById('sum-mcu').textContent = mcuFail ? "🔴 Disconnected / Port Error" : "🟢 Connected";
-        document.getElementById('sum-mcu').style.color = mcuFail ? "var(--secondary)" : "var(--primary-light)";
+        const kLog = currentLogData.klippy;
+        const mcuProtoFail = kLog.includes('MCU Protocol error') || kLog.includes('Protocol error') || kLog.includes('Unable to extract params');
+        const mcuFail = kLog.includes('mcu \'\')') || kLog.includes('Unable to open serial port') || kLog.includes('Unable to connect');
+
+        let mcuStatusText = "🟢 Connected";
+        let mcuStatusColor = "var(--primary-light)";
+
+        if (mcuProtoFail) {
+            mcuStatusText = "🟠 Protocol Error / Outdated";
+            mcuStatusColor = "#f59e0b";
+        } else if (mcuFail) {
+            mcuStatusText = "🔴 Disconnected / Port Error";
+            mcuStatusColor = "var(--secondary)";
+        }
+
+        document.getElementById('sum-mcu').textContent = mcuStatusText;
+        document.getElementById('sum-mcu').style.color = mcuStatusColor;
 
         // OS Detection
         if (data.debug) {
@@ -427,7 +441,10 @@ window.renderLogAnalyzer = function (container, t) {
         }
 
         // 2. Error Extraction
-        const errors = [];
+        let errors = [];
+        const hostStats = { version: "Unknown" };
+        const mcuStats = {}; // { mcu_name: version }
+
         const errorPatterns = [
             /^!! /, // Critical errors start with !!
             /Transition to shutdown state:/,
@@ -438,19 +455,71 @@ window.renderLogAnalyzer = function (container, t) {
             /Unable to open serial port/,
             /Timer too close/,
             /Missed scheduling of next .* event/,
-            /MCU error during connect/
+            /MCU error during connect/,
+            /MCU Protocol error/,
+            /Protocol error/,
+            /Unable to extract params/,
+            /Unable to connect/,
+            /KeyError: 'bytes_per_report'/,
+            /msgproto\.error:/
         ];
 
         let inConfig = false;
+        let firmwareUpdateBlock = [];
+        let capturingFirmwareBlock = false;
+
         currentLogData.klippy.split('\n').forEach(line => {
-            // Filter out config dumps (macros often contain "error" text)
-            if (line.includes('===== Config file')) { inConfig = true; return; }
-            if (inConfig && line.includes('=======================')) { inConfig = false; return; }
+            const trimmedLine = line.trim();
+            if (!trimmedLine) return;
+
+            // Filter out config dumps and MCU build configs
+            if (line.includes('===== Config file') || line.includes('Last MCU build config')) {
+                inConfig = true;
+                return;
+            }
+            if (inConfig && line.includes('=======================')) {
+                inConfig = false;
+                return;
+            }
             if (inConfig) return;
+
+            // --- VERSION SCANNING ---
+            // Host Version
+            const hostVerMatch = line.match(/Git version:\s+'([^']+)'/);
+            if (hostVerMatch) hostStats.version = hostVerMatch[1];
+
+            // MCU Version
+            const mcuVerMatch = line.match(/Loaded MCU '([^']+)' \d+ commands \(([^\s\/]+)/);
+            if (mcuVerMatch) {
+                const name = mcuVerMatch[1];
+                const ver = mcuVerMatch[2];
+                mcuStats[name] = ver;
+            }
+
+            // FILTER: Noise / Tracebacks purely internal
+            if (trimmedLine.startsWith('raise error(') ||
+                trimmedLine.startsWith('self._error(') ||
+                trimmedLine.startsWith('File "') ||
+                trimmedLine.startsWith('Traceback (')) return;
+
+            // Capture firmware update diagnostic block
+            if (line.includes("Your Klipper version is:") || line.includes("MCU(s) which should be updated:")) {
+                capturingFirmwareBlock = true;
+                firmwareUpdateBlock = [];
+            }
+
+            if (capturingFirmwareBlock) {
+                firmwareUpdateBlock.push(trimmedLine);
+                // End block when we hit the restart instruction or after a few lines
+                if (line.includes("reload the config and restart") || firmwareUpdateBlock.length > 15) {
+                    capturingFirmwareBlock = false;
+                    errors.push(firmwareUpdateBlock.join('\n'));
+                }
+            }
 
             // 1. Specific Patterns
             if (errorPatterns.some(p => p.test(line))) {
-                errors.push(line.trim());
+                errors.push(trimmedLine);
                 return;
             }
 
@@ -458,15 +527,37 @@ window.renderLogAnalyzer = function (container, t) {
             const lower = line.toLowerCase();
             if ((lower.includes('error') || lower.includes('warning') || lower.includes('!!')) &&
                 !lower.includes('stats:') &&
-                !lower.includes('check_fan_speed')) {
-                errors.push(line.trim());
+                !lower.includes('check_fan_speed') &&
+                !lower.includes('ready_bytes')) {
+                errors.push(trimmedLine);
             }
         });
 
-        currentErrors = errors; // Persist for AI re-run (e.g. key change)
+        // Create explicit Version Card if we have issues
+        if (mcuProtoFail || mcuFail) {
+            let verHtml = `<strong>Host:</strong> ${hostStats.version}\n`;
+            let mismatch = false;
+            Object.keys(mcuStats).forEach(m => {
+                const mVer = mcuStats[m];
+                const isMismatch = hostStats.version !== "Unknown" && !hostStats.version.startsWith(mVer) && !mVer.startsWith(hostStats.version);
+                if (isMismatch) mismatch = true;
+                verHtml += `<strong>MCU '${m}':</strong> ${mVer}${isMismatch ? ' ⚠️ (MISMATCH)' : ''}\n`;
+            });
 
-        document.getElementById('error-list').innerHTML = errors.length > 0
-            ? errors.slice(-10).map(e => `<div style="margin-bottom: 0.5rem; color: #FDA4AF; padding-left: 0.5rem; border-left: 2px solid var(--secondary);">${e}</div>`).join('')
+            const cardColor = mismatch ? "#fbbf24" : "var(--primary-light)";
+            const title = mismatch ? "⚠️ VERSION MISMATCH DETECTED" : "ℹ️ SYSTEM VERSIONS";
+
+            errors.unshift(`<div style="font-weight: bold; margin-bottom: 0.4rem; color: ${cardColor};">${title}</div>${verHtml}`);
+        }
+
+        // De-duplicate and keep latest unique errors
+        const uniqueErrors = [...new Set(errors)].reverse();
+        currentErrors = uniqueErrors; // Persist for AI re-run (e.g. key change)
+
+        document.getElementById('error-list').innerHTML = uniqueErrors.length > 0
+            ? uniqueErrors.slice(0, 10).map(e => `
+                <div style="margin-bottom: 0.8rem; color: #FDA4AF; padding: 0.8rem; border-left: 3px solid var(--secondary); background: rgba(244, 63, 94, 0.03); border-radius: 4px; white-space: pre-wrap; font-size: 0.75rem;">${e}</div>
+            `).join('')
             : '<p style="color: var(--text-muted);">No critical errors found.</p>';
 
         // 3. Process Sessions & Graphs
@@ -525,9 +616,8 @@ window.renderLogAnalyzer = function (container, t) {
         }
 
         // 8. AI Trigger
-        // 8. AI Trigger
         // Run async analysis
-        runAiAnalysis(data, errors, kversion[0]);
+        runAiAnalysis(data, uniqueErrors, kversion[0]);
 
         if (window.lucide) window.lucide.createIcons();
     }
@@ -984,7 +1074,15 @@ window.renderLogAnalyzer = function (container, t) {
             tmcError: lang === 'es' ? 'Fallo de Controlador: Error TMC' : 'Driver Fault: TMC Error',
             tmcBody: lang === 'es' ? 'El controlador paso a paso no responde o ha detectado un problema eléctrico (bobina abierta/corto).' : 'The stepper driver is not responding or has detected an electrical issue (open coil/short).',
             canError: lang === 'es' ? 'Inestabilidad de Bus CAN' : 'CAN Bus Instability',
-            canBody: lang === 'es' ? 'Se detectó un alto número de "bytes_invalid" o retransmisiones en el bus CAN. Esto indica problemas físicos en el cableado o terminación.' : 'A high number of "bytes_invalid" or retransmits detected on the CAN bus. This points to physical wiring or termination issues.'
+            canBody: lang === 'es' ? 'Se detectó un alto número de "bytes_invalid" o retransmisiones en el bus CAN. Esto indica problemas físicos en el cableado o terminación.' : 'A high number of "bytes_invalid" or retransmits detected on the CAN bus. This points to physical wiring or termination issues.',
+            mcuProtocolError: lang === 'es' ? 'Error de Protocolo: Firmware de MCU Desactualizado' : 'Protocol Error: MCU Firmware Outdated',
+            mcuProtocolBody: lang === 'es'
+                ? 'La MCU está ejecutando una versión de Klipper diferente a la del host. Esto suele ocurrir después de actualizar Klipper en la Pi sin volver a flashear el firmware de la MCU.'
+                : 'The MCU is running a different version of Klipper than the host. This usually happens after updating Klipper on the Pi without reflashing the MCU firmware.',
+            updateMcu: lang === 'es' ? 'Actualizar Firmware de MCU:' : 'Update MCU Firmware:',
+            updateMcuBody: lang === 'es'
+                ? 'Recompila y flashea el firmware de tu MCU. Puedes seguir la guía en <a href="https://klipper.3dwork.io" target="_blank" style="color:var(--primary-light);">klipper.3dwork.io</a> para generar y aplicar el firmware actualizado.'
+                : 'Recompile and flash the firmware for your MCU. You can follow the guide at <a href="https://klipper.3dwork.io" target="_blank" style="color:var(--primary-light);">klipper.3dwork.io</a> to generate and apply the updated firmware.'
         };
 
         let reportTitle = txt.optimal;
@@ -1019,6 +1117,7 @@ Respond with pure HTML content that exactly matches this structure (no markdown 
 
 Language: ${lang === 'es' ? 'Spanish (Español)' : 'English'}
 Keep it concise. If no errors are found, say "System Optimal" and advise to check mechanicals.
+If you see "MCU Protocol error" or "Unable to extract params", it means the MCU firmware is outdated relative to the host. Advise the user to recompile and flash the MCU firmware. Highly recommend visiting https://klipper.3dwork.io for updated firmware guides.
 `;
                 const userMsg = `Firmware: ${version}\nErrors Found: ${errors.join('\n')}\nLast 50 Lines: ${currentLogData.klippy.slice(-3000)}`;
 
@@ -1061,7 +1160,26 @@ Keep it concise. If no errors are found, say "System Optimal" and advise to chec
         // Artificial delay for UX
         await new Promise(r => setTimeout(r, 800));
 
-        if (errors.some(e => e.includes('Unable to open serial port'))) {
+        if (errors.some(e => {
+            const low = e.toLowerCase();
+            return low.includes('mcu protocol error') || low.includes('protocol error') || low.includes('unable to extract params') || low.includes('bytes_per_report');
+        })) {
+            reportTitle = txt.mcuProtocolError;
+            recommendationHtml = `
+                <div class="ai-step-card">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="cpu" style="width: 16px; color: #ef4444;"></i> ${txt.diag}</h4>
+                    <p style="font-size: 0.85rem; color: #94a3b8;">${txt.mcuProtocolBody}</p>
+                </div>
+                <div class="ai-step-card" style="border-left: 4px solid var(--primary); margin-top: 1rem;">
+                    <h4 style="color: white; margin-bottom: 0.5rem;"><i data-lucide="wrench" style="width: 16px; color: var(--primary-light);"></i> ${txt.steps}</h4>
+                    <ul style="font-size: 0.85rem; color: #cbd5e1; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li><strong>${txt.updateMcu}</strong> ${txt.updateMcuBody}</li>
+                    </ul>
+                </div>`;
+        } else if (errors.some(e => {
+            const low = e.toLowerCase();
+            return low.includes('unable to open serial port') || low.includes('unable to connect') || low.includes('resource temporarily unavailable');
+        })) {
             reportTitle = txt.mcuFail;
             recommendationHtml = `
                 <div class="ai-step-card">

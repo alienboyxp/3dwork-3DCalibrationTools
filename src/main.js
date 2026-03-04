@@ -20,6 +20,12 @@ function handleRouting() {
     const hash = window.location.hash.replace('#', '');
     currentView = hash || 'home';
 
+    if (currentView === 'lithophane' || currentView === 'hueforge') {
+        const toolHash = currentView === 'lithophane' ? '#litho' : '#hue';
+        window.location.href = `3d-tools/index.html${toolHash}`;
+        return;
+    }
+
     renderView();
     updateActiveNavItem();
 
@@ -73,10 +79,15 @@ function updateUILabels() {
 
     if (navHome) navHome.textContent = 'Home'; // Could be localized if needed
     if (navCalibrationMenu) {
-        // Keep the icon if it exists
         const icon = navCalibrationMenu.querySelector('i');
         navCalibrationMenu.textContent = t.calibrationMenu + ' ';
         if (icon) navCalibrationMenu.appendChild(icon);
+    }
+    const navCreateMenu = document.getElementById('nav-create-menu');
+    if (navCreateMenu) {
+        const icon = navCreateMenu.querySelector('i');
+        navCreateMenu.textContent = t.createMenu + ' ';
+        if (icon) navCreateMenu.appendChild(icon);
     }
     if (navEsteps) navEsteps.textContent = t.esteps;
     if (navRotation) navRotation.textContent = t.rotation;
@@ -93,6 +104,18 @@ function updateUILabels() {
 
     const navShaper = document.getElementById('nav-shaper');
     if (navShaper) navShaper.textContent = t.shaperTitle;
+
+    const navLithophane = document.getElementById('nav-lithophane');
+    if (navLithophane) navLithophane.textContent = t.lithophaneTitle;
+
+    const navHueForge = document.getElementById('nav-hueforge');
+    if (navHueForge) navHueForge.textContent = t.hueforgeTitle;
+
+    const navLitho = document.getElementById('nav-lithophane');
+    if (navLitho) navLitho.textContent = t.lithophaneTitle;
+
+    const navHue = document.getElementById('nav-hueforge');
+    if (navHue) navHue.textContent = t.hueforgeTitle;
 
     const navLogAnalyzer = document.getElementById('nav-loganalyzer');
     if (navLogAnalyzer) navLogAnalyzer.textContent = t.logAnalyzerTitle;

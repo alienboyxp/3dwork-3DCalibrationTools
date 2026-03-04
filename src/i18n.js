@@ -292,7 +292,12 @@ window.translations = {
         graphsTitle: "System Graphs",
         sessionSelector: "Session",
         temperatureGraph: "Temperatures",
-        loadGraph: "System Load (Host/MCU)"
+        loadGraph: "System Load (Host/MCU)",
+        lithophaneTitle: "Lithophane Creator",
+        lithophaneSummary: "Generate 3D-printable solid blocks from photos with aspect ratio control and watertight geometry.",
+        hueforgeTitle: "HueForge Creator",
+        hueforgeSummary: "Simulate multi-color filament painting based on Transmission Distance (TD) blending logic.",
+        createMenu: "3D Create"
     },
     es: {
         title: "3Dwork - Herramientas de Calibración 3D",
@@ -590,6 +595,11 @@ window.translations = {
         graphsTitle: "Gráficos del Sistema",
         sessionSelector: "Sesión",
         temperatureGraph: "Temperaturas",
-        loadGraph: "Carga del Sistema (Host/MCU)"
+        loadGraph: "Carga del Sistema (Host/MCU)",
+        lithophaneTitle: "Creador de Litofonías",
+        lithophaneSummary: "Genera bloques sólidos imprimibles en 3D a partir de fotos con control de relación de aspecto y geometría estanca.",
+        hueforgeTitle: "Creador HueForge",
+        hueforgeSummary: "Simula pintura de filamentos multicolor basada en la lógica de mezcla de Distancia de Transmisión (TD).",
+        createMenu: "Creación 3D"
     }
 };

@@ -10,6 +10,44 @@ window.renderHome = function (container, t) {
             </div>
 
             <div class="tool-grid">
+                <!-- ROW 1: LITHOPHANE & HUEFORGE (50/50 Split) -->
+                <a href="3d-tools/index.html#litho" class="tool-card" id="card-lithophane" style="grid-column: span 2; border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="badge-container">
+                        <span class="badge" style="background:rgba(255,120,0,0.15);color:#FF9A3C;border:1px solid rgba(255,120,0,0.3);">NEW</span>
+                    </div>
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(255,120,0,0.12); color: #FF9A3C;">
+                                <i data-lucide="image"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.lithophaneTitle}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.lithophaneSummary}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+
+                <a href="3d-tools/index.html#hue" class="tool-card" id="card-hueforge" style="grid-column: span 2; border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="badge-container">
+                        <span class="badge" style="background:rgba(59,130,246,0.15);color:#93C5FD;border:1px solid rgba(59,130,246,0.3);">LABS</span>
+                    </div>
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(59,130,246,0.12); color: #93C5FD;">
+                                <i data-lucide="palette"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.hueforgeTitle}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.hueforgeSummary}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+
+                <!-- ROW 2: CALIBRATION TOOLS -->
                 <a href="#esteps" class="tool-card" id="card-esteps">
                     <div class="badge-container">
                         <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
@@ -84,6 +122,7 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
 
+                <!-- ROW 3: ADVANCED TOOLS -->
                 <a href="#bedleveling" class="tool-card" id="card-bedleveling">
                     <div class="badge-container">
                         <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
@@ -157,6 +196,7 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
 
+                <!-- ROW 4: PRICE CALCULATOR (Full Width) -->
                 <a href="#price" class="tool-card col-span-full" id="card-price">
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
