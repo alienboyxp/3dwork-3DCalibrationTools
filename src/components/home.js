@@ -232,7 +232,7 @@ window.renderHome = function (container, t) {
 
             </div>
         </div>
-    \`;
+    `;
 
     if (window.lucide) {
         window.lucide.createIcons();
