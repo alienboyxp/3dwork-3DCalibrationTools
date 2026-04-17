@@ -1,5 +1,5 @@
-window.renderComparator = function (container, t) {
-    const PRINTERS_URL = './src/assets/printers.json';
+window.renderComparator = function (container, t, opts) {
+    const PRINTERS_URL = (opts && opts.dataUrl) || './src/assets/printers.json';
     let allPrinters = [];
     let selected = new Set();
     let activeType = 'all';
@@ -9,34 +9,40 @@ window.renderComparator = function (container, t) {
     const SPEC_DEFS = {
         FDM: [
             { key: 'build_volume', label: { en: 'Build Volume', es: 'Volumen impresión' }, format: p => `${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z} mm`, best: null },
-            { key: 'speed_max', label: { en: 'Max Speed', es: 'Velocidad máx.' }, format: p => `${p.specs.speed_max} mm/s`, best: 'max' },
-            { key: 'nozzle_temp_max', label: { en: 'Nozzle Temp', es: 'Temp. nozzle' }, format: p => `${p.specs.nozzle_temp_max}°C`, best: 'max' },
-            { key: 'bed_temp_max', label: { en: 'Bed Temp', es: 'Temp. cama' }, format: p => `${p.specs.bed_temp_max}°C`, best: 'max' },
-            { key: 'layer_min', label: { en: 'Min Layer Height', es: 'Capa mínima' }, format: p => `${p.specs.layer_min} mm`, best: 'min' },
-            { key: 'extruder', label: { en: 'Extruder', es: 'Extrusor' }, format: p => p.specs.extruder, best: null },
-            { key: 'auto_leveling', label: { en: 'Auto Leveling', es: 'Nivelación auto' }, format: p => p.specs.auto_leveling ? '✓' : '✗', best: null },
-            { key: 'multi_material', label: { en: 'Multi-Material', es: 'Multifilamento' }, format: p => p.specs.multi_material ? '✓' : '✗', best: null },
-            { key: 'enclosed', label: { en: 'Enclosed', es: 'Cerrada' }, format: p => p.specs.enclosed ? '✓' : '✗', best: null },
-            { key: 'firmware', label: { en: 'Firmware', es: 'Firmware' }, format: p => p.specs.firmware, best: null },
-            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => `~${p.specs.price_eur}€`, best: 'min' },
+            { key: 'speed_max', label: { en: 'Max Speed', es: 'Velocidad máx.' }, format: p => p.specs.speed_max ? `${p.specs.speed_max} mm/s` : '—', best: 'max' },
+            { key: 'nozzle_temp_max', label: { en: 'Nozzle Temp', es: 'Temp. nozzle' }, format: p => p.specs.nozzle_temp_max ? `${p.specs.nozzle_temp_max}°C` : '—', best: 'max' },
+            { key: 'bed_temp_max', label: { en: 'Bed Temp', es: 'Temp. cama' }, format: p => p.specs.bed_temp_max ? `${p.specs.bed_temp_max}°C` : '—', best: 'max' },
+            { key: 'layer_min', label: { en: 'Min Layer Height', es: 'Capa mínima' }, format: p => p.specs.layer_min ? `${p.specs.layer_min} mm` : '—', best: 'min' },
+            { key: 'extruder', label: { en: 'Extruder', es: 'Extrusor' }, format: p => p.specs.extruder || '—', best: null },
+            { key: 'auto_leveling', label: { en: 'Auto Leveling', es: 'Nivelación auto' }, format: p => p.specs.auto_leveling != null ? (p.specs.auto_leveling ? '✓' : '✗') : '—', best: null },
+            { key: 'multi_material', label: { en: 'Multi-Material', es: 'Multifilamento' }, format: p => p.specs.multi_material != null ? (p.specs.multi_material ? '✓' : '✗') : '—', best: null },
+            { key: 'enclosed', label: { en: 'Enclosed', es: 'Cerrada' }, format: p => p.specs.enclosed != null ? (p.specs.enclosed ? '✓' : '✗') : '—', best: null },
+            { key: 'firmware', label: { en: 'Firmware', es: 'Firmware' }, format: p => p.specs.firmware || '—', best: null },
+            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
         ],
         Resina: [
             { key: 'build_volume', label: { en: 'Build Volume', es: 'Volumen impresión' }, format: p => `${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z} mm`, best: null },
-            { key: 'xy_resolution_mm', label: { en: 'XY Resolution', es: 'Resolución XY' }, format: p => `${p.specs.xy_resolution_mm} mm (${p.specs.resolution_label})`, best: 'min' },
-            { key: 'layer_min', label: { en: 'Min Layer', es: 'Capa mínima' }, format: p => `${p.specs.layer_min} mm`, best: 'min' },
-            { key: 'light_source', label: { en: 'Light Source', es: 'Fuente luz' }, format: p => p.specs.light_source, best: null },
-            { key: 'wavelength_nm', label: { en: 'Wavelength', es: 'Longitud onda' }, format: p => `${p.specs.wavelength_nm} nm`, best: null },
-            { key: 'lift_speed', label: { en: 'Lift Speed', es: 'Vel. elevación' }, format: p => `${p.specs.lift_speed} mm/s`, best: 'max' },
-            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => `~${p.specs.price_eur}€`, best: 'min' },
+            { key: 'xy_resolution_mm', label: { en: 'XY Resolution', es: 'Resolución XY' }, format: p => p.specs.xy_resolution_mm ? `${p.specs.xy_resolution_mm} mm (${p.specs.resolution_label||''})` : '—', best: 'min' },
+            { key: 'layer_min', label: { en: 'Min Layer', es: 'Capa mínima' }, format: p => p.specs.layer_min ? `${p.specs.layer_min} mm` : '—', best: 'min' },
+            { key: 'light_source', label: { en: 'Light Source', es: 'Fuente luz' }, format: p => p.specs.light_source || '—', best: null },
+            { key: 'wavelength_nm', label: { en: 'Wavelength', es: 'Longitud onda' }, format: p => p.specs.wavelength_nm ? `${p.specs.wavelength_nm} nm` : '—', best: null },
+            { key: 'lift_speed', label: { en: 'Lift Speed', es: 'Vel. elevación' }, format: p => p.specs.lift_speed ? `${p.specs.lift_speed} mm/s` : '—', best: 'max' },
+            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
         ],
         Escaner: [
-            { key: 'accuracy_mm', label: { en: 'Accuracy', es: 'Precisión' }, format: p => `${p.specs.accuracy_mm} mm`, best: 'min' },
-            { key: 'resolution_mm', label: { en: 'Resolution', es: 'Resolución' }, format: p => `${p.specs.resolution_mm} mm`, best: 'min' },
-            { key: 'scan_mode', label: { en: 'Scan Mode', es: 'Modo escaneo' }, format: p => p.specs.scan_mode, best: null },
-            { key: 'scan_area', label: { en: 'Scan Area', es: 'Área escaneo' }, format: p => p.specs.scan_area, best: null },
-            { key: 'color_scan', label: { en: 'Color Scan', es: 'Escaneo color' }, format: p => p.specs.color_scan ? '✓' : '✗', best: null },
-            { key: 'output_format', label: { en: 'Output Formats', es: 'Formatos salida' }, format: p => p.specs.output_format, best: null },
-            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => `~${p.specs.price_eur}€`, best: 'min' },
+            { key: 'accuracy_mm', label: { en: 'Accuracy', es: 'Precisión' }, format: p => p.specs.accuracy_mm ? `${p.specs.accuracy_mm} mm` : '—', best: 'min' },
+            { key: 'resolution_mm', label: { en: 'Resolution', es: 'Resolución' }, format: p => p.specs.resolution_mm ? `${p.specs.resolution_mm} mm` : '—', best: 'min' },
+            { key: 'scan_mode', label: { en: 'Scan Mode', es: 'Modo escaneo' }, format: p => p.specs.scan_mode || '—', best: null },
+            { key: 'scan_area', label: { en: 'Scan Area', es: 'Área escaneo' }, format: p => p.specs.scan_area || '—', best: null },
+            { key: 'color_scan', label: { en: 'Color Scan', es: 'Escaneo color' }, format: p => p.specs.color_scan != null ? (p.specs.color_scan ? '✓' : '✗') : '—', best: null },
+            { key: 'output_format', label: { en: 'Output Formats', es: 'Formatos salida' }, format: p => p.specs.output_format || '—', best: null },
+            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
+        ],
+        Laser: [
+            { key: 'work_area', label: { en: 'Work Area', es: 'Área trabajo' }, format: p => p.specs.work_area || '—', best: null },
+            { key: 'laser_power', label: { en: 'Laser Power', es: 'Potencia láser' }, format: p => p.specs.laser_power || '—', best: null },
+            { key: 'speed_max', label: { en: 'Max Speed', es: 'Vel. máx.' }, format: p => p.specs.speed_max ? `${p.specs.speed_max} mm/min` : '—', best: 'max' },
+            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
         ]
     };
 
@@ -47,6 +53,7 @@ window.renderComparator = function (container, t) {
     }
 
     function getScoreColor(score) {
+        if (!score) return '#94A3B8';
         if (score >= 9) return '#10B981';
         if (score >= 8) return '#8B5CF6';
         if (score >= 7) return '#F59E0B';
@@ -54,6 +61,7 @@ window.renderComparator = function (container, t) {
     }
 
     function getStars(score) {
+        if (!score) return '';
         const full = Math.floor(score / 2);
         const half = (score % 2) >= 1 ? 1 : 0;
         return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
@@ -79,12 +87,17 @@ window.renderComparator = function (container, t) {
             return;
         }
         if (noResults) noResults.style.display = 'none';
-        const lang = window.currentLang || 'en';
+        const lang = window.currentLang || 'es';
 
         list.forEach(p => {
             const isSelected = selected.has(p.id);
             const scoreColor = getScoreColor(p.score);
-            const imgSrc = p.image;
+            const scoreHtml = p.score
+                ? `<div class="comp-card__score" style="color:${scoreColor}">
+                      <span class="comp-card__score-num">${p.score}</span>
+                      <span class="comp-card__score-stars">${getStars(p.score)}</span>
+                   </div>`
+                : '';
 
             const card = document.createElement('div');
             card.className = 'comp-card' + (isSelected ? ' comp-card--selected' : '');
@@ -92,7 +105,7 @@ window.renderComparator = function (container, t) {
             card.innerHTML = `
                 <div class="comp-card__header">
                     <div class="comp-card__img-wrap">
-                        <img src="${imgSrc}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                         <div class="comp-card__img-placeholder" style="display:none"><i data-lucide="printer"></i></div>
                     </div>
                     <div class="comp-card__badge-row">
@@ -100,10 +113,7 @@ window.renderComparator = function (container, t) {
                         <span class="comp-card__brand">${p.brand}</span>
                     </div>
                     <h3 class="comp-card__name">${p.name}</h3>
-                    <div class="comp-card__score" style="color:${scoreColor}">
-                        <span class="comp-card__score-num">${p.score}</span>
-                        <span class="comp-card__score-stars">${getStars(p.score)}</span>
-                    </div>
+                    ${scoreHtml}
                 </div>
                 <div class="comp-card__quick-specs">
                     ${getQuickSpecs(p, lang)}
@@ -114,9 +124,9 @@ window.renderComparator = function (container, t) {
                             ? `<i data-lucide="check-square"></i> ${lang === 'es' ? 'Seleccionado' : 'Selected'}`
                             : `<i data-lucide="square"></i> ${lang === 'es' ? 'Comparar' : 'Compare'}`}
                     </button>
-                    <a href="${p.reviewUrl}" target="_blank" class="comp-btn-review">
-                        ${lang === 'es' ? 'Ver review' : 'Full review'} <i data-lucide="external-link"></i>
-                    </a>
+                    ${p.reviewUrl ? `<a href="${p.reviewUrl}" target="_blank" class="comp-btn-review">
+                        ${lang === 'es' ? 'Review' : 'Review'} <i data-lucide="external-link"></i>
+                    </a>` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -145,25 +155,36 @@ window.renderComparator = function (container, t) {
 
     function getQuickSpecs(p, lang) {
         if (p.type === 'FDM') {
+            const vol = (p.specs.build_x && p.specs.build_y && p.specs.build_z)
+                ? `${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z}mm` : '—';
             return `
-                <div class="qs"><span>${lang === 'es' ? 'Volumen' : 'Volume'}</span><b>${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z}mm</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Vel. máx.' : 'Max speed'}</span><b>${p.specs.speed_max} mm/s</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Extrusor' : 'Extruder'}</span><b>${p.specs.extruder}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>~${p.specs.price_eur}€</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Volumen' : 'Volume'}</span><b>${vol}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Vel. máx.' : 'Max speed'}</span><b>${p.specs.speed_max ? p.specs.speed_max + ' mm/s' : '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Extrusor' : 'Extruder'}</span><b>${p.specs.extruder || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
             `;
         } else if (p.type === 'Resina') {
+            const vol = (p.specs.build_x && p.specs.build_y && p.specs.build_z)
+                ? `${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z}mm` : '—';
             return `
-                <div class="qs"><span>${lang === 'es' ? 'Volumen' : 'Volume'}</span><b>${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z}mm</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Resolución XY' : 'XY Res.'}</span><b>${p.specs.resolution_label}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Fuente luz' : 'Light'}</span><b>${p.specs.light_source}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>~${p.specs.price_eur}€</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Volumen' : 'Volume'}</span><b>${vol}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Resolución XY' : 'XY Res.'}</span><b>${p.specs.resolution_label || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Fuente luz' : 'Light'}</span><b>${p.specs.light_source || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
             `;
         } else if (p.type === 'Escaner') {
             return `
-                <div class="qs"><span>${lang === 'es' ? 'Precisión' : 'Accuracy'}</span><b>${p.specs.accuracy_mm} mm</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Modo' : 'Mode'}</span><b>${p.specs.scan_mode}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Color' : 'Color'}</span><b>${p.specs.color_scan ? '✓' : '✗'}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>~${p.specs.price_eur}€</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Precisión' : 'Accuracy'}</span><b>${p.specs.accuracy_mm ? p.specs.accuracy_mm + ' mm' : '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Modo' : 'Mode'}</span><b>${p.specs.scan_mode || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Color' : 'Color'}</span><b>${p.specs.color_scan != null ? (p.specs.color_scan ? '✓' : '✗') : '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
+            `;
+        } else if (p.type === 'Laser') {
+            return `
+                <div class="qs"><span>${lang === 'es' ? 'Área' : 'Area'}</span><b>${p.specs.work_area || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Potencia' : 'Power'}</span><b>${p.specs.laser_power || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
+                <div class="qs"><span></span><b></b></div>
             `;
         }
         return '';
@@ -172,11 +193,10 @@ window.renderComparator = function (container, t) {
     function updateCompareBar() {
         const bar = document.getElementById('comp-bar');
         const count = document.getElementById('comp-bar-count');
-        const btnCompare = document.getElementById('comp-bar-btn');
         if (!bar) return;
         if (selected.size >= 2) {
             bar.style.display = 'flex';
-            const lang = window.currentLang || 'en';
+            const lang = window.currentLang || 'es';
             if (count) count.textContent = lang === 'es'
                 ? `${selected.size} ${selected.size === 1 ? 'impresora seleccionada' : 'impresoras seleccionadas'}`
                 : `${selected.size} printer${selected.size > 1 ? 's' : ''} selected`;
@@ -186,28 +206,30 @@ window.renderComparator = function (container, t) {
     }
 
     function showCompareModal() {
-        const lang = window.currentLang || 'en';
+        const lang = window.currentLang || 'es';
         const ps = allPrinters.filter(p => selected.has(p.id));
         if (ps.length < 2) return;
 
-        // Find mixed types?
         const types = [...new Set(ps.map(p => p.type))];
         const defs = SPEC_DEFS[types[0]] || SPEC_DEFS.FDM;
 
         let headerCols = ps.map(p => {
             const scoreColor = getScoreColor(p.score);
+            const scoreHtml = p.score
+                ? `<div style="font-size:1.5rem;font-weight:800;color:${scoreColor}">${p.score}</div>
+                   <div style="font-size:0.8rem;color:${scoreColor}">${getStars(p.score)}</div>`
+                : '';
             return `<th>
                 <div style="text-align:center">
                     <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">${p.brand}</div>
                     <div style="font-weight:700;margin-bottom:6px">${p.name}</div>
-                    <div style="font-size:1.5rem;font-weight:800;color:${scoreColor}">${p.score}</div>
-                    <div style="font-size:0.8rem;color:${scoreColor}">${getStars(p.score)}</div>
-                    ${p.buyUrl ? `<a href="${p.buyUrl}" target="_blank" class="comp-buy-btn" style="margin-top:8px;display:inline-block">
+                    ${scoreHtml}
+                    ${p.buyUrl ? `<a href="${p.buyUrl}" target="_blank" class="comp-buy-btn" style="margin-top:8px;display:inline-flex">
                         <i data-lucide="shopping-cart"></i> ${lang === 'es' ? 'Comprar' : 'Buy'}
                     </a>` : ''}
-                    <a href="${p.reviewUrl}" target="_blank" class="comp-review-btn-sm" style="margin-top:4px;display:inline-block">
+                    ${p.reviewUrl ? `<a href="${p.reviewUrl}" target="_blank" class="comp-review-btn-sm" style="margin-top:4px;display:inline-flex">
                         <i data-lucide="file-text"></i> ${lang === 'es' ? 'Review' : 'Review'}
-                    </a>
+                    </a>` : ''}
                 </div>
             </th>`;
         }).join('');
@@ -227,11 +249,12 @@ window.renderComparator = function (container, t) {
             } catch(e){ return null; }});
 
             let bestIdx = -1;
-            if (def.best === 'max') bestIdx = rawVals.indexOf(Math.max(...rawVals.filter(v => v !== null)));
-            if (def.best === 'min') bestIdx = rawVals.indexOf(Math.min(...rawVals.filter(v => v !== null)));
+            const numericVals = rawVals.filter(v => v !== null && v !== undefined);
+            if (def.best === 'max' && numericVals.length > 0) bestIdx = rawVals.indexOf(Math.max(...numericVals));
+            if (def.best === 'min' && numericVals.length > 0) bestIdx = rawVals.indexOf(Math.min(...numericVals));
 
             const cells = vals.map((v, i) => {
-                const isBest = bestIdx === i && def.best !== null;
+                const isBest = bestIdx === i && def.best !== null && v !== '—';
                 return `<td class="${isBest ? 'comp-best' : ''}">${v}</td>`;
             }).join('');
 
@@ -281,7 +304,6 @@ window.renderComparator = function (container, t) {
     function buildFilters(lang) {
         const types = ['all', ...new Set(allPrinters.map(p => p.type))];
         const brands = ['all', ...new Set(allPrinters.map(p => p.brand))];
-
         const typeLabels = { all: lang === 'es' ? 'Todos' : 'All', FDM: 'FDM', Resina: lang === 'es' ? 'Resina' : 'Resin', Escaner: lang === 'es' ? 'Escáner' : 'Scanner', Laser: 'Laser' };
 
         return `
@@ -309,13 +331,10 @@ window.renderComparator = function (container, t) {
     }
 
     function render() {
-        const lang = window.currentLang || 'en';
+        const lang = window.currentLang || 'es';
         container.innerHTML = `
             <style>
                 .comp-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
-                .comp-header { text-align: center; margin-bottom: 2rem; }
-                .comp-header h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-                .comp-header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; }
                 .comp-filter-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; margin-bottom: 1.5rem; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1rem 1.25rem; }
                 .comp-filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
                 .comp-search-group { flex: 1; min-width: 200px; justify-content: flex-end; }
@@ -380,12 +399,6 @@ window.renderComparator = function (container, t) {
             </style>
 
             <div class="comp-wrap">
-                <div class="comp-header">
-                    <h1>${lang === 'es' ? '🖨️ Comparador de Impresoras 3D' : '🖨️ 3D Printer Comparator'}</h1>
-                    <p>${lang === 'es'
-                        ? 'Compara los modelos analizados por 3Dwork. Selecciona 2-4 impresoras para ver una comparativa detallada.'
-                        : 'Compare models reviewed by 3Dwork. Select 2-4 printers to see a detailed side-by-side comparison.'}</p>
-                </div>
                 <div id="comp-filters">${buildFilters(lang)}</div>
                 <div id="comp-grid" class="comp-grid"></div>
                 <div id="comp-no-results" class="comp-no-results">
@@ -410,20 +423,11 @@ window.renderComparator = function (container, t) {
             </div>
         `;
 
-        // Wire up filters
         document.querySelectorAll('#filter-type .comp-pill').forEach(btn => {
-            btn.addEventListener('click', () => {
-                activeType = btn.dataset.type;
-                refreshFilters();
-                renderGrid();
-            });
+            btn.addEventListener('click', () => { activeType = btn.dataset.type; refreshFilters(); renderGrid(); });
         });
         document.querySelectorAll('#filter-brand .comp-pill').forEach(btn => {
-            btn.addEventListener('click', () => {
-                activeBrand = btn.dataset.brand;
-                refreshFilters();
-                renderGrid();
-            });
+            btn.addEventListener('click', () => { activeBrand = btn.dataset.brand; refreshFilters(); renderGrid(); });
         });
         const searchInput = document.getElementById('comp-search');
         if (searchInput) {
@@ -449,7 +453,7 @@ window.renderComparator = function (container, t) {
     }
 
     function refreshFilters() {
-        const lang = window.currentLang || 'en';
+        const lang = window.currentLang || 'es';
         const filtersEl = document.getElementById('comp-filters');
         if (filtersEl) {
             filtersEl.innerHTML = buildFilters(lang);
@@ -465,7 +469,6 @@ window.renderComparator = function (container, t) {
         }
     }
 
-    // Load data then render
     fetch(PRINTERS_URL + '?v=' + Date.now())
         .then(r => r.json())
         .then(data => {
