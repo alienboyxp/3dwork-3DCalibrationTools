@@ -120,6 +120,9 @@ function updateUILabels() {
     const navLogAnalyzer = document.getElementById('nav-loganalyzer');
     if (navLogAnalyzer) navLogAnalyzer.textContent = t.logAnalyzerTitle;
 
+    const navComparator = document.getElementById('nav-comparator');
+    if (navComparator) navComparator.textContent = t.comparatorTitle || (window.currentLang === 'es' ? 'Comparador' : 'Comparator');
+
     const footerText = document.getElementById('footer-contact-text');
     if (footerText) footerText.innerHTML = t.footerContact;
 
@@ -182,6 +185,9 @@ function renderView() {
         window.renderShaper(content, t);
     } else if (currentView === 'loganalyzer' && window.renderLogAnalyzer) {
         window.renderLogAnalyzer(content, t);
+    } else if (currentView === 'comparator' && window.renderComparator) {
+        content.style.maxWidth = '1200px';
+        window.renderComparator(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);
