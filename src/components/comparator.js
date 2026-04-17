@@ -66,17 +66,40 @@ window.renderComparator = function (container, t, opts) {
 
     function getScoreColor(score) {
         if (!score) return '#94A3B8';
-        if (score >= 9) return '#10B981';
-        if (score >= 8) return '#8B5CF6';
-        if (score >= 7) return '#F59E0B';
+        if (score >= 4.5) return '#10B981';
+        if (score >= 4.0) return '#8B5CF6';
+        if (score >= 3.5) return '#F59E0B';
         return '#EF4444';
     }
 
     function getStars(score) {
         if (!score) return '';
-        const full = Math.floor(score / 2);
-        const half = (score % 2) >= 1 ? 1 : 0;
+        const full = Math.floor(score);
+        const half = (score % 1) >= 0.5 ? 1 : 0;
         return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
+    }
+
+    function getScoreBadge(score) {
+        if (!score) return '';
+        const color = getScoreColor(score);
+        const r = 26, cx = 32, cy = 32, sw = 5;
+        const circ = 2 * Math.PI * r;
+        const filled = ((score / 5) * circ).toFixed(2);
+        const gap = (circ - filled).toFixed(2);
+        return `
+            <div class="comp-score-ring">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="${sw}"/>
+                    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}"
+                        stroke-dasharray="${filled} ${gap}" stroke-linecap="round"
+                        transform="rotate(-90 ${cx} ${cy})"/>
+                </svg>
+                <div class="comp-score-ring__text">
+                    <span style="color:${color}">${score}</span>
+                    <span>/5</span>
+                </div>
+            </div>
+        `;
     }
 
     function filtered() {
@@ -103,29 +126,24 @@ window.renderComparator = function (container, t, opts) {
 
         list.forEach(p => {
             const isSelected = selected.has(p.id);
-            const scoreColor = getScoreColor(p.score);
-            const scoreHtml = p.score
-                ? `<div class="comp-card__score" style="color:${scoreColor}">
-                      <span class="comp-card__score-num">${p.score}</span>
-                      <span class="comp-card__score-stars">${getStars(p.score)}</span>
-                   </div>`
-                : '';
 
             const card = document.createElement('div');
             card.className = 'comp-card' + (isSelected ? ' comp-card--selected' : '');
             card.dataset.id = p.id;
             card.innerHTML = `
                 <div class="comp-card__header">
-                    <div class="comp-card__img-wrap">
-                        <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                        <div class="comp-card__img-placeholder" style="display:none"><i data-lucide="printer"></i></div>
+                    <div class="comp-card__top-row">
+                        <div class="comp-card__img-wrap">
+                            <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <div class="comp-card__img-placeholder" style="display:none"><i data-lucide="printer"></i></div>
+                        </div>
+                        ${getScoreBadge(p.score)}
                     </div>
                     <div class="comp-card__badge-row">
                         ${getTypeBadge(p.type)}
                         <span class="comp-card__brand">${p.brand}</span>
                     </div>
                     <h3 class="comp-card__name">${p.name}</h3>
-                    ${scoreHtml}
                 </div>
                 <div class="comp-card__quick-specs">
                     ${getQuickSpecs(p, lang)}
@@ -238,8 +256,7 @@ window.renderComparator = function (container, t, opts) {
         let headerCols = ps.map(p => {
             const scoreColor = getScoreColor(p.score);
             const scoreHtml = p.score
-                ? `<div style="font-size:1.5rem;font-weight:800;color:${scoreColor}">${p.score}</div>
-                   <div style="font-size:0.8rem;color:${scoreColor}">${getStars(p.score)}</div>`
+                ? `${getScoreBadge(p.score)}<div style="font-size:0.75rem;color:${scoreColor};margin-top:2px">${getStars(p.score)}</div>`
                 : '';
             return `<th>
                 <div style="text-align:center">
@@ -374,15 +391,18 @@ window.renderComparator = function (container, t, opts) {
                 .comp-card:hover { border-color: rgba(139,92,246,0.4); transform: translateY(-2px); }
                 .comp-card--selected { border-color: var(--primary) !important; box-shadow: 0 0 0 2px rgba(139,92,246,0.3); }
                 .comp-card__header { padding: 1rem 1rem 0.5rem; }
-                .comp-card__img-wrap { height: 140px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,0.03); margin-bottom: 0.75rem; }
-                .comp-card__img-wrap img { max-height: 130px; max-width: 100%; object-fit: contain; }
+                .comp-card__top-row { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.75rem; }
+                .comp-card__img-wrap { flex: 1; height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,0.03); }
+                .comp-card__img-wrap img { max-height: 120px; max-width: 100%; object-fit: contain; }
                 .comp-card__img-placeholder { width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); }
+                .comp-score-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+                .comp-score-ring svg { position: absolute; top: 0; left: 0; }
+                .comp-score-ring__text { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; z-index: 1; }
+                .comp-score-ring__text span:first-child { font-size: 1.05rem; font-weight: 800; line-height: 1; }
+                .comp-score-ring__text span:last-child { font-size: 0.58rem; color: var(--text-muted); line-height: 1.2; }
                 .comp-card__badge-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
                 .comp-card__brand { font-size: 0.75rem; color: var(--text-muted); }
                 .comp-card__name { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
-                .comp-card__score { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 0.25rem; }
-                .comp-card__score-num { font-size: 1.6rem; font-weight: 800; }
-                .comp-card__score-stars { font-size: 0.75rem; letter-spacing: 2px; }
                 .comp-card__quick-specs { padding: 0.75rem 1rem; border-top: 1px solid var(--glass-border); display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; flex: 1; }
                 .qs { display: flex; flex-direction: column; }
                 .qs span { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
