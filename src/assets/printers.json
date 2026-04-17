@@ -21,9 +21,10 @@
       "auto_leveling": true,
       "filament_diameter": 1.75,
       "layer_min": 0.05,
-      "enclosed": false,
+      "enclosed": true,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "price_eur": 499
     }
   },
   {
@@ -44,13 +45,14 @@
       "nozzle_temp_max": 300,
       "bed_temp_max": 100,
       "multi_material": true,
-      "firmware": "Klipper",
+      "firmware": "Kobra OS",
       "extruder": "Direct",
       "auto_leveling": true,
       "filament_diameter": 1.75,
       "layer_min": 0.05,
       "enclosed": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "price_eur": 199
     }
   },
   {
@@ -73,7 +75,12 @@
       "layer_min": 0.05,
       "enclosed": false,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "build_x": 250,
+      "build_y": 250,
+      "build_z": 260,
+      "firmware": "Kobra OS",
+      "price_eur": 399
     }
   },
   {
@@ -99,7 +106,10 @@
       "filament_diameter": 1.75,
       "layer_min": 0.05,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "speed_max": 500,
+      "firmware": "Klipper",
+      "price_eur": 299
     }
   },
   {
@@ -115,18 +125,20 @@
     "specs": {
       "build_x": 250,
       "build_y": 250,
-      "build_z": 260,
+      "build_z": 250,
       "speed_max": 600,
       "accel_max": 10000,
-      "nozzle_temp_max": 300,
-      "bed_temp_max": 110,
+      "nozzle_temp_max": 320,
+      "bed_temp_max": 120,
       "extruder": "Direct",
       "auto_leveling": true,
       "multi_material": true,
       "filament_diameter": 1.75,
       "layer_min": 0.05,
-      "enclosed": false,
-      "connectivity": "WiFi/USB"
+      "enclosed": true,
+      "connectivity": "WiFi/USB",
+      "firmware": "Kobra OS",
+      "price_eur": 499
     }
   },
   {
@@ -152,7 +164,9 @@
       "layer_min": 0.05,
       "enclosed": false,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "firmware": "Klipper",
+      "price_eur": 799
     }
   },
   {
@@ -172,7 +186,15 @@
       "layer_min": 0.05,
       "enclosed": false,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "build_x": 250,
+      "build_y": 250,
+      "build_z": 260,
+      "speed_max": 600,
+      "nozzle_temp_max": 300,
+      "bed_temp_max": 110,
+      "firmware": "Kobra OS",
+      "price_eur": 349
     }
   },
   {
@@ -198,7 +220,10 @@
       "layer_min": 0.05,
       "enclosed": false,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "speed_max": 600,
+      "firmware": "Klipper",
+      "price_eur": 299
     }
   },
   {
@@ -218,7 +243,15 @@
       "layer_min": 0.05,
       "enclosed": false,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "build_x": 256,
+      "build_y": 256,
+      "build_z": 256,
+      "speed_max": 700,
+      "nozzle_temp_max": 300,
+      "bed_temp_max": 110,
+      "firmware": "Klipper",
+      "price_eur": 499
     }
   },
   {
@@ -244,7 +277,10 @@
       "layer_min": 0.05,
       "enclosed": false,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "speed_max": 600,
+      "firmware": "Klipper",
+      "price_eur": 299
     }
   },
   {
@@ -265,9 +301,15 @@
       "auto_leveling": true,
       "filament_diameter": 1.75,
       "layer_min": 0.05,
-      "enclosed": false,
+      "enclosed": true,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "build_x": 245,
+      "build_y": 245,
+      "build_z": 245,
+      "nozzle_temp_max": 350,
+      "firmware": "Klipper",
+      "price_eur": 499
     }
   },
   {
@@ -289,9 +331,13 @@
       "auto_leveling": true,
       "filament_diameter": 1.75,
       "layer_min": 0.05,
-      "enclosed": false,
+      "enclosed": true,
       "multi_material": false,
-      "connectivity": "WiFi/USB"
+      "connectivity": "WiFi/USB",
+      "speed_max": 600,
+      "bed_temp_max": 120,
+      "firmware": "Klipper",
+      "price_eur": 849
     }
   },
   {
@@ -311,7 +357,11 @@
       "wavelength_nm": 405,
       "light_source": "Mono LCD",
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "xy_resolution_mm": 0.017,
+      "resolution_label": "12K",
+      "lift_speed": 5,
+      "price_eur": 499
     }
   },
   {
@@ -328,7 +378,14 @@
       "light_source": "Mono LCD",
       "wavelength_nm": 405,
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "build_x": 212,
+      "build_y": 118,
+      "build_z": 200,
+      "xy_resolution_mm": 0.014,
+      "resolution_label": "16K",
+      "lift_speed": 6,
+      "price_eur": 499
     }
   },
   {
@@ -345,7 +402,14 @@
       "light_source": "Mono LCD",
       "wavelength_nm": 405,
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "build_x": 298,
+      "build_y": 164,
+      "build_z": 300,
+      "xy_resolution_mm": 0.046,
+      "resolution_label": "7K",
+      "lift_speed": 5,
+      "price_eur": 599
     }
   },
   {
@@ -362,7 +426,14 @@
       "light_source": "Mono LCD",
       "wavelength_nm": 405,
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "build_x": 212,
+      "build_y": 118,
+      "build_z": 220,
+      "xy_resolution_mm": 0.014,
+      "resolution_label": "16K",
+      "lift_speed": 8,
+      "price_eur": 499
     }
   },
   {
@@ -376,13 +447,17 @@
     "reviewUrl": "https://3dwork.io/anycubic-photon-mono-4-ultra-review/",
     "buyUrl": "https://s.click.aliexpress.com/e/_oCczZuF",
     "specs": {
-      "build_x": 4,
+      "build_x": 153,
       "build_y": 87,
       "build_z": 165,
       "light_source": "Mono LCD",
       "wavelength_nm": 405,
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "xy_resolution_mm": 0.017,
+      "resolution_label": "10K",
+      "lift_speed": 5,
+      "price_eur": 279
     }
   },
   {
@@ -399,7 +474,14 @@
       "light_source": "Mono LCD",
       "wavelength_nm": 405,
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "build_x": 219,
+      "build_y": 123,
+      "build_z": 220,
+      "xy_resolution_mm": 0.019,
+      "resolution_label": "12K",
+      "lift_speed": 6,
+      "price_eur": 319
     }
   },
   {
@@ -416,7 +498,14 @@
       "light_source": "Mono LCD",
       "wavelength_nm": 405,
       "layer_min": 0.01,
-      "connectivity": "USB"
+      "connectivity": "USB/WiFi",
+      "build_x": 153,
+      "build_y": 78,
+      "build_z": 165,
+      "xy_resolution_mm": 0.018,
+      "resolution_label": "9K",
+      "lift_speed": 5,
+      "price_eur": 269
     }
   },
   {
@@ -430,7 +519,14 @@
     "reviewUrl": "https://3dwork.io/revopoint-inspire-2-analisis-completo-de-este-escaner-3d-dual-que-desafia-en-calidad-y-precio-a-la-gama-alta/",
     "buyUrl": "",
     "specs": {
-      "accuracy_mm": 0.05
+      "accuracy_mm": 0.05,
+      "resolution_mm": 0.1,
+      "scan_mode": "Handheld + Desktop",
+      "scan_area": "20×20 a 2000×2000mm",
+      "color_scan": true,
+      "output_format": "OBJ/STL/PLY/3MF/FBX",
+      "price_eur": 519,
+      "connectivity": "USB/WiFi 6"
     }
   },
   {
@@ -444,7 +540,14 @@
     "reviewUrl": "https://3dwork.io/revopoint-metrox-analisis-escanner-3d/",
     "buyUrl": "https://s.click.aliexpress.com/e/_opvRP9S",
     "specs": {
-      "accuracy_mm": 0.03
+      "accuracy_mm": 0.02,
+      "resolution_mm": 0.01,
+      "scan_mode": "Turntable + Handheld + Feature + Marker",
+      "scan_area": "hasta 1000×1000×1000mm",
+      "color_scan": false,
+      "output_format": "OBJ/STL/PLY/3MF/FBX/GLTF",
+      "price_eur": 1499,
+      "connectivity": "USB/WiFi"
     }
   },
   {
@@ -458,7 +561,14 @@
     "reviewUrl": "https://3dwork.io/revopoint-range-2/",
     "buyUrl": "",
     "specs": {
-      "accuracy_mm": 0.3
+      "accuracy_mm": 0.3,
+      "resolution_mm": 0.1,
+      "scan_mode": "Handheld",
+      "scan_area": "50×50×50mm a 4000×4000×4000mm",
+      "color_scan": true,
+      "output_format": "OBJ/STL/PLY/3MF/FBX",
+      "price_eur": 669,
+      "connectivity": "USB/WiFi"
     }
   },
   {
@@ -471,7 +581,16 @@
     "image": "https://3dwork.io/wp-content/uploads/2023/11/image-55.png",
     "reviewUrl": "https://3dwork.io/revopoint-miraco-escaneo-3d-preciso-y-portatil/",
     "buyUrl": "",
-    "specs": {}
+    "specs": {
+      "accuracy_mm": 0.05,
+      "resolution_mm": 0.05,
+      "scan_mode": "Standalone Handheld",
+      "scan_area": "10×10×10mm a 4000×4000×4000mm",
+      "color_scan": true,
+      "output_format": "OBJ/STL/PLY/3MF/FBX",
+      "price_eur": 1279,
+      "connectivity": "WiFi/USB"
+    }
   },
   {
     "id": "revopoint-inspire-escaneo-3d-rapido-y-as",
@@ -484,7 +603,14 @@
     "reviewUrl": "https://3dwork.io/revopoint-inspire-escaneo-3d-rapido-y-asequible/",
     "buyUrl": "",
     "specs": {
-      "accuracy_mm": 0.2
+      "accuracy_mm": 0.2,
+      "resolution_mm": 0.2,
+      "scan_mode": "Handheld + Turntable",
+      "scan_area": "30×30 a 2000×2000mm",
+      "color_scan": true,
+      "output_format": "OBJ/STL/PLY/3MF",
+      "price_eur": 359,
+      "connectivity": "USB/WiFi"
     }
   },
   {
@@ -498,9 +624,11 @@
     "reviewUrl": "https://3dwork.io/twotrees-ttc6050-review/",
     "buyUrl": "https://s.click.aliexpress.com/e/_c3GRojh5",
     "specs": {
-      "work_area": "460×460mm",
-      "power_w": 500,
-      "speed_mm_s": 800
+      "work_area": "600×500mm",
+      "laser_power": "20W Diodo + 500W CNC",
+      "speed_max": 5000,
+      "price_eur": 1499,
+      "connectivity": "USB/WiFi"
     }
   },
   {
@@ -514,8 +642,11 @@
     "reviewUrl": "https://3dwork.io/twotrees-ts1/",
     "buyUrl": "https://s.click.aliexpress.com/e/_oERJfcn",
     "specs": {
-      "power_w": 17,
-      "speed_mm_s": 3000
+      "work_area": "80×80mm",
+      "laser_power": "3W",
+      "speed_max": 3000,
+      "price_eur": 79,
+      "connectivity": "Bluetooth/USB"
     }
   },
   {
@@ -529,9 +660,11 @@
     "reviewUrl": "https://3dwork.io/laserpecker-lp5-review/",
     "buyUrl": "https://s.click.aliexpress.com/e/_onT5UpX",
     "specs": {
-      "power_w": 20,
-      "work_area": "120×160mm",
-      "speed_mm_s": 10
+      "work_area": "120×160mm (+160×300mm extensión)",
+      "laser_power": "20W Fibra + 20W Diodo",
+      "speed_max": 600000,
+      "price_eur": 2799,
+      "connectivity": "USB/WiFi"
     }
   }
 ]
