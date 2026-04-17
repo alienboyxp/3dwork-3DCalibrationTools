@@ -211,9 +211,28 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
+                <!-- COMPARATOR CARD -->
+                <a href="#comparator" class="tool-card" id="card-comparator" style="grid-column: span 2; border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="badge-container">
+                        <span class="badge" style="background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">NEW</span>
+                    </div>
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(16,185,129,0.12); color: #34D399;">
+                                <i data-lucide="columns-2"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.comparatorTitle || 'Comparator'}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.comparatorSummary || 'Compare 3D printers reviewed by 3Dwork'}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+
             </div>
         </div>
-    `;
+    \`;
 
     if (window.lucide) {
         window.lucide.createIcons();
