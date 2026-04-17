@@ -46,10 +46,14 @@ window.renderComparator = function (container, t, opts) {
         ],
         Electronica: [
             { key: 'subtype', label: { en: 'Type', es: 'Tipo' }, format: p => p.specs.subtype || '—', best: null },
-            { key: 'processor', label: { en: 'Processor/CPU', es: 'Procesador/CPU' }, format: p => p.specs.processor || '—', best: null },
+            { key: 'mcu', label: { en: 'MCU/CPU', es: 'MCU/CPU' }, format: p => p.specs.mcu || '—', best: null },
+            { key: 'mcu_freq_mhz', label: { en: 'Frequency', es: 'Frecuencia' }, format: p => p.specs.mcu_freq_mhz ? `${p.specs.mcu_freq_mhz} MHz` : '—', best: 'max' },
+            { key: 'stepper_drivers', label: { en: 'Driver Slots', es: 'Ranuras drivers' }, format: p => p.specs.stepper_drivers != null ? `${p.specs.stepper_drivers}` : '—', best: 'max' },
+            { key: 'fan_outputs', label: { en: 'Fan Outputs (PWM)', es: 'Salidas ventilador' }, format: p => p.specs.fan_outputs != null ? `${p.specs.fan_outputs}` : '—', best: 'max' },
+            { key: 'heater_outputs', label: { en: 'Heater Outputs', es: 'Salidas heater' }, format: p => p.specs.heater_outputs != null ? `${p.specs.heater_outputs}` : '—', best: 'max' },
+            { key: 'thermistor_inputs', label: { en: 'Thermistor Inputs', es: 'Entradas termistor' }, format: p => p.specs.thermistor_inputs != null ? `${p.specs.thermistor_inputs}` : '—', best: 'max' },
             { key: 'firmware_compatibility', label: { en: 'Firmware', es: 'Firmware' }, format: p => p.specs.firmware_compatibility || '—', best: null },
             { key: 'connectivity', label: { en: 'Connectivity', es: 'Conectividad' }, format: p => p.specs.connectivity || '—', best: null },
-            { key: 'input_voltage', label: { en: 'Input Voltage', es: 'Voltaje entrada' }, format: p => p.specs.input_voltage || '—', best: null },
             { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
         ]
     };
@@ -195,11 +199,14 @@ window.renderComparator = function (container, t, opts) {
                 <div class="qs"><span></span><b></b></div>
             `;
         } else if (p.type === 'Electronica') {
+            const mcu = p.specs.mcu ? p.specs.mcu.split(' ')[0] : '—';
+            const freq = p.specs.mcu_freq_mhz ? p.specs.mcu_freq_mhz + ' MHz' : '—';
+            const drivers = p.specs.stepper_drivers != null ? p.specs.stepper_drivers + ' drivers' : '—';
             return `
                 <div class="qs"><span>${lang === 'es' ? 'Tipo' : 'Type'}</span><b>${p.specs.subtype || '—'}</b></div>
-                <div class="qs"><span>Firmware</span><b>${p.specs.firmware_compatibility || '—'}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Conectividad' : 'Connectivity'}</span><b>${p.specs.connectivity || '—'}</b></div>
-                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
+                <div class="qs"><span>MCU</span><b>${mcu}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Frecuencia' : 'Frequency'}</span><b>${freq}</b></div>
+                <div class="qs"><span>Drivers</span><b>${drivers}</b></div>
             `;
         }
         return '';
