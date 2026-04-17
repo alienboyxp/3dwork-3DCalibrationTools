@@ -72,11 +72,24 @@ window.renderComparator = function (container, t, opts) {
         return '#EF4444';
     }
 
-    function getStars(score) {
+    function getStars(score, color) {
         if (!score) return '';
-        const full = Math.floor(score);
-        const half = (score % 1) >= 0.5 ? 1 : 0;
-        return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
+        const c = color || getScoreColor(score);
+        // Floor to nearest 0.5 step
+        const floored = Math.floor(score * 2) / 2;
+        const full = Math.floor(floored);
+        const half = (floored % 1) >= 0.4 ? 1 : 0;
+        const empty = 5 - full - half;
+        const dim = 'rgba(255,255,255,0.15)';
+        const fullStar  = `<span style="color:${c};font-size:0.9rem;line-height:1">★</span>`;
+        const halfStar  = `<span style="position:relative;display:inline-block;font-size:0.9rem;line-height:1">` +
+                          `<span style="color:${dim}">★</span>` +
+                          `<span style="position:absolute;left:0;top:0;overflow:hidden;width:55%;color:${c}">★</span>` +
+                          `</span>`;
+        const emptyStar = `<span style="color:${dim};font-size:0.9rem;line-height:1">★</span>`;
+        return Array(full).fill(fullStar).join('') +
+               Array(half).fill(halfStar).join('') +
+               Array(empty).fill(emptyStar).join('');
     }
 
     function getScoreBadge(score) {
@@ -137,7 +150,10 @@ window.renderComparator = function (container, t, opts) {
                             <img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                             <div class="comp-card__img-placeholder" style="display:none"><i data-lucide="printer"></i></div>
                         </div>
-                        ${getScoreBadge(p.score)}
+                        <div class="comp-score-col">
+                            ${getScoreBadge(p.score)}
+                            ${p.score ? `<div style="display:flex;justify-content:center;gap:1px;margin-top:3px">${getStars(p.score)}</div>` : ''}
+                        </div>
                     </div>
                     <div class="comp-card__badge-row">
                         ${getTypeBadge(p.type)}
@@ -256,7 +272,7 @@ window.renderComparator = function (container, t, opts) {
         let headerCols = ps.map(p => {
             const scoreColor = getScoreColor(p.score);
             const scoreHtml = p.score
-                ? `${getScoreBadge(p.score)}<div style="font-size:0.75rem;color:${scoreColor};margin-top:2px">${getStars(p.score)}</div>`
+                ? `${getScoreBadge(p.score)}<div style="display:flex;justify-content:center;gap:1px;margin-top:4px">${getStars(p.score, scoreColor)}</div>`
                 : '';
             return `<th>
                 <div style="text-align:center">
@@ -395,6 +411,7 @@ window.renderComparator = function (container, t, opts) {
                 .comp-card__img-wrap { flex: 1; height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px; background: rgba(255,255,255,0.03); }
                 .comp-card__img-wrap img { max-height: 120px; max-width: 100%; object-fit: contain; }
                 .comp-card__img-placeholder { width: 100%; height: 100%; align-items: center; justify-content: center; color: var(--text-muted); }
+                .comp-score-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
                 .comp-score-ring { position: relative; width: 64px; height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
                 .comp-score-ring svg { position: absolute; top: 0; left: 0; }
                 .comp-score-ring__text { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; z-index: 1; }
