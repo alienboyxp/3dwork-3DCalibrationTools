@@ -43,11 +43,19 @@ window.renderComparator = function (container, t, opts) {
             { key: 'laser_power', label: { en: 'Laser Power', es: 'Potencia láser' }, format: p => p.specs.laser_power || '—', best: null },
             { key: 'speed_max', label: { en: 'Max Speed', es: 'Vel. máx.' }, format: p => p.specs.speed_max ? `${p.specs.speed_max} mm/min` : '—', best: 'max' },
             { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
+        ],
+        Electronica: [
+            { key: 'subtype', label: { en: 'Type', es: 'Tipo' }, format: p => p.specs.subtype || '—', best: null },
+            { key: 'processor', label: { en: 'Processor/CPU', es: 'Procesador/CPU' }, format: p => p.specs.processor || '—', best: null },
+            { key: 'firmware_compatibility', label: { en: 'Firmware', es: 'Firmware' }, format: p => p.specs.firmware_compatibility || '—', best: null },
+            { key: 'connectivity', label: { en: 'Connectivity', es: 'Conectividad' }, format: p => p.specs.connectivity || '—', best: null },
+            { key: 'input_voltage', label: { en: 'Input Voltage', es: 'Voltaje entrada' }, format: p => p.specs.input_voltage || '—', best: null },
+            { key: 'price_eur', label: { en: 'Approx. Price', es: 'Precio aprox.' }, format: p => p.specs.price_eur ? `~${p.specs.price_eur}€` : '—', best: 'min' },
         ]
     };
 
     function getTypeBadge(type) {
-        const colors = { FDM: '#8B5CF6', Resina: '#06B6D4', Escaner: '#10B981', Laser: '#F59E0B' };
+        const colors = { FDM: '#8B5CF6', Resina: '#06B6D4', Escaner: '#10B981', Laser: '#F59E0B', Electronica: '#EC4899' };
         const color = colors[type] || '#94A3B8';
         return `<span style="background:${color}22;color:${color};border:1px solid ${color}44;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;letter-spacing:0.05em;">${type}</span>`;
     }
@@ -142,7 +150,7 @@ window.renderComparator = function (container, t, opts) {
                     selected.delete(id);
                 } else {
                     if (selected.size >= 4) {
-                        showToast(lang === 'es' ? 'Máximo 4 impresoras a comparar' : 'Maximum 4 printers to compare');
+                        showToast(lang === 'es' ? 'Máximo 4 productos a comparar' : 'Maximum 4 products to compare');
                         return;
                     }
                     selected.add(id);
@@ -186,6 +194,13 @@ window.renderComparator = function (container, t, opts) {
                 <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
                 <div class="qs"><span></span><b></b></div>
             `;
+        } else if (p.type === 'Electronica') {
+            return `
+                <div class="qs"><span>${lang === 'es' ? 'Tipo' : 'Type'}</span><b>${p.specs.subtype || '—'}</b></div>
+                <div class="qs"><span>Firmware</span><b>${p.specs.firmware_compatibility || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Conectividad' : 'Connectivity'}</span><b>${p.specs.connectivity || '—'}</b></div>
+                <div class="qs"><span>${lang === 'es' ? 'Precio' : 'Price'}</span><b>${p.specs.price_eur ? '~' + p.specs.price_eur + '€' : '—'}</b></div>
+            `;
         }
         return '';
     }
@@ -198,8 +213,8 @@ window.renderComparator = function (container, t, opts) {
             bar.style.display = 'flex';
             const lang = window.currentLang || 'es';
             if (count) count.textContent = lang === 'es'
-                ? `${selected.size} ${selected.size === 1 ? 'impresora seleccionada' : 'impresoras seleccionadas'}`
-                : `${selected.size} printer${selected.size > 1 ? 's' : ''} selected`;
+                ? `${selected.size} ${selected.size === 1 ? 'producto seleccionado' : 'productos seleccionados'}`
+                : `${selected.size} product${selected.size > 1 ? 's' : ''} selected`;
         } else {
             bar.style.display = 'none';
         }
@@ -304,7 +319,7 @@ window.renderComparator = function (container, t, opts) {
     function buildFilters(lang) {
         const types = ['all', ...new Set(allPrinters.map(p => p.type))];
         const brands = ['all', ...new Set(allPrinters.map(p => p.brand))];
-        const typeLabels = { all: lang === 'es' ? 'Todos' : 'All', FDM: 'FDM', Resina: lang === 'es' ? 'Resina' : 'Resin', Escaner: lang === 'es' ? 'Escáner' : 'Scanner', Laser: 'Laser' };
+        const typeLabels = { all: lang === 'es' ? 'Todos' : 'All', FDM: 'FDM', Resina: lang === 'es' ? 'Resina' : 'Resin', Escaner: lang === 'es' ? 'Escáner' : 'Scanner', Laser: 'Laser', Electronica: lang === 'es' ? 'Electrónica' : 'Electronics' };
 
         return `
             <div class="comp-filter-row">
