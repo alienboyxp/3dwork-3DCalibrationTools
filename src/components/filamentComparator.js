@@ -400,14 +400,13 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             </div>
         </div>
         
-        <div id="comp-bar" class="comp-bar" style="display:none">
-            <span id="comp-bar-count"></span>
-            <button id="comp-bar-btn" class="comp-bar-btn">
-                <i data-lucide="binary"></i>
+        <div id="comp-bar" style="position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);border-top:1px solid rgba(139,92,246,0.5);padding:16px 32px;display:none;align-items:center;justify-content:center;gap:16px;z-index:999999;">
+            <span id="comp-bar-count" style="font-size:14px;color:#94A3B8"></span>
+            <button id="comp-bar-btn" style="background:#06B6D4;border:none;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;">
+                <i data-lucide="columns-2"></i>
                 ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
             </button>
-            <button id="comp-bar-clear" class="comp-bar-clear">
-                <i data-lucide="x"></i>
+            <button id="comp-bar-clear" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:#94A3B8;padding:9px 16px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">
                 ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
             </button>
         </div>
