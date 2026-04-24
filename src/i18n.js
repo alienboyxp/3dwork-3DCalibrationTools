@@ -185,6 +185,8 @@ window.translations = {
         cfgTab: "Config Data",
         comparatorTitle: "Comparator",
         comparatorSummary: "Compare 3D printers, resin printers and scanners reviewed by 3Dwork. Select up to 4 models for a side-by-side spec comparison.",
+        filamentsTitle: "Filaments",
+        filamentsSummary: "Compare filament specifications, temperatures and prices from top brands. Select up to 4 materials for comparison.",
         footerContact: 'If you have issues, doubts or recommendations for these tools, contact the 3Dwork Telegram group at <a href="https://t.me/trastornados" target="_blank" style="color:var(--primary-light); text-decoration:none; font-weight:bold;">@trastornados</a>',
 
         // Manual Bed Leveling
@@ -492,6 +494,8 @@ window.translations = {
         comparatorSummary: "Compare 3D printers, resin printers and scanners reviewed by 3Dwork. Select up to 4 models for a side-by-side spec comparison.",
         comparatorTitle: "Comparador",
         comparatorSummary: "Compara las impresoras 3D FDM, resina y escáneres analizados por 3Dwork. Selecciona hasta 4 modelos para ver una comparativa de especificaciones.",
+        filamentsTitle: "Filamentos",
+        filamentsSummary: "Compara especificaciones, temperaturas y precios de los mejores filamentos. Selecciona hasta 4 materiales para comparar.",
         footerContact: 'Si tienes problemas, dudas o recomendaciones para estas herramientas, contacta al grupo de Telegram de 3Dwork en <a href="https://t.me/trastornados" target="_blank" style="color:var(--primary-light); text-decoration:none; font-weight:bold;">@trastornados</a>',
 
         // Manual Bed Leveling

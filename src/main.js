@@ -123,6 +123,9 @@ function updateUILabels() {
     const navComparator = document.getElementById('nav-comparator');
     if (navComparator) navComparator.textContent = t.comparatorTitle || (window.currentLang === 'es' ? 'Comparador' : 'Comparator');
 
+    const navFilaments = document.getElementById('nav-filaments');
+    if (navFilaments) navFilaments.textContent = t.filamentsTitle || (window.currentLang === 'es' ? 'Filamentos' : 'Filaments');
+
     const footerText = document.getElementById('footer-contact-text');
     if (footerText) footerText.innerHTML = t.footerContact;
 
@@ -188,6 +191,9 @@ function renderView() {
     } else if (currentView === 'comparator' && window.renderComparator) {
         content.style.maxWidth = '1200px';
         window.renderComparator(content, t);
+    } else if (currentView === 'filaments' && window.renderFilamentComparator) {
+        content.style.maxWidth = '1200px';
+        window.renderFilamentComparator(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);
