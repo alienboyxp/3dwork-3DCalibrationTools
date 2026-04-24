@@ -233,8 +233,14 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
                     <button class="comp-btn-detail" data-id="${f.id}" title="${lang === 'es' ? 'Ver detalles' : 'View details'}">
                         <i data-lucide="info"></i>
                     </button>
-                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-btn-ali">ALIEXPRESS</a>` : ''}
-                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn-sm">${f.brand}</a>` : ''}
+                </div>
+                <div class="comp-card__actions" style="justify-content:center">
+                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-btn-ali">
+                        <i data-lucide="shopping-cart" style="width:12px;height:12px"></i>ALIEXPRESS
+                    </a>` : ''}
+                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn-sm">
+                        <i data-lucide="shopping-cart" style="width:12px;height:12px"></i>${f.brand}
+                    </a>` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -434,10 +440,14 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             .comp-btn-select { background:rgba(139,92,246,0.2); color:#A78BFA; }
             .comp-btn-select:hover { background:rgba(139,92,246,0.3); }
             .comp-btn-select--active { background:#10B981; color:white; }
+            .comp-btn-ali { background:#FF681F; color:#FFF; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
+            .comp-btn-ali:hover { background:#FF8550; }
             .comp-btn-detail { background:rgba(99,102,241,0.2); color:#818CF8; padding:6px; }
             .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
-            .comp-btn-ali { background:#FF681F; color:#FFF; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; text-decoration:none; }
-            .comp-btn-ali:hover { background:#FF8550; }
+.comp-btn-select, .comp-btn-detail { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; }
+            .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
+            .comp-card__actions { display:flex; gap:8px; padding:12px 16px; justify-content:space-between; flex-wrap:wrap; }
+            .comp-card__actions:last-of-type { justify-content:center; }
             .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
