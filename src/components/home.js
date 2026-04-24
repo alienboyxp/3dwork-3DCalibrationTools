@@ -230,7 +230,7 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
                 <!-- FILAMENTS CARD -->
-                <a href="#filaments" class="tool-card" id="card-filaments" style="border-color: rgba(6,182,212,0.3); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, var(--bg-card) 100%);">
+                <a href="#filaments" class="tool-card" id="card-filaments" style="grid-column: span 2; border-color: rgba(6,182,212,0.3); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, var(--bg-card) 100%);">
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon" style="background: rgba(6,182,212,0.12); color: #22D3EE;">

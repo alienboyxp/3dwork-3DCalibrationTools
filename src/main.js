@@ -191,9 +191,12 @@ function renderView() {
     } else if (currentView === 'comparator' && window.renderComparator) {
         content.style.maxWidth = '1200px';
         window.renderComparator(content, t);
-    } else if (currentView === 'filaments' && window.renderFilamentComparator) {
-        content.style.maxWidth = '1200px';
-        window.renderFilamentComparator(content, t);
+    } else if (currentView === 'filaments') {
+        content.style.maxWidth = '100%';
+        content.style.padding = '0';
+        content.innerHTML = `
+            <iframe src="./filaments/index.html" style="width:100%;min-height:600px;border:none;" frameborder="0"></iframe>
+        `;
     } else {
         // Fallback to home
         window.renderHome(content, t);
