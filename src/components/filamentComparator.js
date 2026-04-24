@@ -497,6 +497,7 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
                 const brandSelect = document.getElementById('filter-brand');
                 brands.forEach(b => { brandSelect.innerHTML += `<option value="${b}">${b}</option>`; });
                 renderGrid();
+                updateCompareBar();
             })
             .catch(err => console.error('Error loading filaments:', err));
     }
