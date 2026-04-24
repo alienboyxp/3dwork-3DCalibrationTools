@@ -280,13 +280,13 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
         const count = document.getElementById('comp-bar-count');
         if (!bar) return;
         if (selected.size >= 2) {
-            bar.style.display = 'flex';
+            bar.classList.add('comp-bar--visible');
             const lang = window.currentLang || 'es';
             if (count) count.textContent = lang === 'es'
                 ? `${selected.size} ${selected.size === 1 ? 'filamento seleccionado' : 'filamentos seleccionados'}`
                 : `${selected.size} filament${selected.size > 1 ? 's' : ''} selected`;
         } else {
-            bar.style.display = 'none';
+            bar.classList.remove('comp-bar--visible');
         }
     }
 
@@ -398,17 +398,19 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
                 <i data-lucide="search-x" style="width:40px;height:40px;margin-bottom:1rem"></i>
                 <p>${window.currentLang === 'es' ? 'No se encontraron filamentos' : 'No filaments found'}</p>
             </div>
-            <div id="comp-bar" class="comp-bar" style="display:none">
-                <span id="comp-bar-count" class="comp-bar-text"></span>
-                <button id="comp-bar-btn" class="comp-bar-btn">
-                    <i data-lucide="binary"></i>
-                    ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
-                </button>
-                <button id="comp-bar-clear" class="comp-bar-clear">
-                    <i data-lucide="x"></i>
-                    ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
-                </button>
-            </div>
+        </div>
+        
+        <div id="comp-bar" class="comp-bar">
+            <span id="comp-bar-count"></span>
+            <button id="comp-bar-btn" class="comp-bar-btn">
+                <i data-lucide="binary"></i>
+                ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
+            </button>
+            <button id="comp-bar-clear" class="comp-bar-clear">
+                <i data-lucide="x"></i>
+                ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
+            </button>
+        </div>
             <div id="comp-modal" class="comp-modal" style="display:none">
                 <div id="comp-modal-content" class="comp-modal-inner"></div>
             </div>
@@ -452,7 +454,8 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
-            .comp-bar { position:fixed !important; bottom:0 !important; left:0 !important; right:0 !important; background:rgba(15,23,42,0.98) !important; backdrop-filter:blur(12px) !important; border-top:1px solid rgba(139,92,246,0.5) !important; padding:1rem 2rem !important; display:none !important; align-items:center !important; justify-content:center !important; gap:1rem !important; z-index:9999 !important; }
+            .comp-bar { position:fixed !important; bottom:0 !important; left:0 !important; right:0 !important; background:rgba(15,23,42,0.98) !important; backdrop-filter:blur(12px) !important; border-top:1px solid rgba(139,92,246,0.5) !important; padding:1rem 2rem !important; display:flex !important; align-items:center !important; justify-content:center !important; gap:1rem !important; z-index:9999 !important; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+            .comp-bar.comp-bar--visible { opacity:1; pointer-events:auto; }
             .comp-bar-text { font-size:0.875rem; color:var(--text-muted); }
             .comp-bar-btn { background:var(--primary); border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); transition:background 0.15s; }
             .comp-bar-btn:hover { background:var(--primary-dark); }
