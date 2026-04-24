@@ -401,10 +401,11 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             <div id="comp-bar" class="comp-bar" style="display:none">
                 <span id="comp-bar-count" class="comp-bar-text"></span>
                 <button id="comp-bar-btn" class="comp-bar-btn">
-                    <i data-lucide="columns-2"></i>
+                    <i data-lucide="binary"></i>
                     ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
                 </button>
                 <button id="comp-bar-clear" class="comp-bar-clear">
+                    <i data-lucide="x"></i>
                     ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
                 </button>
             </div>
