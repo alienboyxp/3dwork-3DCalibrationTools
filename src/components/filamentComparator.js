@@ -15,14 +15,6 @@ window.renderFilamentComparator = function (container, t, opts) {
         'PA-CF': '#A855F7', 'PC': '#6366F1', 'PC-ABS': '#818CF8'
     };
 
-    const BUILD_PLATE_ICONS = {
-        'smooth_pei': '🟦',
-        'textured_pei': '🔲',
-        'cool_plate': '❄️',
-        'engineering_plate': '⚙️',
-        'glue_recommended': '🧴'
-    };
-
     function getMaterialBadge(material) {
         const color = MATERIAL_COLORS[material] || '#94A3B8';
         return `<span style="background:${color}22;color:${color};border:1px solid ${color}44;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;letter-spacing:0.05em;">${material}</span>`;
@@ -49,116 +41,116 @@ window.renderFilamentComparator = function (container, t, opts) {
                 ${f.ams_ht ? '<span style="background:#10B98122;color:#10B981;padding:3px 8px;border-radius:6px;font-size:0.7rem">AMS HT</span>' : ''}
             </div>` : '<span style="color:var(--text-muted)">—</span>';
 
-        const modal = document.createElement('div');
-        modal.className = 'comp-modal';
-        modal.innerHTML = `
-            <div class="comp-modal__backdrop"></div>
-            <div class="comp-modal__content comp-modal__content--detail">
-                <div class="comp-modal__header">
-                    <div>
-                        ${getMaterialBadge(f.material)}
-                        <h2 style="margin:8px 0 0;font-size:1.3rem">${f.brand} ${f.name}</h2>
+        const modal = document.getElementById('comp-modal');
+        const content = document.getElementById('comp-modal-content');
+        if (!modal || !content) return;
+
+        content.innerHTML = `
+            <div class="comp-modal-header">
+                <div>
+                    ${getMaterialBadge(f.material)}
+                    <h2 style="margin:8px 0 0;font-size:1.3rem">${f.brand} ${f.name}</h2>
+                </div>
+                <button class="comp-modal-close" id="comp-modal-close-detail"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Colores disponibles' : 'Available colors'}</h3>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">${colors}</div>
+            </div>
+
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Temperaturas recomendadas' : 'Recommended temperatures'}</h3>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Nozzle' : 'Nozzle'}</span>
+                        <span class="spec-value">${f.nozzle_temp_min}–${f.nozzle_temp_max}°C</span>
                     </div>
-                    <button class="comp-modal__close" id="comp-modal-close"><i data-lucide="x"></i></button>
-                </div>
-                
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Colores disponibles' : 'Available colors'}</h3>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap">${colors}</div>
-                </div>
-
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Temperaturas recomendadas' : 'Recommended temperatures'}</h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Nozzle' : 'Nozzle'}</span>
-                            <span class="spec-value">${f.nozzle_temp_min}–${f.nozzle_temp_max}°C</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Cama' : 'Bed'}</span>
-                            <span class="spec-value">${f.bed_temp_min}–${f.bed_temp_max}°C</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Ventilador' : 'Fan'}</span>
-                            <span class="spec-value">${f.fan_speed_min || 0}–100%</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Cámara' : 'Chamber'}</span>
-                            <span class="spec-value">${f.chamber_temp || '—'}</span>
-                        </div>
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Cama' : 'Bed'}</span>
+                        <span class="spec-value">${f.bed_temp_min}–${f.bed_temp_max}°C</span>
                     </div>
-                </div>
-
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Características técnicas' : 'Technical specs'}</h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Densidad' : 'Density'}</span>
-                            <span class="spec-value">${f.density} g/cm³</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Temp. reblandecimiento' : 'Softening temp'}</span>
-                            <span class="spec-value">${f.softening_temp}°C</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">MVS</span>
-                            <span class="spec-value">${f.mvs || '—'} mm³/s</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Ratio flujo' : 'Flow ratio'}</span>
-                            <span class="spec-value">${f.flow_ratio || '—'}</span>
-                        </div>
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Ventilador' : 'Fan'}</span>
+                        <span class="spec-value">${f.fan_speed_min || 0}–100%</span>
                     </div>
-                </div>
-
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Secado' : 'Drying'}</h3>
-                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Temperatura' : 'Temperature'}</span>
-                            <span class="spec-value">${f.drying_temp || '—'}°C</span>
-                        </div>
-                        <div class="spec-box">
-                            <span class="spec-label">${lang === 'es' ? 'Tiempo' : 'Time'}</span>
-                            <span class="spec-value">${f.drying_time || '—'}h</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Compatibilidad AMS' : 'AMS compatibility'}</h3>
-                    ${amsCompatible}
-                </div>
-
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Placas compatibles' : 'Build plates'}</h3>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap">${buildPlates}</div>
-                </div>
-
-                ${f.special_properties && f.special_properties.length > 0 ? `
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Propiedades especiales' : 'Special properties'}</h3>
-                    <div style="display:flex;gap:6px;flex-wrap:wrap">
-                        ${f.special_properties.map(p => `<span style="background:rgba(139,92,246,0.15);color:#A78BFA;padding:4px 10px;border-radius:8px;font-size:0.75rem">${p}</span>`).join('')}
-                    </div>
-                </div>
-                ` : ''}
-
-                <div class="detail-section">
-                    <h3>${lang === 'es' ? 'Dónde comprar' : 'Where to buy'}</h3>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-btn-buy">
-                            ${lang === 'es' ? 'Tienda oficial' : 'Official store'} <i data-lucide="external-link"></i>
-                        </a>` : ''}
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Cámara' : 'Chamber'}</span>
+                        <span class="spec-value">${f.chamber_temp || '—'}</span>
                     </div>
                 </div>
             </div>
+
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Características técnicas' : 'Technical specs'}</h3>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Densidad' : 'Density'}</span>
+                        <span class="spec-value">${f.density} g/cm³</span>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Temp. reblandecimiento' : 'Softening temp'}</span>
+                        <span class="spec-value">${f.softening_temp}°C</span>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label">MVS</span>
+                        <span class="spec-value">${f.mvs || '—'} mm³/s</span>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Ratio flujo' : 'Flow ratio'}</span>
+                        <span class="spec-value">${f.flow_ratio || '—'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Secado' : 'Drying'}</h3>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Temperatura' : 'Temperature'}</span>
+                        <span class="spec-value">${f.drying_temp || '—'}°C</span>
+                    </div>
+                    <div class="spec-box">
+                        <span class="spec-label">${lang === 'es' ? 'Tiempo' : 'Time'}</span>
+                        <span class="spec-value">${f.drying_time || '—'}h</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Compatibilidad AMS' : 'AMS compatibility'}</h3>
+                ${amsCompatible}
+            </div>
+
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Placas compatibles' : 'Build plates'}</h3>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">${buildPlates}</div>
+            </div>
+
+            ${f.special_properties && f.special_properties.length > 0 ? `
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Propiedades especiales' : 'Special properties'}</h3>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    ${f.special_properties.map(p => `<span style="background:rgba(139,92,246,0.15);color:#A78BFA;padding:4px 10px;border-radius:8px;font-size:0.75rem">${p}</span>`).join('')}
+                </div>
+            </div>
+            ` : ''}
+
+            <div class="detail-section">
+                <h3>${lang === 'es' ? 'Dónde comprar' : 'Where to buy'}</h3>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn">
+                        ${lang === 'es' ? 'Tienda oficial' : 'Official store'} <i data-lucide="external-link"></i>
+                    </a>` : ''}
+                </div>
+            </div>
         `;
-        document.body.appendChild(modal);
+
+        modal.style.display = 'flex';
         if (window.lucide) window.lucide.createIcons();
 
-        modal.querySelector('#comp-modal-close').addEventListener('click', () => modal.remove());
-        modal.querySelector('.comp-modal__backdrop').addEventListener('click', () => modal.remove());
+        document.getElementById('comp-modal-close-detail').onclick = () => { modal.style.display = 'none'; };
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     }
 
     function filtered() {
@@ -183,7 +175,7 @@ window.renderFilamentComparator = function (container, t, opts) {
         const list = filtered();
         grid.innerHTML = '';
         if (list.length === 0) {
-            if (noResults) noResults.style.display = 'block';
+            if (noResults) noResults.style.display = 'flex';
             return;
         }
         if (noResults) noResults.style.display = 'none';
@@ -209,7 +201,7 @@ window.renderFilamentComparator = function (container, t, opts) {
                         ${getMaterialBadge(f.material)}
                         <span class="comp-card__brand">${f.brand}</span>
                     </div>
-                    <h3 class="comp-card__name" style="cursor:pointer" title="${lang === 'es' ? 'Ver detalles' : 'View details'}">${f.name}</h3>
+                    <h3 class="comp-card__name detail-trigger" style="cursor:pointer" title="${lang === 'es' ? 'Ver detalles' : 'View details'}">${f.name}</h3>
                     <div style="margin-top:6px">${colorPreview}</div>
                 </div>
                 <div class="comp-card__quick-specs">
@@ -227,8 +219,8 @@ window.renderFilamentComparator = function (container, t, opts) {
                     <button class="comp-btn-detail" data-id="${f.id}" title="${lang === 'es' ? 'Ver detalles' : 'View details'}">
                         <i data-lucide="info"></i>
                     </button>
-                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-btn-buy">
-                        <i data-lucide="shopping-cart"></i> ${lang === 'es' ? 'Comprar' : 'Buy'}
+                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn-sm">
+                        <i data-lucide="shopping-cart"></i>
                     </a>` : ''}
                 </div>
             `;
@@ -237,17 +229,9 @@ window.renderFilamentComparator = function (container, t, opts) {
 
         if (window.lucide) window.lucide.createIcons();
 
-        grid.querySelectorAll('.comp-card__name').forEach(el => {
+        grid.querySelectorAll('.detail-trigger, .comp-btn-detail').forEach(el => {
             el.addEventListener('click', e => {
-                const id = e.target.closest('.comp-card').dataset.id;
-                const f = allFilaments.find(f => f.id === id);
-                if (f) showDetailModal(f);
-            });
-        });
-
-        grid.querySelectorAll('.comp-btn-detail').forEach(btn => {
-            btn.addEventListener('click', e => {
-                const id = btn.dataset.id;
+                const id = e.currentTarget.dataset.id || e.target.closest('.comp-card').dataset.id;
                 const f = allFilaments.find(f => f.id === id);
                 if (f) showDetailModal(f);
             });
@@ -292,6 +276,10 @@ window.renderFilamentComparator = function (container, t, opts) {
         const filaments = allFilaments.filter(f => selected.has(f.id));
         if (filaments.length < 2) return;
 
+        const modal = document.getElementById('comp-modal');
+        const content = document.getElementById('comp-modal-content');
+        if (!modal || !content) return;
+
         const headerCols = filaments.map(f => {
             return `<th>
                 <div style="text-align:center">
@@ -315,7 +303,7 @@ window.renderFilamentComparator = function (container, t, opts) {
             let cells = filaments.map(f => {
                 return `<td>${spec.format(f)}</td>`;
             }).join('');
-            return `<tr><td class="spec-label">${spec.label[lang]}</td>${cells}</tr>`;
+            return `<tr><td class="comp-spec-label">${spec.label[lang]}</td>${cells}</tr>`;
         }).join('');
 
         const propsRow = filaments.map(f => {
@@ -323,28 +311,24 @@ window.renderFilamentComparator = function (container, t, opts) {
             return `<td style="font-size:0.75rem;padding:8px">${props}</td>`;
         }).join('');
 
-        const modal = document.createElement('div');
-        modal.className = 'comp-modal';
-        modal.innerHTML = `
-            <div class="comp-modal__backdrop"></div>
-            <div class="comp-modal__content">
-                <div class="comp-modal__header">
-                    <h2>${lang === 'es' ? 'Comparar filamentos' : 'Compare filaments'}</h2>
-                    <button class="comp-modal__close" id="comp-modal-close"><i data-lucide="x"></i></button>
-                </div>
-                <div class="comp-modal__table-wrap">
-                    <table class="comp-table">
-                        <thead><tr><th></th>${headerCols}</tr></thead>
-                        <tbody>${specRows}<tr><td class="spec-label">${lang === 'es' ? 'Propiedades' : 'Properties'}</td>${propsRow}</tr></tbody>
-                    </table>
-                </div>
+        content.innerHTML = `
+            <div class="comp-modal-header">
+                <h2>${lang === 'es' ? 'Comparar filamentos' : 'Compare filaments'}</h2>
+                <button class="comp-modal-close" id="comp-modal-close-compare"><i data-lucide="x"></i></button>
+            </div>
+            <div class="comp-table-wrap">
+                <table class="comp-table">
+                    <thead><tr><th></th>${headerCols}</tr></thead>
+                    <tbody>${specRows}<tr><td class="comp-spec-label">${lang === 'es' ? 'Propiedades' : 'Properties'}</td>${propsRow}</tr></tbody>
+                </table>
             </div>
         `;
-        document.body.appendChild(modal);
+
+        modal.style.display = 'flex';
         if (window.lucide) window.lucide.createIcons();
 
-        modal.querySelector('#comp-modal-close').addEventListener('click', () => modal.remove());
-        modal.querySelector('.comp-modal__backdrop').addEventListener('click', () => modal.remove());
+        document.getElementById('comp-modal-close-compare').onclick = () => { modal.style.display = 'none'; };
+        modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
     }
 
     function showToast(msg) {
@@ -392,12 +376,21 @@ window.renderFilamentComparator = function (container, t, opts) {
             </div>
             <div id="comp-grid" class="comp-grid"></div>
             <div id="comp-no-results" class="comp-no-results" style="display:none">
+                <i data-lucide="search-x" style="width:40px;height:40px;margin-bottom:1rem"></i>
                 <p>${window.currentLang === 'es' ? 'No se encontraron filamentos' : 'No filaments found'}</p>
             </div>
             <div id="comp-bar" class="comp-bar" style="display:none">
-                <span id="comp-bar-count"></span>
-                <button id="comp-bar-compare">${window.currentLang === 'es' ? 'Comparar seleccionados' : 'Compare selected'}</button>
-                <button id="comp-bar-clear">${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}</button>
+                <span id="comp-bar-count" class="comp-bar-text"></span>
+                <button id="comp-bar-btn" class="comp-bar-btn">
+                    <i data-lucide="columns-2"></i>
+                    ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
+                </button>
+                <button id="comp-bar-clear" class="comp-bar-clear">
+                    ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
+                </button>
+            </div>
+            <div id="comp-modal" class="comp-modal" style="display:none">
+                <div id="comp-modal-content" class="comp-modal-inner"></div>
             </div>
         `;
 
@@ -411,7 +404,7 @@ window.renderFilamentComparator = function (container, t, opts) {
             .comp-filter-group label { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
             .comp-filter-group select, .comp-filter-group input { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:8px; padding:8px 12px; color:var(--text-main); font-family:var(--font-family); }
             .comp-filter-group--search { flex:1; min-width:200px; }
-            .comp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; padding:0 20px 20px; }
+            .comp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; padding:0 20px 100px; }
             .comp-card { background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; transition:all 0.2s; }
             .comp-card:hover { border-color:var(--primary); box-shadow:0 0 20px var(--accent-glow); transform:translateY(-2px); }
             .comp-card--selected { border-color:var(--secondary); }
@@ -424,34 +417,35 @@ window.renderFilamentComparator = function (container, t, opts) {
             .qs span { font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; }
             .qs b { font-size:0.85rem; }
             .comp-card__actions { display:flex; gap:8px; padding:12px 16px; flex-wrap:wrap; }
-            .comp-btn-select, .comp-btn-detail, .comp-btn-buy { display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); text-decoration:none; transition:all 0.2s; }
+            .comp-btn-select, .comp-btn-detail { display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; }
             .comp-btn-select { background:rgba(139,92,246,0.2); color:#A78BFA; }
             .comp-btn-select:hover { background:rgba(139,92,246,0.3); }
             .comp-btn-select--active { background:#10B981; color:white; }
-            .comp-btn-detail { background:rgba(99,102,241,0.2); color:#818CF8; }
+            .comp-btn-detail { background:rgba(99,102,241,0.2); color:#818CF8; padding:6px; }
             .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
-            .comp-btn-buy { background:rgba(16,185,129,0.2); color:#10B981; }
-            .comp-btn-buy:hover { background:rgba(16,185,129,0.3); }
-            .comp-no-results { text-align:center; padding:60px 20px; color:var(--text-muted); }
-            .comp-bar { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--bg-card); border:1px solid var(--secondary); border-radius:16px; padding:12px 20px; display:flex; align-items:center; gap:16px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:100; }
-            .comp-bar button { padding:8px 16px; border-radius:8px; border:none; font-weight:500; cursor:pointer; font-family:var(--font-family); }
-            #comp-bar-compare { background:var(--secondary); color:white; }
-            #comp-bar-clear { background:rgba(255,255,255,0.1); color:var(--text-main); }
-            .comp-modal { position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center; }
-            .comp-modal__backdrop { position:absolute; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(4px); }
-            .comp-modal__content { position:relative; background:var(--bg-dark); border:1px solid var(--glass-border); border-radius:16px; max-width:90vw; max-height:90vh; overflow:auto; }
-            .comp-modal__content--detail { max-width:600px; }
-            .comp-modal__header { display:flex; justify-content:space-between; align-items:start; padding:20px; border-bottom:1px solid var(--glass-border); }
-            .comp-modal__header h2 { font-size:1.2rem; }
-            .comp-modal__close { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; }
-            .comp-modal__table-wrap { padding:20px; overflow:auto; }
-            .comp-table { width:100%; border-collapse:collapse; }
-            .comp-table th { padding:12px 8px; vertical-align:bottom; }
-            .comp-table td { padding:10px 8px; text-align:center; border-top:1px solid var(--glass-border); }
-            .spec-label { text-align:left; color:var(--text-muted); font-size:0.8rem; width:140px; }
-            .comp-toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#EF4444; color:white; padding:12px 20px; border-radius:8px; font-weight:500; z-index:1001; }
+            .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; text-decoration:none; display:flex; align-items:center; }
+            .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
-            .detail-section { padding:16px 20px; border-bottom:1px solid var(--glass-border); }
+            .comp-bar { position:fixed; bottom:0; left:0; right:0; background:rgba(15,23,42,0.95); backdrop-filter:blur(12px); border-top:1px solid rgba(139,92,246,0.4); padding:1rem 2rem; display:none; align-items:center; justify-content:center; gap:1rem; z-index:500; }
+            .comp-bar-text { font-size:0.875rem; color:var(--text-muted); }
+            .comp-bar-btn { background:var(--primary); border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); transition:background 0.15s; }
+            .comp-bar-btn:hover { background:var(--primary-dark); }
+            .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:var(--text-muted); padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
+            
+            .comp-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; display:none; align-items:center; justify-content:center; padding:1rem; }
+            .comp-modal-inner { background:#0F172A; border:1px solid rgba(139,92,246,0.3); border-radius:16px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
+            .comp-modal-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem; }
+            .comp-modal-header h2 { font-size:1.4rem; font-weight:800; }
+            .comp-modal-close { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:var(--text-main); width:36px; height:36px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+            .comp-table-wrap { overflow-x:auto; }
+            .comp-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+            .comp-table th, .comp-table td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.06); text-align:center; }
+            .comp-table th { text-align:left; }
+            .comp-spec-label { text-align:left; color:var(--text-muted); font-size:0.8rem; white-space:nowrap; }
+            .comp-buy-btn { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:var(--secondary); padding:8px 16px; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+            .comp-toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#EF4444; color:white; padding:12px 20px; border-radius:8px; font-weight:500; z-index:1001; }
+            
+            .detail-section { padding:16px 0; border-bottom:1px solid var(--glass-border); }
             .detail-section:last-child { border-bottom:none; }
             .detail-section h3 { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
             .spec-box { background:rgba(255,255,255,0.03); border-radius:8px; padding:10px; }
@@ -466,10 +460,10 @@ window.renderFilamentComparator = function (container, t, opts) {
         document.getElementById('filter-brand').addEventListener('change', e => { activeBrand = e.target.value; renderGrid(); });
         document.getElementById('filter-enclosure').addEventListener('change', e => { activeEnclosure = e.target.value; renderGrid(); });
         document.getElementById('filter-search').addEventListener('input', e => { searchTerm = e.target.value; renderGrid(); });
-        document.getElementById('comp-bar-compare').addEventListener('click', showCompareModal);
+        document.getElementById('comp-bar-btn').addEventListener('click', showCompareModal);
         document.getElementById('comp-bar-clear').addEventListener('click', () => { selected.clear(); updateCompareBar(); renderGrid(); });
 
-        fetch(FILAMENTS_URL)
+        fetch(FILAMENTS_URL + '?v=' + Date.now())
             .then(r => r.json())
             .then(data => {
                 allFilaments = data.filaments || [];
