@@ -5,6 +5,16 @@ function init() {
     setupLangButtons();
     setupNavigation();
 
+    // Listen for iframe height messages from comparator/filaments iframes
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'comparator-height') {
+            var iframe = document.querySelector('iframe[src*="filaments"]');
+            if (iframe) {
+                iframe.style.height = (e.data.height + 40) + 'px';
+            }
+        }
+    });
+
     // Initial routing based on hash or default
     handleRouting();
 
@@ -195,7 +205,7 @@ function renderView() {
         content.style.maxWidth = '100%';
         content.style.padding = '0';
         content.innerHTML = `
-            <iframe src="./filaments/index.html" style="width:100%;min-height:600px;border:none;" frameborder="0"></iframe>
+            <iframe src="./filaments/index.html" id="filaments-iframe" style="width:100%;min-height:600px;border:none;height:auto;" frameborder="0"></iframe>
         `;
     } else {
         // Fallback to home
