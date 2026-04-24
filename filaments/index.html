@@ -21,7 +21,7 @@
             --glass-border: rgba(255, 255, 255, 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-        html, body { height: auto; overflow-x: hidden; }
+        html, body { height: auto; min-height: 100vh; }
         body {
             background-color: var(--bg-dark);
             background-image:
@@ -32,32 +32,32 @@
             font-family: var(--font-family);
             line-height: 1.6;
         }
-        #app { width: 100%; }
+        #app { width: 100%; min-height: 100vh; }
     </style>
 </head>
 <body>
     <div id="app"></div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <script src="../src/components/filamentComparator.js?v=1.0"></script>
+    <script src="../src/components/filamentComparator.js?v=1.1"></script>
     <script>
         window.currentLang = (navigator.language || 'es').startsWith('es') ? 'es' : 'en';
         document.documentElement.lang = window.currentLang;
 
         function reportHeight() {
-            var h = document.documentElement.scrollHeight;
+            var h = document.body.scrollHeight;
             window.parent.postMessage({ type: 'comparator-height', height: h }, '*');
         }
 
         document.addEventListener('DOMContentLoaded', function() {
             var container = document.getElementById('app');
             window.renderFilamentComparator(container, {}, { dataUrl: '../src/assets/filaments.json' });
+            setTimeout(reportHeight, 100);
+            setInterval(reportHeight, 500);
+        });
 
-            if (window.ResizeObserver) {
-                new ResizeObserver(reportHeight).observe(document.body);
-            } else {
-                setInterval(reportHeight, 300);
-            }
+        window.addEventListener('load', function() {
+            setTimeout(reportHeight, 200);
         });
     </script>
 </body>
