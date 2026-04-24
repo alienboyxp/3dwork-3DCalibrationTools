@@ -361,28 +361,69 @@ window.renderFilamentComparator = function (container, t, opts) {
     function init(container) {
         const lang = window.currentLang || 'es';
         
-        const bar = document.createElement('div');
-        bar.id = 'comp-bar';
-        bar.innerHTML = `
-            <span id="comp-bar-count"></span>
-            <button id="comp-bar-btn" class="comp-bar-btn">
-                <i data-lucide="columns-2"></i>
-                ${lang === 'es' ? 'Comparar' : 'Compare'}
-            </button>
-            <button id="comp-bar-clear" class="comp-bar-clear">
-                ${lang === 'es' ? 'Limpiar' : 'Clear'}
-            </button>
-        `;
-        bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);border-top:1px solid rgba(139,92,246,0.5);padding:16px 32px;display:none;align-items:center;justify-content:center;gap:16px;z-index:2147483647;';
-        document.body.appendChild(bar);
-
-        const modal = document.createElement('div');
-        modal.id = 'comp-modal';
-        modal.innerHTML = '<div id="comp-modal-content" class="comp-modal-inner"></div>';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;display:none;align-items:center;justify-content:center;padding:1rem;';
-        document.body.appendChild(modal);
-        
         container.innerHTML = `
+            <style>
+                .comp-hero { text-align:center; padding:40px 20px 40px; }
+                .comp-hero h1 { font-size:2rem; font-weight:800; margin-bottom:8px; background:linear-gradient(135deg,#06B6D4,#10B981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+                .comp-hero p { color:var(--text-muted); max-width:600px; margin:0 auto; }
+                .comp-filters { display:flex; flex-wrap:wrap; gap:16px; padding:20px; background:var(--bg-card); border-radius:16px; margin:0 20px 20px; border:1px solid var(--glass-border); }
+                .comp-filter-group { display:flex; flex-direction:column; gap:6px; }
+                .comp-filter-group label { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
+                .comp-filter-group select, .comp-filter-group input { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:8px; padding:8px 12px; color:var(--text-main); font-family:var(--font-family); }
+                .comp-filter-group--search { flex:1; min-width:200px; }
+                .comp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem; padding:0 20px 120px; }
+                .comp-card { background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; transition:all 0.2s; }
+                .comp-card:hover { border-color:var(--primary); box-shadow:0 0 20px var(--accent-glow); transform:translateY(-2px); }
+                .comp-card--selected { border-color:var(--secondary); }
+                .comp-card__header { padding:16px; }
+                .comp-card__badge-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+                .comp-card__brand { font-size:0.75rem; color:var(--text-muted); }
+                .comp-card__name { font-size:1rem; font-weight:600; margin-top:4px; }
+                .comp-card__quick-specs { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; background:rgba(0,0,0,0.2); }
+                .qs { display:flex; flex-direction:column; gap:2px; }
+                .qs span { font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; }
+                .qs b { font-size:0.85rem; }
+                .comp-card__actions { display:flex; gap:8px; padding:12px 16px; justify-content:space-between; flex-wrap:wrap; }
+                .comp-card__actions:last-of-type { justify-content:center; }
+                .comp-btn-select { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; background:rgba(139,92,246,0.2); color:#A78BFA; }
+                .comp-btn-select:hover { background:rgba(139,92,246,0.3); }
+                .comp-btn-select--active { background:#10B981; color:white; }
+                .comp-btn-detail { display:inline-flex; align-items:center; justify-content:center; padding:6px; background:rgba(99,102,241,0.2); color:#818CF8; border-radius:8px; font-size:0.75rem; }
+                .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
+                .comp-btn-ali { background:#FF681F; color:#FFF; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
+                .comp-btn-ali:hover { background:#FF8550; }
+                .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
+                .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
+                
+                .comp-bar { position:fixed; bottom:0; left:0; right:0; background:rgba(15,23,42,0.95); backdrop-filter:blur(12px); border-top:1px solid rgba(139,92,246,0.4); padding:1rem 2rem; display:none; align-items:center; justify-content:center; gap:1rem; z-index:500; }
+                .comp-bar-text { font-size:0.875rem; color:var(--text-muted); }
+                .comp-bar-btn { background:var(--primary); border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); }
+                .comp-bar-btn:hover { background:var(--primary-dark); }
+                .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:var(--text-muted); padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
+                
+                .comp-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; display:none; align-items:center; justify-content:center; padding:1rem; }
+                .comp-modal-inner { background:#0F172A; border:1px solid rgba(139,92,246,0.3); border-radius:16px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
+                .comp-modal-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem; }
+                .comp-modal-header h2 { font-size:1.4rem; font-weight:800; }
+                .comp-modal-close { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:var(--text-main); width:36px; height:36px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+                .comp-table-wrap { overflow-x:auto; }
+                .comp-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
+                .comp-table th, .comp-table td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.06); text-align:center; }
+                .comp-table th { text-align:left; }
+                .comp-spec-label { text-align:left; color:var(--text-muted); font-size:0.8rem; white-space:nowrap; }
+                .comp-buy-btn { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:var(--secondary); padding:8px 16px; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+                .comp-toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#EF4444; color:white; padding:12px 20px; border-radius:8px; font-weight:500; z-index:1001; }
+                
+                .detail-section { padding:16px 0; border-bottom:1px solid var(--glass-border); }
+                .detail-section:last-child { border-bottom:none; }
+                .detail-section h3 { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
+                .spec-box { background:rgba(255,255,255,0.03); border-radius:8px; padding:10px; }
+                .spec-box .spec-label { display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:2px; }
+                .spec-box .spec-value { display:block; font-size:0.9rem; font-weight:600; }
+                
+                @media (max-width:768px) { .comp-filters { flex-direction:column; } .comp-grid { grid-template-columns:1fr; } }
+            </style>
+
             <div class="comp-hero">
                 <h1>${lang === 'es' ? 'Comparador de Filamentos 3D' : '3D Filament Comparator'}</h1>
                 <p>${lang === 'es' 
@@ -419,69 +460,22 @@ window.renderFilamentComparator = function (container, t, opts) {
                 <i data-lucide="search-x" style="width:40px;height:40px;margin-bottom:1rem"></i>
                 <p>${lang === 'es' ? 'No se encontraron filamentos' : 'No filaments found'}</p>
             </div>
-        `;
 
-        const style = document.createElement('style');
-        style.textContent = `
-            .comp-hero { text-align:center; padding:40px 20px 40px; }
-            .comp-hero h1 { font-size:2rem; font-weight:800; margin-bottom:8px; background:linear-gradient(135deg,#06B6D4,#10B981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-            .comp-hero p { color:var(--text-muted); max-width:600px; margin:0 auto; }
-            .comp-filters { display:flex; flex-wrap:wrap; gap:16px; padding:20px; background:var(--bg-card); border-radius:16px; margin:0 20px 20px; border:1px solid var(--glass-border); }
-            .comp-filter-group { display:flex; flex-direction:column; gap:6px; }
-            .comp-filter-group label { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; }
-            .comp-filter-group select, .comp-filter-group input { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:8px; padding:8px 12px; color:var(--text-main); font-family:var(--font-family); }
-            .comp-filter-group--search { flex:1; min-width:200px; }
-            .comp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem; padding:0 20px 120px; }
-            .comp-card { background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; transition:all 0.2s; }
-            .comp-card:hover { border-color:var(--primary); box-shadow:0 0 20px var(--accent-glow); transform:translateY(-2px); }
-            .comp-card--selected { border-color:var(--secondary); }
-            .comp-card__header { padding:16px; }
-            .comp-card__badge-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
-            .comp-card__brand { font-size:0.75rem; color:var(--text-muted); }
-            .comp-card__name { font-size:1rem; font-weight:600; margin-top:4px; }
-            .comp-card__quick-specs { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px 16px; background:rgba(0,0,0,0.2); }
-            .qs { display:flex; flex-direction:column; gap:2px; }
-            .qs span { font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; }
-            .qs b { font-size:0.85rem; }
-            .comp-card__actions { display:flex; gap:8px; padding:12px 16px; justify-content:space-between; flex-wrap:wrap; }
-            .comp-card__actions:last-of-type { justify-content:center; }
-            .comp-btn-select { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; background:rgba(139,92,246,0.2); color:#A78BFA; }
-            .comp-btn-select:hover { background:rgba(139,92,246,0.3); }
-            .comp-btn-select--active { background:#10B981; color:white; }
-            .comp-btn-detail { display:inline-flex; align-items:center; justify-content:center; padding:6px; background:rgba(99,102,241,0.2); color:#818CF8; border-radius:8px; font-size:0.75rem; }
-            .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
-            .comp-btn-ali { background:#FF681F; color:#FFF; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
-            .comp-btn-ali:hover { background:#FF8550; }
-            .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
-            .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
-            
-            .comp-bar-text { font-size:0.875rem; color:#94A3B8; }
-            .comp-bar-btn { background:#06B6D4; border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); }
-            .comp-bar-btn:hover { background:#0891B2; }
-            .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:#94A3B8; padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
-            
-            .comp-modal-inner { background:#0F172A; border:1px solid rgba(139,92,246,0.3); border-radius:16px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
-            .comp-modal-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem; }
-            .comp-modal-header h2 { font-size:1.4rem; font-weight:800; }
-            .comp-modal-close { background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:var(--text-main); width:36px; height:36px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-            .comp-table-wrap { overflow-x:auto; }
-            .comp-table { width:100%; border-collapse:collapse; font-size:0.875rem; }
-            .comp-table th, .comp-table td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.06); text-align:center; }
-            .comp-table th { text-align:left; }
-            .comp-spec-label { text-align:left; color:var(--text-muted); font-size:0.8rem; white-space:nowrap; }
-            .comp-buy-btn { background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.3); color:var(--secondary); padding:8px 16px; border-radius:8px; font-size:0.85rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
-            .comp-toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#EF4444; color:white; padding:12px 20px; border-radius:8px; font-weight:500; z-index:1001; }
-            
-            .detail-section { padding:16px 0; border-bottom:1px solid var(--glass-border); }
-            .detail-section:last-child { border-bottom:none; }
-            .detail-section h3 { font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:10px; }
-            .spec-box { background:rgba(255,255,255,0.03); border-radius:8px; padding:10px; }
-            .spec-box .spec-label { display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:2px; }
-            .spec-box .spec-value { display:block; font-size:0.9rem; font-weight:600; }
-            
-            @media (max-width:768px) { .comp-filters { flex-direction:column; } .comp-grid { grid-template-columns:1fr; } }
+            <div id="comp-bar" class="comp-bar">
+                <span id="comp-bar-count" class="comp-bar-text"></span>
+                <button id="comp-bar-btn" class="comp-bar-btn">
+                    <i data-lucide="columns-2"></i>
+                    ${lang === 'es' ? 'Comparar' : 'Compare'}
+                </button>
+                <button id="comp-bar-clear" class="comp-bar-clear">
+                    ${lang === 'es' ? 'Limpiar' : 'Clear'}
+                </button>
+            </div>
+
+            <div id="comp-modal" class="comp-modal">
+                <div id="comp-modal-content" class="comp-modal-inner"></div>
+            </div>
         `;
-        document.head.appendChild(style);
 
         document.getElementById('filter-material').addEventListener('change', e => { activeMaterial = e.target.value; renderGrid(); });
         document.getElementById('filter-brand').addEventListener('change', e => { activeBrand = e.target.value; renderGrid(); });
