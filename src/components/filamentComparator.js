@@ -154,13 +154,8 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             <div class="detail-section">
                 <h3>${lang === 'es' ? 'Dónde comprar' : 'Where to buy'}</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-buy-btn" style="background:#FFF;border-color:#FF681F;color:#000">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><text x="4" y="16" font-size="10" font-weight="bold" fill="#FF681F">!</text></svg> AliExpress
-                    </a>` : ''}
-                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn">
-                        <img src="https://logo.clearbit.com/${new URL(f.buy_url).hostname}" style="width:16px;height:16px;border-radius:4px;object-fit:contain" onerror="this.style.display='none'"> 
-                        ${f.brand}
-                    </a>` : ''}
+                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-buy-btn" style="background:#FF681F;color:#FFF;border-color:#FF681F;font-weight:600">ALIEXPRESS</a>` : ''}
+                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn">${f.brand}</a>` : ''}
                 </div>
             </div>
         `;
@@ -238,12 +233,8 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
                     <button class="comp-btn-detail" data-id="${f.id}" title="${lang === 'es' ? 'Ver detalles' : 'View details'}">
                         <i data-lucide="info"></i>
                     </button>
-                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-btn-ali" title="AliExpress">
-                        <svg width="14" height="14" viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#FF681F"/><text x="12" y="16" text-anchor="middle" font-size="12" font-weight="bold" fill="#FFF">a</text></svg>
-                    </a>` : ''}
-                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn-sm" title="${f.brand}">
-                        <img src="https://logo.clearbit.com/${(f.buy_url.match(/https?:\/\/([^/]+)/)||[0,''])[1]}" style="width:14px;height:14px;border-radius:4px;object-fit:contain;background:#fff" onerror="this.style.display='none'" onload="this.style.display='inline-flex'">
-                    </a>` : ''}
+                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-btn-ali">ALIEXPRESS</a>` : ''}
+                    ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn-sm">${f.brand}</a>` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -445,9 +436,9 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             .comp-btn-select--active { background:#10B981; color:white; }
             .comp-btn-detail { background:rgba(99,102,241,0.2); color:#818CF8; padding:6px; }
             .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
-            .comp-btn-ali { background:rgba(255,104,31,0.2); color:#FF681F; padding:6px 10px; border-radius:8px; text-decoration:none; display:flex; align-items:center; }
-            .comp-btn-ali:hover { background:rgba(255,104,31,0.3); }
-            .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; text-decoration:none; display:flex; align-items:center; }
+            .comp-btn-ali { background:#FF681F; color:#FFF; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; text-decoration:none; }
+            .comp-btn-ali:hover { background:#FF8550; }
+            .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
             .comp-bar { position:fixed; bottom:0; left:0; right:0; background:rgba(15,23,42,0.95); backdrop-filter:blur(12px); border-top:1px solid rgba(139,92,246,0.4); padding:1rem 2rem; display:none; align-items:center; justify-content:center; gap:1rem; z-index:500; }
