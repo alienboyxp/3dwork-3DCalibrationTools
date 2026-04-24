@@ -5,16 +5,6 @@ function init() {
     setupLangButtons();
     setupNavigation();
 
-    // Listen for iframe height messages from comparator/filaments iframes
-    window.addEventListener('message', function(e) {
-        if (e.data && e.data.type === 'comparator-height') {
-            var iframe = document.querySelector('iframe[src*="filaments"]');
-            if (iframe) {
-                iframe.style.height = (e.data.height + 40) + 'px';
-            }
-        }
-    });
-
     // Initial routing based on hash or default
     handleRouting();
 
@@ -87,7 +77,7 @@ function updateUILabels() {
     const navSkew = document.getElementById('nav-skew');
     const navPrice = document.getElementById('nav-price');
 
-    if (navHome) navHome.textContent = 'Home'; // Could be localized if needed
+    if (navHome) navHome.textContent = 'Home';
     if (navCalibrationMenu) {
         const icon = navCalibrationMenu.querySelector('i');
         navCalibrationMenu.textContent = t.calibrationMenu + ' ';
@@ -120,12 +110,6 @@ function updateUILabels() {
 
     const navHueForge = document.getElementById('nav-hueforge');
     if (navHueForge) navHueForge.textContent = t.hueforgeTitle;
-
-    const navLitho = document.getElementById('nav-lithophane');
-    if (navLitho) navLitho.textContent = t.lithophaneTitle;
-
-    const navHue = document.getElementById('nav-hueforge');
-    if (navHue) navHue.textContent = t.hueforgeTitle;
 
     const navLogAnalyzer = document.getElementById('nav-loganalyzer');
     if (navLogAnalyzer) navLogAnalyzer.textContent = t.logAnalyzerTitle;
@@ -177,6 +161,7 @@ function renderView() {
     // Reset any view-specific style overrides
     content.style.maxWidth = '';
     content.style.width = '';
+    content.style.padding = '';
 
     if (currentView === 'home' && window.renderHome) {
         window.renderHome(content, t);
@@ -201,12 +186,10 @@ function renderView() {
     } else if (currentView === 'comparator' && window.renderComparator) {
         content.style.maxWidth = '1200px';
         window.renderComparator(content, t);
-    } else if (currentView === 'filaments') {
+    } else if (currentView === 'filaments' && window.renderFilamentComparator) {
+        // Render filamentComparator directly instead of iframe (fixes position:fixed floating bar)
         content.style.maxWidth = '100%';
-        content.style.padding = '0';
-        content.innerHTML = `
-            <iframe src="./filaments/index.html" id="filaments-iframe" style="width:100%;min-height:600px;border:none;height:auto;" frameborder="0"></iframe>
-        `;
+        window.renderFilamentComparator(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);
