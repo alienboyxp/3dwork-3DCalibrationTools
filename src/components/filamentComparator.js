@@ -15,6 +15,35 @@ window.renderFilamentComparator = function (container, t, opts) {
         'PA-CF': '#A855F7', 'PC': '#6366F1', 'PC-ABS': '#818CF8'
     };
 
+    function ensureElements() {
+        let bar = document.getElementById('comp-bar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'comp-bar';
+            bar.className = 'comp-bar';
+            bar.innerHTML = `
+                <span id="comp-bar-count" class="comp-bar-text"></span>
+                <button id="comp-bar-btn" class="comp-bar-btn">
+                    <i data-lucide="columns-2"></i>
+                    ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
+                </button>
+                <button id="comp-bar-clear" class="comp-bar-clear">
+                    ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
+                </button>
+            `;
+            document.body.appendChild(bar);
+        }
+        let modal = document.getElementById('comp-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'comp-modal';
+            modal.className = 'comp-modal';
+            modal.innerHTML = `<div id="comp-modal-content" class="comp-modal-inner"></div>`;
+            document.body.appendChild(modal);
+        }
+        return { bar, modal };
+    }
+
     function getMaterialBadge(material) {
         const color = MATERIAL_COLORS[material] || '#94A3B8';
         return `<span style="background:${color}22;color:${color};border:1px solid ${color}44;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;letter-spacing:0.05em;">${material}</span>`;
@@ -280,13 +309,13 @@ window.renderFilamentComparator = function (container, t, opts) {
         const count = document.getElementById('comp-bar-count');
         if (!bar) return;
         if (selected.size >= 2) {
-            bar.classList.add('comp-bar--visible');
+            bar.style.display = 'flex';
             const lang = window.currentLang || 'es';
             if (count) count.textContent = lang === 'es'
                 ? `${selected.size} ${selected.size === 1 ? 'filamento seleccionado' : 'filamentos seleccionados'}`
                 : `${selected.size} filament${selected.size > 1 ? 's' : ''} selected`;
         } else {
-            bar.classList.remove('comp-bar--visible');
+            bar.style.display = 'none';
         }
     }
 
@@ -361,6 +390,8 @@ window.renderFilamentComparator = function (container, t, opts) {
     }
 
     function init(container) {
+        ensureElements();
+        
         container.innerHTML = `
             <div class="comp-hero">
                 <h1>${window.currentLang === 'es' ? 'Comparador de Filamentos 3D' : '3D Filament Comparator'}</h1>
@@ -400,23 +431,6 @@ window.renderFilamentComparator = function (container, t, opts) {
             </div>
         `;
 
-        document.getElementById('app').appendChild(document.getElementById('comp-modal'));
-
-        const bar = document.createElement('div');
-        bar.id = 'comp-bar';
-        bar.className = 'comp-bar';
-        bar.innerHTML = `
-            <span id="comp-bar-count"></span>
-            <button id="comp-bar-btn">
-                <i data-lucide="columns-2"></i>
-                ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
-            </button>
-            <button id="comp-bar-clear">
-                ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
-            </button>
-        `;
-        document.body.appendChild(bar);
-
         const style = document.createElement('style');
         style.textContent = `
             .comp-hero { text-align:center; padding:40px 20px 40px; }
@@ -451,14 +465,25 @@ window.renderFilamentComparator = function (container, t, opts) {
             .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
-            #comp-bar { position:fixed; bottom:0; left:0; right:0; background:rgba(15,23,42,0.97); backdrop-filter:blur(12px); border-top:1px solid rgba(139,92,246,0.5); padding:16px 32px; display:none; align-items:center; justify-content:center; gap:16px; z-index:999999; transform:translateZ(0); }
-            #comp-bar.comp-bar--visible { display:flex; }
-            .comp-bar-text { font-size:0.875rem; color:var(--text-muted); }
+            #comp-bar { 
+                position:fixed !important; bottom:0 !important; left:0 !important; right:0 !important; 
+                background:rgba(15,23,42,0.97) !important; backdrop-filter:blur(12px) !important; 
+                border-top:1px solid rgba(139,92,246,0.5) !important; 
+                padding:16px 32px !important; display:none !important; 
+                align-items:center !important; justify-content:center !important; gap:16px !important; 
+                z-index:2147483647 !important; transform:translateZ(0) !important; 
+                will-change:transform !important;
+            }
+            .comp-bar-text { font-size:0.875rem; color:#94A3B8; }
             .comp-bar-btn { background:#06B6D4; border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); }
             .comp-bar-btn:hover { background:#0891B2; }
-            .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:var(--text-muted); padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
+            .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:#94A3B8; padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
             
-            .comp-modal { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:none; align-items:center; justify-content:center; padding:1rem; }
+            #comp-modal { 
+                position:fixed !important; inset:0 !important; background:rgba(0,0,0,0.85) !important; 
+                z-index:10000 !important; display:none !important; 
+                align-items:center !important; justify-content:center !important; padding:1rem !important; 
+            }
             .comp-modal-inner { background:#0F172A; border:1px solid rgba(139,92,246,0.3); border-radius:16px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
             .comp-modal-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem; }
             .comp-modal-header h2 { font-size:1.4rem; font-weight:800; }
@@ -486,8 +511,12 @@ window.renderFilamentComparator = function (container, t, opts) {
         document.getElementById('filter-brand').addEventListener('change', e => { activeBrand = e.target.value; renderGrid(); });
         document.getElementById('filter-enclosure').addEventListener('change', e => { activeEnclosure = e.target.value; renderGrid(); });
         document.getElementById('filter-search').addEventListener('input', e => { searchTerm = e.target.value; renderGrid(); });
-        document.getElementById('comp-bar-btn').addEventListener('click', showCompareModal);
-        document.getElementById('comp-bar-clear').addEventListener('click', () => { selected.clear(); updateCompareBar(); renderGrid(); });
+        
+        const barBtn = document.getElementById('comp-bar-btn');
+        if (barBtn) barBtn.addEventListener('click', showCompareModal);
+        
+        const clearBtn = document.getElementById('comp-bar-clear');
+        if (clearBtn) clearBtn.addEventListener('click', () => { selected.clear(); updateCompareBar(); renderGrid(); });
 
         fetch(FILAMENTS_URL + '?v=' + Date.now())
             .then(r => r.json())
@@ -498,6 +527,7 @@ window.renderFilamentComparator = function (container, t, opts) {
                 brands.forEach(b => { brandSelect.innerHTML += `<option value="${b}">${b}</option>`; });
                 renderGrid();
                 updateCompareBar();
+                if (window.lucide) window.lucide.createIcons();
             })
             .catch(err => console.error('Error loading filaments:', err));
     }
