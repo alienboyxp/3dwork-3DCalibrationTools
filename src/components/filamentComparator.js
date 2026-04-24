@@ -33,7 +33,7 @@ window.renderFilamentComparator = function (container, t, opts) {
             `<span style="padding:3px 8px;background:rgba(99,102,241,0.15);color:#818CF8;border-radius:6px;font-size:0.7rem">${bp.replace('_', ' ')}</span>`
         ).join(' ') : '—';
 
-const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
+        const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
         const amsBg = (f.ams || f.ams_lite) ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)';
         const amsColor = (f.ams || f.ams_lite) ? '#10B981' : 'var(--text-muted)';
         const amsBorder = (f.ams || f.ams_lite) ? 'rgba(16,185,129,0.3)' : 'var(--glass-border)';
@@ -280,13 +280,13 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
         const count = document.getElementById('comp-bar-count');
         if (!bar) return;
         if (selected.size >= 2) {
-            bar.style.display = 'flex';
+            bar.classList.add('comp-bar--visible');
             const lang = window.currentLang || 'es';
             if (count) count.textContent = lang === 'es'
                 ? `${selected.size} ${selected.size === 1 ? 'filamento seleccionado' : 'filamentos seleccionados'}`
                 : `${selected.size} filament${selected.size > 1 ? 's' : ''} selected`;
         } else {
-            bar.style.display = 'none';
+            bar.classList.remove('comp-bar--visible');
         }
     }
 
@@ -398,22 +398,24 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
                 <i data-lucide="search-x" style="width:40px;height:40px;margin-bottom:1rem"></i>
                 <p>${window.currentLang === 'es' ? 'No se encontraron filamentos' : 'No filaments found'}</p>
             </div>
-        </div>
-        
-        <div id="comp-bar" style="position:fixed;bottom:0;left:0;right:0;background:rgba(15,23,42,0.97);backdrop-filter:blur(12px);border-top:1px solid rgba(139,92,246,0.5);padding:16px 32px;display:none;align-items:center;justify-content:center;gap:16px;z-index:999999;">
-            <span id="comp-bar-count" style="font-size:14px;color:#94A3B8"></span>
-            <button id="comp-bar-btn" style="background:#06B6D4;border:none;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;">
+        `;
+
+        document.getElementById('app').appendChild(document.getElementById('comp-modal'));
+
+        const bar = document.createElement('div');
+        bar.id = 'comp-bar';
+        bar.className = 'comp-bar';
+        bar.innerHTML = `
+            <span id="comp-bar-count"></span>
+            <button id="comp-bar-btn">
                 <i data-lucide="columns-2"></i>
                 ${window.currentLang === 'es' ? 'Comparar' : 'Compare'}
             </button>
-            <button id="comp-bar-clear" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:#94A3B8;padding:9px 16px;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">
+            <button id="comp-bar-clear">
                 ${window.currentLang === 'es' ? 'Limpiar' : 'Clear'}
             </button>
-        </div>
-            <div id="comp-modal" class="comp-modal" style="display:none">
-                <div id="comp-modal-content" class="comp-modal-inner"></div>
-            </div>
         `;
+        document.body.appendChild(bar);
 
         const style = document.createElement('style');
         style.textContent = `
@@ -437,29 +439,26 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             .qs { display:flex; flex-direction:column; gap:2px; }
             .qs span { font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; }
             .qs b { font-size:0.85rem; }
-            .comp-card__actions { display:flex; gap:8px; padding:12px 16px; flex-wrap:wrap; }
-            .comp-btn-select, .comp-btn-detail { display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; }
-            .comp-btn-select { background:rgba(139,92,246,0.2); color:#A78BFA; }
-            .comp-btn-select:hover { background:rgba(139,92,246,0.3); }
-            .comp-btn-select--active { background:#10B981; color:white; }
-            .comp-btn-ali { background:#FF681F; color:#FFF; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
-            .comp-btn-ali:hover { background:#FF8550; }
-            .comp-btn-detail { background:rgba(99,102,241,0.2); color:#818CF8; padding:6px; }
-            .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
-.comp-btn-select, .comp-btn-detail { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; }
-            .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
             .comp-card__actions { display:flex; gap:8px; padding:12px 16px; justify-content:space-between; flex-wrap:wrap; }
             .comp-card__actions:last-of-type { justify-content:center; }
+            .comp-btn-select { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:8px; font-size:0.75rem; font-weight:500; cursor:pointer; border:none; font-family:var(--font-family); transition:all 0.2s; background:rgba(139,92,246,0.2); color:#A78BFA; }
+            .comp-btn-select:hover { background:rgba(139,92,246,0.3); }
+            .comp-btn-select--active { background:#10B981; color:white; }
+            .comp-btn-detail { display:inline-flex; align-items:center; justify-content:center; padding:6px; background:rgba(99,102,241,0.2); color:#818CF8; border-radius:8px; font-size:0.75rem; }
+            .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
+            .comp-btn-ali { background:#FF681F; color:#FFF; padding:4px 8px; border-radius:6px; font-size:0.65rem; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:3px; }
+            .comp-btn-ali:hover { background:#FF8550; }
             .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
-            .comp-bar { position:fixed !important; bottom:0 !important; left:0 !important; right:0 !important; transform:translateZ(0) !important; will-change:transform !important; background:rgba(15,23,42,0.98) !important; backdrop-filter:blur(12px) !important; border-top:1px solid rgba(139,92,246,0.5) !important; padding:1rem 2rem !important; display:flex !important; align-items:center !important; justify-content:center !important; gap:1rem !important; z-index:2147483647 !important; }
+            #comp-bar { position:fixed; bottom:0; left:0; right:0; background:rgba(15,23,42,0.97); backdrop-filter:blur(12px); border-top:1px solid rgba(139,92,246,0.5); padding:16px 32px; display:none; align-items:center; justify-content:center; gap:16px; z-index:999999; transform:translateZ(0); }
+            #comp-bar.comp-bar--visible { display:flex; }
             .comp-bar-text { font-size:0.875rem; color:var(--text-muted); }
-            .comp-bar-btn { background:var(--primary); border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); transition:background 0.15s; }
-            .comp-bar-btn:hover { background:var(--primary-dark); }
+            .comp-bar-btn { background:#06B6D4; border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); }
+            .comp-bar-btn:hover { background:#0891B2; }
             .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:var(--text-muted); padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
             
-            .comp-modal { position:fixed !important; inset:0 !important; background:rgba(0,0,0,0.85) !important; z-index:10000 !important; display:none !important; align-items:center !important; justify-content:center !important; padding:1rem !important; }
+            .comp-modal { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; display:none; align-items:center; justify-content:center; padding:1rem; }
             .comp-modal-inner { background:#0F172A; border:1px solid rgba(139,92,246,0.3); border-radius:16px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
             .comp-modal-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem; }
             .comp-modal-header h2 { font-size:1.4rem; font-weight:800; }
