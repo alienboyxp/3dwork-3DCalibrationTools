@@ -441,13 +441,13 @@ const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
             .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; font-size:0.7rem; font-weight:600; text-decoration:none; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
-            .comp-bar { position:fixed; bottom:0; left:0; right:0; background:rgba(15,23,42,0.95); backdrop-filter:blur(12px); border-top:1px solid rgba(139,92,246,0.4); padding:1rem 2rem; display:none; align-items:center; justify-content:center; gap:1rem; z-index:500; }
+            .comp-bar { position:fixed !important; bottom:0 !important; left:0 !important; right:0 !important; background:rgba(15,23,42,0.98) !important; backdrop-filter:blur(12px) !important; border-top:1px solid rgba(139,92,246,0.5) !important; padding:1rem 2rem !important; display:none !important; align-items:center !important; justify-content:center !important; gap:1rem !important; z-index:9999 !important; }
             .comp-bar-text { font-size:0.875rem; color:var(--text-muted); }
             .comp-bar-btn { background:var(--primary); border:none; color:#fff; padding:10px 24px; border-radius:8px; font-size:0.9rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; font-family:var(--font-family); transition:background 0.15s; }
             .comp-bar-btn:hover { background:var(--primary-dark); }
             .comp-bar-clear { background:transparent; border:1px solid var(--glass-border); color:var(--text-muted); padding:9px 16px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-family:var(--font-family); }
             
-            .comp-modal { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:1000; display:none; align-items:center; justify-content:center; padding:1rem; }
+            .comp-modal { position:fixed !important; inset:0 !important; background:rgba(0,0,0,0.85) !important; z-index:10000 !important; display:none !important; align-items:center !important; justify-content:center !important; padding:1rem !important; }
             .comp-modal-inner { background:#0F172A; border:1px solid rgba(139,92,246,0.3); border-radius:16px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; padding:1.5rem; }
             .comp-modal-header { display:flex; justify-content:space-between; align-items:start; margin-bottom:1.5rem; }
             .comp-modal-header h2 { font-size:1.4rem; font-weight:800; }
