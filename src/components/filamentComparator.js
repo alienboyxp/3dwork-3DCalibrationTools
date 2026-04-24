@@ -33,13 +33,18 @@ window.renderFilamentComparator = function (container, t, opts) {
             `<span style="padding:3px 8px;background:rgba(99,102,241,0.15);color:#818CF8;border-radius:6px;font-size:0.7rem">${bp.replace('_', ' ')}</span>`
         ).join(' ') : '—';
 
-        const amsCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht) ? 
-            `<div style="display:flex;gap:6px;flex-wrap:wrap">
-                ${f.ams_lite ? '<span style="background:#10B98122;color:#10B981;padding:3px 8px;border-radius:6px;font-size:0.7rem">AMS Lite</span>' : ''}
-                ${f.ams ? '<span style="background:#10B98122;color:#10B981;padding:3px 8px;border-radius:6px;font-size:0.7rem">AMS</span>' : ''}
-                ${f.ams_2_pro ? '<span style="background:#10B98122;color:#10B981;padding:3px 8px;border-radius:6px;font-size:0.7rem">AMS 2 Pro</span>' : ''}
-                ${f.ams_ht ? '<span style="background:#10B98122;color:#10B981;padding:3px 8px;border-radius:6px;font-size:0.7rem">AMS HT</span>' : ''}
-            </div>` : '<span style="color:var(--text-muted)">—</span>';
+        const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht) ? 
+            `<div style="display:flex;gap:12px;align-items:center">
+                <span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:${f.ams || f.ams_lite ? 'rgba(16,185,129,0.15)':'rgba(255,255,255,0.05)'};color:${f.ams || f.ams_lite ? '#10B981':'var(--text-muted)');border-radius:6px;font-size:0.75rem;border:1px solid ${f.ams || f.ams_lite ? 'rgba(16,185,129,0.3)':'var(--glass-border)'}">
+                    <i data-lucide="${f.ams || f.ams_lite ? 'check-circle':'x-circle'}" style="width:14px;height:14px"></i>
+                    AMS
+                </span>
+                <span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:${f.ams_ht ? 'rgba(16,185,129,0.15)':'rgba(255,255,255,0.05)'};color:${f.ams_ht ? '#10B981':'var(--text-muted)'};border-radius:6px;font-size:0.75rem;border:1px solid ${f.ams_ht ? 'rgba(16,185,129,0.3)':'var(--glass-border)'}">
+                    <i data-lucide="${f.ams_ht ? 'check-circle':'x-circle'}" style="width:14px;height:14px"></i>
+                    AMS HT
+                </span>
+            </div>` : 
+            `<span style="color:var(--text-muted)">—</span>`;
 
         const modal = document.getElementById('comp-modal');
         const content = document.getElementById('comp-modal-content');
@@ -118,8 +123,8 @@ window.renderFilamentComparator = function (container, t, opts) {
             </div>
 
             <div class="detail-section">
-                <h3>${lang === 'es' ? 'Compatibilidad AMS' : 'AMS compatibility'}</h3>
-                ${amsCompatible}
+                <h3>${lang === 'es' ? 'Compatibilidad MMU' : 'MMU Compatibility'}</h3>
+                ${mmuCompatible}
             </div>
 
             <div class="detail-section">
