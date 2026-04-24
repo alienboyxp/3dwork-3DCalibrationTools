@@ -80,7 +80,6 @@ window.renderFilamentComparator = function (container, t, opts) {
                 <div class="comp-card__header">
                     <div class="comp-card__badge-row">
                         ${getMaterialBadge(f.material)}
-                        ${f.partner ? `<span style="background:#10B98122;color:#10B981;border:1px solid #10B98144;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;">Partner</span>` : ''}
                         <span class="comp-card__brand">${f.brand}</span>
                     </div>
                     <h3 class="comp-card__name">${f.name}</h3>
