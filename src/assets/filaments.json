@@ -9,12 +9,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -34,12 +52,19 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Intelligent Chip"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Intelligent Chip"
+      ],
       "price_eur": 17.99,
       "buy_url": "https://store.anycubic.com/products/pla-filament-1kg",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-anycubic-filament.html"
     },
     {
       "id": "anycubic-petg-1kg",
@@ -50,11 +75,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Transparent", "hex": "#E5E7EB"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        }
       ],
       "nozzle_temp_min": 230,
       "nozzle_temp_max": 250,
@@ -74,12 +114,22 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["Water Resistant", "Weather Resistant", "Food Safe"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "Water Resistant",
+        "Weather Resistant",
+        "Food Safe"
+      ],
       "price_eur": 16.99,
       "buy_url": "https://store.anycubic.com/products/petg-filament-1kg",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-anycubic-filament.html"
     },
     {
       "id": "elegoo-pla-1kg",
@@ -90,13 +140,34 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"},
-        {"name": "Orange", "hex": "#F97316"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -116,12 +187,17 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
       "special_properties": [],
       "price_eur": 16.99,
       "buy_url": "https://eu.elegoo.com/collections/filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-elegoo-3d-filament.html"
     },
     {
       "id": "elegoo-rapid-pla-plus-1kg",
@@ -132,11 +208,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"}
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        }
       ],
       "nozzle_temp_min": 200,
       "nozzle_temp_max": 230,
@@ -156,12 +247,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["High Speed", "Improved Strength"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "High Speed",
+        "Improved Strength"
+      ],
       "price_eur": 20.99,
       "buy_url": "https://eu.elegoo.com/products/rapid-pla-plus",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-elegoo-3d-filament.html"
     },
     {
       "id": "elegoo-rapid-petg-1kg",
@@ -172,12 +271,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Transparent", "hex": "#E5E7EB"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        }
       ],
       "nozzle_temp_min": 230,
       "nozzle_temp_max": 250,
@@ -197,12 +314,21 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["High Speed", "Low Odor"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "High Speed",
+        "Low Odor"
+      ],
       "price_eur": 17.99,
       "buy_url": "https://eu.elegoo.com/products/rapid-petg",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-elegoo-3d-filament.html"
     },
     {
       "id": "creality-pla-basic-1kg",
@@ -213,13 +339,34 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"},
-        {"name": "Orange", "hex": "#F97316"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -239,12 +386,17 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
       "special_properties": [],
       "price_eur": 15.99,
       "buy_url": "https://store.creality.com/collections/filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-creality-3d-filament.html"
     },
     {
       "id": "creality-pla-plus-1kg",
@@ -255,11 +407,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        }
       ],
       "nozzle_temp_min": 200,
       "nozzle_temp_max": 230,
@@ -279,12 +446,19 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Improved Strength"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Improved Strength"
+      ],
       "price_eur": 17.99,
       "buy_url": "https://store.creality.com/collections/filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-creality-3d-filament.html"
     },
     {
       "id": "creality-hyper-petg-1kg",
@@ -295,11 +469,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Transparent", "hex": "#E5E7EB"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        }
       ],
       "nozzle_temp_min": 230,
       "nozzle_temp_max": 250,
@@ -319,12 +508,21 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["High Speed", "Water Resistant"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "High Speed",
+        "Water Resistant"
+      ],
       "price_eur": 18.99,
       "buy_url": "https://store.creality.com/products/hyper-series-petg-3d-printing-filament-1kg",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-creality-3d-filament.html"
     },
     {
       "id": "spectrum-pla-premium-1kg",
@@ -335,17 +533,50 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"},
-        {"name": "Orange", "hex": "#F97316"},
-        {"name": "Yellow", "hex": "#EAB308"},
-        {"name": "Natural", "hex": "#F5F5F4"},
-        {"name": "Wood", "hex": "#8B5A2B"},
-        {"name": "Marble", "hex": "#D4D4D4"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#EAB308"
+        },
+        {
+          "name": "Natural",
+          "hex": "#F5F5F4"
+        },
+        {
+          "name": "Wood",
+          "hex": "#8B5A2B"
+        },
+        {
+          "name": "Marble",
+          "hex": "#D4D4D4"
+        }
       ],
       "nozzle_temp_min": 185,
       "nozzle_temp_max": 215,
@@ -365,13 +596,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Premium Quality"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Premium Quality"
+      ],
       "price_eur": 19.99,
       "diameter_tolerance": 0.05,
       "buy_url": "https://shop.spectrumfilaments.com/collections/pla-filaments",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-spectrum-filament.html"
     },
     {
       "id": "spectrum-petg-premium-1kg",
@@ -382,13 +620,34 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Transparent", "hex": "#E5E7EB"},
-        {"name": "Orange", "hex": "#F97316"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        }
       ],
       "nozzle_temp_min": 230,
       "nozzle_temp_max": 255,
@@ -408,12 +667,21 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["Water Resistant", "Food Safe"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "Water Resistant",
+        "Food Safe"
+      ],
       "price_eur": 20.99,
       "buy_url": "https://shop.spectrumfilaments.com/collections/petg-filaments",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-spectrum-filament.html"
     },
     {
       "id": "spectrum-pla-silk-1kg",
@@ -424,13 +692,34 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Gold", "hex": "#FFD700"},
-        {"name": "Silver", "hex": "#C0C0C0"},
-        {"name": "Bronze", "hex": "#CD7F32"},
-        {"name": "Rainbow", "hex": "#FF6B6B"},
-        {"name": "Galaxy", "hex": "#6366F1"},
-        {"name": "Aurora", "hex": "#22D3EE"},
-        {"name": "Sunset", "hex": "#F97316"}
+        {
+          "name": "Gold",
+          "hex": "#FFD700"
+        },
+        {
+          "name": "Silver",
+          "hex": "#C0C0C0"
+        },
+        {
+          "name": "Bronze",
+          "hex": "#CD7F32"
+        },
+        {
+          "name": "Rainbow",
+          "hex": "#FF6B6B"
+        },
+        {
+          "name": "Galaxy",
+          "hex": "#6366F1"
+        },
+        {
+          "name": "Aurora",
+          "hex": "#22D3EE"
+        },
+        {
+          "name": "Sunset",
+          "hex": "#F97316"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 220,
@@ -450,12 +739,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Silk Finish", "High Gloss"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Silk Finish",
+        "High Gloss"
+      ],
       "price_eur": 23.99,
       "buy_url": "https://shop.spectrumfilaments.com/collections/pla-filaments",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-spectrum-filament.html"
     },
     {
       "id": "spectrum-pla-matte-1kg",
@@ -466,10 +763,22 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Beige", "hex": "#D4C4A8"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Beige",
+          "hex": "#D4C4A8"
+        }
       ],
       "nozzle_temp_min": 185,
       "nozzle_temp_max": 215,
@@ -489,12 +798,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Matte Finish", "No Visible Layers"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Matte Finish",
+        "No Visible Layers"
+      ],
       "price_eur": 21.99,
       "buy_url": "https://shop.spectrumfilaments.com/collections/pla-filaments",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-spectrum-filament.html"
     },
     {
       "id": "spectrum-asa-1kg",
@@ -505,11 +822,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Orange", "hex": "#F97316"},
-        {"name": "Blue", "hex": "#3B82F6"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        }
       ],
       "nozzle_temp_min": 240,
       "nozzle_temp_max": 260,
@@ -517,7 +849,7 @@
       "bed_temp_max": 100,
       "fan_speed_min": 0,
       "fan_speed_bridge": 60,
-      "chamber_temp": "60-80°C",
+      "chamber_temp": "60-80\u00b0C",
       "enclosure_needed": true,
       "density": 1.07,
       "softening_temp": 100,
@@ -529,12 +861,19 @@
       "ams": false,
       "ams_2_pro": false,
       "ams_ht": false,
-      "build_plates": ["textured_pei", "engineering_plate"],
-      "special_properties": ["UV Resistant", "Weather Resistant"],
+      "build_plates": [
+        "textured_pei",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "UV Resistant",
+        "Weather Resistant"
+      ],
       "price_eur": 25.99,
       "buy_url": "https://shop.spectrumfilaments.com/collections/asa-filaments",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-spectrum-filament.html"
     },
     {
       "id": "rosa3d-pla-starter-1kg",
@@ -545,13 +884,34 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Green", "hex": "#22C55E"},
-        {"name": "Orange", "hex": "#F97316"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 220,
@@ -571,12 +931,17 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
       "special_properties": [],
       "price_eur": 21.99,
       "buy_url": "https://www.rosa3d.pl/en/filaments/pla",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-rosa3d-filament.html"
     },
     {
       "id": "rosa3d-petg-standard-1kg",
@@ -587,12 +952,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Transparent", "hex": "#E5E7EB"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        }
       ],
       "nozzle_temp_min": 220,
       "nozzle_temp_max": 260,
@@ -612,12 +995,21 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["Food Safe", "Low Odor"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "Food Safe",
+        "Low Odor"
+      ],
       "price_eur": 23.99,
       "buy_url": "https://www.rosa3d.pl/en/filaments/petg",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-rosa3d-filament.html"
     },
     {
       "id": "rosa3d-pla-speed-1kg",
@@ -628,11 +1020,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Red", "hex": "#EF4444"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 220,
@@ -652,12 +1059,19 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["High Speed"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "High Speed"
+      ],
       "price_eur": 23.99,
       "buy_url": "https://www.rosa3d.pl/en/filaments/pla",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-rosa3d-filament.html"
     },
     {
       "id": "azurefilm-pla-original-1kg",
@@ -668,16 +1082,46 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"},
-        {"name": "Orange", "hex": "#F97316"},
-        {"name": "Yellow", "hex": "#EAB308"},
-        {"name": "Pink", "hex": "#EC4899"},
-        {"name": "Purple", "hex": "#A855F7"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#EAB308"
+        },
+        {
+          "name": "Pink",
+          "hex": "#EC4899"
+        },
+        {
+          "name": "Purple",
+          "hex": "#A855F7"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -697,12 +1141,17 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
       "special_properties": [],
-      "price_eur": 18.90,
+      "price_eur": 18.9,
       "buy_url": "https://www.azurefilm.com/collections/pla-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-azurefilm-filament.html"
     },
     {
       "id": "azurefilm-petg-hyper-speed-1kg",
@@ -713,12 +1162,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Transparent", "hex": "#E5E7EB"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        }
       ],
       "nozzle_temp_min": 230,
       "nozzle_temp_max": 250,
@@ -738,12 +1205,21 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["High Speed", "Low Odor"],
-      "price_eur": 15.90,
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "High Speed",
+        "Low Odor"
+      ],
+      "price_eur": 15.9,
       "buy_url": "https://www.azurefilm.com/collections/petg-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-azurefilm-filament.html"
     },
     {
       "id": "azurefilm-pla-plus-1kg",
@@ -754,12 +1230,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        }
       ],
       "nozzle_temp_min": 200,
       "nozzle_temp_max": 230,
@@ -779,12 +1273,19 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Improved Strength"],
-      "price_eur": 19.90,
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Improved Strength"
+      ],
+      "price_eur": 19.9,
       "buy_url": "https://www.azurefilm.com/collections/pla-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-azurefilm-filament.html"
     },
     {
       "id": "azurefilm-pla-silk-multicolor-1kg",
@@ -795,9 +1296,18 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Multicolor", "hex": "#FF6B6B"},
-        {"name": "Rainbow", "hex": "#6366F1"},
-        {"name": "Galaxy", "hex": "#8B5CF6"}
+        {
+          "name": "Multicolor",
+          "hex": "#FF6B6B"
+        },
+        {
+          "name": "Rainbow",
+          "hex": "#6366F1"
+        },
+        {
+          "name": "Galaxy",
+          "hex": "#8B5CF6"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -817,12 +1327,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Silk Finish", "Color Changing"],
-      "price_eur": 23.90,
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Silk Finish",
+        "Color Changing"
+      ],
+      "price_eur": 23.9,
       "buy_url": "https://www.azurefilm.com/collections/pla-silk",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-azurefilm-filament.html"
     },
     {
       "id": "sunlu-pla-1kg",
@@ -833,18 +1351,54 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"},
-        {"name": "Orange", "hex": "#F97316"},
-        {"name": "Yellow", "hex": "#EAB308"},
-        {"name": "Pink", "hex": "#EC4899"},
-        {"name": "Purple", "hex": "#A855F7"},
-        {"name": "Skin", "hex": "#F5D0C5"},
-        {"name": "Coffee", "hex": "#6F4E37"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        },
+        {
+          "name": "Orange",
+          "hex": "#F97316"
+        },
+        {
+          "name": "Yellow",
+          "hex": "#EAB308"
+        },
+        {
+          "name": "Pink",
+          "hex": "#EC4899"
+        },
+        {
+          "name": "Purple",
+          "hex": "#A855F7"
+        },
+        {
+          "name": "Skin",
+          "hex": "#F5D0C5"
+        },
+        {
+          "name": "Coffee",
+          "hex": "#6F4E37"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -864,12 +1418,17 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
       "special_properties": [],
       "price_eur": 10.99,
       "buy_url": "https://store.sunlu.com/collections/pla-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-sunlu-3d-filament.html"
     },
     {
       "id": "sunlu-petg-1kg",
@@ -880,12 +1439,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Transparent", "hex": "#E5E7EB"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Transparent",
+          "hex": "#E5E7EB"
+        }
       ],
       "nozzle_temp_min": 230,
       "nozzle_temp_max": 250,
@@ -905,12 +1482,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate", "engineering_plate"],
-      "special_properties": ["Water Resistant"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate",
+        "engineering_plate"
+      ],
+      "special_properties": [
+        "Water Resistant"
+      ],
       "price_eur": 11.99,
       "buy_url": "https://store.sunlu.com/collections/petg-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-sunlu-3d-filament.html"
     },
     {
       "id": "sunlu-pla-matte-1kg",
@@ -921,12 +1506,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Beige", "hex": "#D4C4A8"},
-        {"name": "Sage", "hex": "#9CAF88"},
-        {"name": "Lavender", "hex": "#C4B5FD"}
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Beige",
+          "hex": "#D4C4A8"
+        },
+        {
+          "name": "Sage",
+          "hex": "#9CAF88"
+        },
+        {
+          "name": "Lavender",
+          "hex": "#C4B5FD"
+        }
       ],
       "nozzle_temp_min": 190,
       "nozzle_temp_max": 230,
@@ -946,12 +1549,19 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Matte Finish"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Matte Finish"
+      ],
       "price_eur": 13.99,
       "buy_url": "https://store.sunlu.com/collections/pla-matte",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-sunlu-3d-filament.html"
     },
     {
       "id": "sunlu-abs-1kg",
@@ -962,11 +1572,26 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        }
       ],
       "nozzle_temp_min": 240,
       "nozzle_temp_max": 260,
@@ -974,7 +1599,7 @@
       "bed_temp_max": 110,
       "fan_speed_min": 0,
       "fan_speed_bridge": 50,
-      "chamber_temp": "60-80°C",
+      "chamber_temp": "60-80\u00b0C",
       "enclosure_needed": true,
       "density": 1.04,
       "softening_temp": 78,
@@ -986,12 +1611,20 @@
       "ams": false,
       "ams_2_pro": false,
       "ams_ht": false,
-      "build_plates": ["textured_pei", "engineering_plate", "cool_plate"],
-      "special_properties": ["High Impact", "Easy Post-Processing"],
+      "build_plates": [
+        "textured_pei",
+        "engineering_plate",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "High Impact",
+        "Easy Post-Processing"
+      ],
       "price_eur": 12.99,
       "buy_url": "https://store.sunlu.com/collections/abs-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-sunlu-3d-filament.html"
     },
     {
       "id": "sunlu-tpu-95a-1kg",
@@ -1002,10 +1635,22 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Red", "hex": "#EF4444"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        }
       ],
       "nozzle_temp_min": 210,
       "nozzle_temp_max": 240,
@@ -1025,12 +1670,19 @@
       "ams": false,
       "ams_2_pro": false,
       "ams_ht": true,
-      "build_plates": ["cool_plate", "smooth_pei"],
-      "special_properties": ["Flexible", "95A Shore"],
+      "build_plates": [
+        "cool_plate",
+        "smooth_pei"
+      ],
+      "special_properties": [
+        "Flexible",
+        "95A Shore"
+      ],
       "price_eur": 17.99,
       "buy_url": "https://store.sunlu.com/collections/tpu-filament",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-sunlu-3d-filament.html"
     },
     {
       "id": "sunlu-pla-plus-2-1kg",
@@ -1041,12 +1693,30 @@
       "diameter": 1.75,
       "weight": 1000,
       "colors": [
-        {"name": "Black", "hex": "#1A1A1A"},
-        {"name": "White", "hex": "#FFFFFF"},
-        {"name": "Grey", "hex": "#6B7280"},
-        {"name": "Red", "hex": "#EF4444"},
-        {"name": "Blue", "hex": "#3B82F6"},
-        {"name": "Green", "hex": "#22C55E"}
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#FFFFFF"
+        },
+        {
+          "name": "Grey",
+          "hex": "#6B7280"
+        },
+        {
+          "name": "Red",
+          "hex": "#EF4444"
+        },
+        {
+          "name": "Blue",
+          "hex": "#3B82F6"
+        },
+        {
+          "name": "Green",
+          "hex": "#22C55E"
+        }
       ],
       "nozzle_temp_min": 200,
       "nozzle_temp_max": 230,
@@ -1066,12 +1736,20 @@
       "ams": true,
       "ams_2_pro": true,
       "ams_ht": true,
-      "build_plates": ["smooth_pei", "textured_pei", "cool_plate"],
-      "special_properties": ["Improved Strength", "Low Warping"],
+      "build_plates": [
+        "smooth_pei",
+        "textured_pei",
+        "cool_plate"
+      ],
+      "special_properties": [
+        "Improved Strength",
+        "Low Warping"
+      ],
       "price_eur": 12.99,
       "buy_url": "https://store.sunlu.com/collections/pla-plus",
       "data_url": "",
-      "lastUpdated": "2026-04-24"
+      "lastUpdated": "2026-04-24",
+      "aliexpress_url": "https://s.click.aliexpress.com/e/182731559?productUrl=https://es.aliexpress.com/w/wholesale-sunlu-3d-filament.html"
     }
   ],
   "lastFullUpdate": "2026-04-24"
