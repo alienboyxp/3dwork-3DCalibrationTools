@@ -33,14 +33,24 @@ window.renderFilamentComparator = function (container, t, opts) {
             `<span style="padding:3px 8px;background:rgba(99,102,241,0.15);color:#818CF8;border-radius:6px;font-size:0.7rem">${bp.replace('_', ' ')}</span>`
         ).join(' ') : '—';
 
-        const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht) ? 
+const mmuCompatible = (f.ams || f.ams_lite || f.ams_2_pro || f.ams_ht);
+        const amsBg = (f.ams || f.ams_lite) ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)';
+        const amsColor = (f.ams || f.ams_lite) ? '#10B981' : 'var(--text-muted)';
+        const amsBorder = (f.ams || f.ams_lite) ? 'rgba(16,185,129,0.3)' : 'var(--glass-border)';
+        const amsIcon = (f.ams || f.ams_lite) ? 'check-circle' : 'x-circle';
+        const amsHtBg = f.ams_ht ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)';
+        const amsHtColor = f.ams_ht ? '#10B981' : 'var(--text-muted)';
+        const amsHtBorder = f.ams_ht ? 'rgba(16,185,129,0.3)' : 'var(--glass-border)';
+        const amsHtIcon = f.ams_ht ? 'check-circle' : 'x-circle';
+
+        const mmuHtml = mmuCompatible ? 
             `<div style="display:flex;gap:12px;align-items:center">
-                <span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:${f.ams || f.ams_lite ? 'rgba(16,185,129,0.15)':'rgba(255,255,255,0.05)'};color:${f.ams || f.ams_lite ? '#10B981':'var(--text-muted)');border-radius:6px;font-size:0.75rem;border:1px solid ${f.ams || f.ams_lite ? 'rgba(16,185,129,0.3)':'var(--glass-border)'}">
-                    <i data-lucide="${f.ams || f.ams_lite ? 'check-circle':'x-circle'}" style="width:14px;height:14px"></i>
+                <span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:${amsBg};color:${amsColor};border-radius:6px;font-size:0.75rem;border:1px solid ${amsBorder}">
+                    <i data-lucide="${amsIcon}" style="width:14px;height:14px"></i>
                     AMS
                 </span>
-                <span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:${f.ams_ht ? 'rgba(16,185,129,0.15)':'rgba(255,255,255,0.05)'};color:${f.ams_ht ? '#10B981':'var(--text-muted)'};border-radius:6px;font-size:0.75rem;border:1px solid ${f.ams_ht ? 'rgba(16,185,129,0.3)':'var(--glass-border)'}">
-                    <i data-lucide="${f.ams_ht ? 'check-circle':'x-circle'}" style="width:14px;height:14px"></i>
+                <span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:${amsHtBg};color:${amsHtColor};border-radius:6px;font-size:0.75rem;border:1px solid ${amsHtBorder}">
+                    <i data-lucide="${amsHtIcon}" style="width:14px;height:14px"></i>
                     AMS HT
                 </span>
             </div>` : 
@@ -124,7 +134,7 @@ window.renderFilamentComparator = function (container, t, opts) {
 
             <div class="detail-section">
                 <h3>${lang === 'es' ? 'Compatibilidad MMU' : 'MMU Compatibility'}</h3>
-                ${mmuCompatible}
+                ${mmuHtml}
             </div>
 
             <div class="detail-section">
@@ -227,6 +237,9 @@ window.renderFilamentComparator = function (container, t, opts) {
                     <button class="comp-btn-detail" data-id="${f.id}" title="${lang === 'es' ? 'Ver detalles' : 'View details'}">
                         <i data-lucide="info"></i>
                     </button>
+                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-btn-ali" title="AliExpress">
+                        <i data-lucide="shopping-cart"></i>
+                    </a>` : ''}
                     ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn-sm">
                         <i data-lucide="shopping-cart"></i>
                     </a>` : ''}
@@ -431,6 +444,8 @@ window.renderFilamentComparator = function (container, t, opts) {
             .comp-btn-select--active { background:#10B981; color:white; }
             .comp-btn-detail { background:rgba(99,102,241,0.2); color:#818CF8; padding:6px; }
             .comp-btn-detail:hover { background:rgba(99,102,241,0.3); }
+            .comp-btn-ali { background:rgba(255,104,31,0.2); color:#FF681F; padding:6px 10px; border-radius:8px; text-decoration:none; display:flex; align-items:center; }
+            .comp-btn-ali:hover { background:rgba(255,104,31,0.3); }
             .comp-buy-btn-sm { background:rgba(16,185,129,0.2); color:#10B981; padding:6px 10px; border-radius:8px; text-decoration:none; display:flex; align-items:center; }
             .comp-no-results { display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; }
             
