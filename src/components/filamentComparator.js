@@ -144,6 +144,9 @@ window.renderFilamentComparator = function (container, t, opts) {
             <div class="detail-section">
                 <h3>${lang === 'es' ? 'Dónde comprar' : 'Where to buy'}</h3>
                 <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    ${f.aliexpress_url ? `<a href="${f.aliexpress_url}" target="_blank" class="comp-buy-btn" style="background:rgba(255,104,31,0.15);border-color:rgba(255,104,31,0.3);color:#FF681F">
+                        <i data-lucide="shopping-cart"></i> AliExpress
+                    </a>` : ''}
                     ${f.buy_url ? `<a href="${f.buy_url}" target="_blank" class="comp-buy-btn">
                         ${lang === 'es' ? 'Tienda oficial' : 'Official store'} <i data-lucide="external-link"></i>
                     </a>` : ''}
