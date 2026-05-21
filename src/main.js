@@ -1,6 +1,37 @@
 let currentLang = 'en';
 let currentView = 'home';
 
+const TOOL_TITLES = {
+    en: {
+        home:        '3Dwork Tools — 3D Printer Calibration Tools',
+        esteps:      'E-steps Calibration Calculator | 3Dwork',
+        rotation:    'Rotation Distance Calculator | 3Dwork',
+        skew:        'Skew Correction Calculator | 3Dwork',
+        bedmesh:     'Bed Mesh Alignment | 3Dwork',
+        bedleveling: 'Manual Bed Leveling | 3Dwork',
+        vref:        'Vref & RMS Calculator | 3Dwork',
+        shaper:      'Input Shaper Analysis | 3Dwork',
+        loganalyzer: 'Klipper Log Analyzer | 3Dwork',
+        price:       '3D Printing Price Calculator | 3Dwork',
+        filaments:   '3D Filament Database | 3Dwork',
+        comparator:  '3D Printer Comparator | 3Dwork',
+    },
+    es: {
+        home:        '3Dwork Tools — Herramientas calibración impresoras 3D',
+        esteps:      'Calculadora E-steps Extrusor | 3Dwork',
+        rotation:    'Calculadora Rotation Distance | 3Dwork',
+        skew:        'Calculadora Corrección Skew | 3Dwork',
+        bedmesh:     'Alineación Bed Mesh | 3Dwork',
+        bedleveling: 'Nivelación Manual Cama | 3Dwork',
+        vref:        'Calculadora Vref y RMS Drivers | 3Dwork',
+        shaper:      'Análisis Input Shaper | 3Dwork',
+        loganalyzer: 'Analizador Logs Klipper | 3Dwork',
+        price:       'Calculadora Precio Impresión 3D | 3Dwork',
+        filaments:   'Base de Datos Filamentos 3D | 3Dwork',
+        comparator:  'Comparador Impresoras 3D | 3Dwork',
+    }
+};
+
 function init() {
     setupLangButtons();
     setupNavigation();
@@ -26,13 +57,14 @@ function handleRouting() {
         return;
     }
 
+    updatePageTitle();
     renderView();
     updateActiveNavItem();
 
     // Google Analytics Tracking
     if (typeof gtag === 'function') {
         gtag('event', 'page_view', {
-            page_title: currentView.charAt(0).toUpperCase() + currentView.slice(1),
+            page_title: document.title,
             page_path: '/' + currentView,
             page_location: window.location.href
         });
@@ -40,6 +72,11 @@ function handleRouting() {
 
     // Auto-scroll to top on navigation
     window.scrollTo(0, 0);
+}
+
+function updatePageTitle() {
+    const titles = TOOL_TITLES[currentLang] || TOOL_TITLES.en;
+    document.title = titles[currentView] || titles.home;
 }
 
 function setupLangButtons() {
@@ -52,11 +89,13 @@ function setupLangButtons() {
 
 function switchLang(lang) {
     currentLang = lang;
+    document.documentElement.lang = lang;
     const btnEn = document.getElementById('btn-en');
     const btnEs = document.getElementById('btn-es');
     if (btnEn) btnEn.classList.toggle('active', lang === 'en');
     if (btnEs) btnEs.classList.toggle('active', lang === 'es');
 
+    updatePageTitle();
     updateUILabels();
     renderView();
 }
@@ -77,7 +116,7 @@ function updateUILabels() {
     const navSkew = document.getElementById('nav-skew');
     const navPrice = document.getElementById('nav-price');
 
-    if (navHome) navHome.textContent = 'Home';
+    if (navHome) navHome.textContent = 'Home'; // Could be localized if needed
     if (navCalibrationMenu) {
         const icon = navCalibrationMenu.querySelector('i');
         navCalibrationMenu.textContent = t.calibrationMenu + ' ';
@@ -110,6 +149,12 @@ function updateUILabels() {
 
     const navHueForge = document.getElementById('nav-hueforge');
     if (navHueForge) navHueForge.textContent = t.hueforgeTitle;
+
+    const navLitho = document.getElementById('nav-lithophane');
+    if (navLitho) navLitho.textContent = t.lithophaneTitle;
+
+    const navHue = document.getElementById('nav-hueforge');
+    if (navHue) navHue.textContent = t.hueforgeTitle;
 
     const navLogAnalyzer = document.getElementById('nav-loganalyzer');
     if (navLogAnalyzer) navLogAnalyzer.textContent = t.logAnalyzerTitle;
