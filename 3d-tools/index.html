@@ -543,6 +543,9 @@
             const [baseT, setBt] = useState(0.48), [relT, setRt] = useState(1.8), [res, setRes] = useState(100), [lh, setLh] = useState(0.08);
             const [maxH, setMaxH] = useState(2.4), [autoSort, setAutoSort] = useState(true), [tab, setTab] = useState('stack');
             const [mode, setMode] = useState('layered');        // layered | flat
+            const [imgMode, setImgMode] = useState('color');    // color | gray | bw
+            const [threshold, setThreshold] = useState(0.5);
+            const [numColors, setNumColors] = useState(4);
             const [view, setView] = useState('sim');            // sim | layers
             const [flatThick, setFlatThick] = useState(2.0);
             const [clip, setClip] = useState(2.4);              // altura del corte 3D
@@ -573,22 +576,29 @@
             const reliefH = Math.max(0, Math.min(relT, Math.max(0, maxH - baseT)));
             const maxZ = baseT + reliefH;
 
-            const relief = useMemo(() => {
+            // Modo de imagen: color, escala de grises o blanco y negro con
+            // umbral (elimina el tramado y sube el contraste).
+            const processed = useMemo(() => {
                 if (!pix) return null;
-                return window.HueForge.sampleRelief(pix, imgW, imgH, {
+                return window.HueForge.processImage(pix, imgW, imgH, { mode: imgMode, threshold: threshold });
+            }, [pix, imgW, imgH, imgMode, threshold]);
+
+            const relief = useMemo(() => {
+                if (!processed) return null;
+                return window.HueForge.sampleRelief(processed, imgW, imgH, {
                     gridW: gridW, gridH: gridH, width: W, height: H,
                     baseT: baseT, relief: reliefH, layerHeight: lh,
                     bright: bright, contrast: contrast, blackP: blackP, whiteP: whiteP
                 });
-            }, [pix, imgW, imgH, gridW, gridH, W, H, baseT, reliefH, lh, bright, contrast, blackP, whiteP]);
+            }, [processed, imgW, imgH, gridW, gridH, W, H, baseT, reliefH, lh, bright, contrast, blackP, whiteP]);
 
             const flat = useMemo(() => {
-                if (!pix) return null;
-                return window.HueForge.assignFlatPaint(pix, imgW, imgH, {
+                if (!processed) return null;
+                return window.HueForge.assignFlatPaint(processed, imgW, imgH, {
                     gridW: gridW, gridH: gridH, width: W, height: H,
                     palette: layers.map(l => ({ hex: l.hex, name: l.name }))
                 });
-            }, [pix, imgW, imgH, gridW, gridH, W, H, layers]);
+            }, [processed, imgW, imgH, gridW, gridH, W, H, layers]);
 
             const sorted = useMemo(() => [...layers].sort((a, b) => a.stop - b.stop), [layers]);
 
@@ -606,6 +616,23 @@
                 [nl[idx], nl[target]] = [nl[target], nl[idx]];
                 setLayers(nl);
                 if (autoSort) setAutoSort(false);
+            };
+
+            // Paleta automática: los n filamentos de la biblioteca que más se
+            // parecen a los colores dominantes de la imagen.
+            const autoPalette = () => {
+                if (!processed || !library.length) return;
+                const dom = window.HueForge.dominantColors(processed, imgW, imgH, Math.max(2, numColors));
+                const chosen = window.HueForge.matchPalette(library, dom, numColors);
+                if (!chosen.length) return;
+                const planned = window.HueForge.planStack(
+                    chosen.map((f, i) => ({
+                        id: Date.now() + i, name: f.colorName || f.name, hex: f.hex,
+                        td: f.td, stop: 0, brand: f.brand || '', type: f.type || ''
+                    })),
+                    { baseT: baseT, relief: reliefH, layerHeight: lh, maxHeight: maxZ }
+                );
+                setLayers(planned);
             };
 
             const addFilament = (f) => {
@@ -871,6 +898,38 @@
                             <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)}>🔗</div>
                             <div><label>Height</label><input type="number" className="dim-input" value={H} onChange={e => upH(parseFloat(e.target.value))} /></div>
                         </div>
+                        <div className="section-label">IMAGE TREATMENT</div>
+                        <div className="geo-btn-group" style={{ display: 'flex', gap: '6px' }}>
+                            <button className={`geo-btn ${imgMode === 'color' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setImgMode('color')}>Colour</button>
+                            <button className={`geo-btn ${imgMode === 'gray' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setImgMode('gray')}>Grey</button>
+                            <button className={`geo-btn ${imgMode === 'bw' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setImgMode('bw')}>B&amp;W</button>
+                        </div>
+                        {imgMode === 'bw' && (
+                            <div className="control-group" style={{ marginTop: '6px' }}>
+                                <div className="control-label"><span>Threshold</span><span>{threshold.toFixed(2)}</span></div>
+                                <input type="range" min="0.1" max="0.9" step="0.01" value={threshold} onChange={e => setThreshold(parseFloat(e.target.value))} />
+                                <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '2px' }}>
+                                    Corta el tramado: el relieve queda más limpio y con más contraste.
+                                </p>
+                            </div>
+                        )}
+                        {imgMode === 'gray' && (
+                            <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px', lineHeight: 1.45 }}>
+                                Escala de grises: el color de la foto se ignora y sólo cuenta la luminosidad (para paletas de gris, negro y blanco).
+                            </p>
+                        )}
+
+                        <div className="section-label">AVAILABLE COLOURS</div>
+                        <div className="thickness-grid">
+                            <div className="thickness-item"><label>Colours (max)</label><input type="number" min="1" max="8" step="1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={numColors} onChange={e => setNumColors(Math.max(1, Math.min(8, parseInt(e.target.value) || 1)))} /></div>
+                            <div className="thickness-item" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                <button className="download-btn" style={{ padding: 6, fontSize: 9, background: 'rgba(255,255,255,0.05)', color: 'var(--accent)', boxShadow: 'none', border: '1px solid var(--border-accent)' }} disabled={!processed || !library.length} onClick={autoPalette}>⚡ AUTO PALETTE</button>
+                            </div>
+                        </div>
+                        <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '2px', lineHeight: 1.45 }}>
+                            AUTO PALETTE coge de la biblioteca los {numColors} filamentos que más se parecen a los colores de tu imagen y rehace la pila.
+                        </p>
+
                         <div className="section-label">IMAGE FILTERS</div>
                         <div className="control-group"><div className="control-label"><span>Exposure</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
                         <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast}</span></div><input type="range" min="0" max="4" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>

@@ -277,5 +277,65 @@ console.log('\n── Calibración del TD ──');
         neg ? 'td=' + (neg.td ? neg.td.toFixed(3) : 'null') : 'sin resultado');
 }
 
+console.log('\n── Modo de imagen y paleta automática ──');
+{
+    // Imagen con tres zonas de color
+    const w = 90, h = 90;
+    const px = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            let r, g, b;
+            if (x < 30) { r = 200; g = 30; b = 30; }
+            else if (x < 60) { r = 30; g = 120; b = 200; }
+            else { r = 240; g = 230; b = 60; }
+            px[i] = r; px[i + 1] = g; px[i + 2] = b; px[i + 3] = 255;
+        }
+    }
+    const dom = HueForge.dominantColors(px, w, h, 3);
+    check('se detectan 3 colores dominantes con peso',
+        dom.length === 3 && dom.every(d => d.count > 0),
+        dom.map(d => d.hex + '(' + d.count + ')').join(' '));
+    // Las tres zonas pesan lo mismo: cada color debe cubrir ~1/3 de la imagen
+    check('cada color dominante cubre un tercio de la imagen',
+        dom.every(d => Math.abs(d.count - (w * h) / 3) < (w * h) / 12),
+        dom.map(d => d.count).join(','));
+
+    const lib = [
+        { id: 'a', hex: '#1A1A1A', name: 'Negro' },
+        { id: 'b', hex: '#C0392B', name: 'Rojo' },
+        { id: 'c', hex: '#2980B9', name: 'Azul' },
+        { id: 'd', hex: '#F1C40F', name: 'Amarillo' },
+        { id: 'e', hex: '#FFFFFF', name: 'Blanco' }
+    ];
+    const chosen = HueForge.matchPalette(lib, dom, 3);
+    check('la paleta elige 3 filamentos', chosen.length === 3, `${chosen.length}`);
+    check('la paleta elige los colores más parecidos (rojo, azul, amarillo)',
+        chosen.map(f => f.name).sort().join(',') === 'Amarillo,Azul,Rojo',
+        chosen.map(f => f.name).join(','));
+    check('no se repite filamento',
+        new Set(chosen.map(f => f.id)).size === chosen.length);
+
+    // Escala de grises y blanco y negro
+    const gray = HueForge.processImage(px, w, h, { mode: 'gray' });
+    check('el modo gris deja los tres canales iguales',
+        gray[0] === gray[1] && gray[1] === gray[2]);
+    const bw = HueForge.processImage(px, w, h, { mode: 'bw', threshold: 0.5 });
+    let onlyBi = true;
+    for (let i = 0; i < bw.length; i += 4) {
+        if (bw[i] !== 0 && bw[i] !== 255) { onlyBi = false; break; }
+    }
+    check('el modo B&W deja sólo blanco y negro (elimina el tramado)', onlyBi);
+    // Con el modo B&W el relieve sólo tiene dos alturas
+    const reliefBW = HueForge.sampleRelief(bw, w, h, {
+        gridW: 30, gridH: 30, width: 100, height: 100,
+        baseT: 0.48, relief: 1.8, layerHeight: 0.08,
+        bright: 1, contrast: 1, blackP: 0, whiteP: 1
+    });
+    const heights = new Set();
+    for (let i = 0; i < reliefBW.heights.length; i++) heights.add(Math.round(reliefBW.heights[i] * 1000));
+    check('el relieve en B&W tiene sólo 2 alturas', heights.size === 2, [...heights].join(', '));
+}
+
 console.log(`\n${pass} correctas, ${fail} fallidas\n`);
 process.exit(fail ? 1 : 0);

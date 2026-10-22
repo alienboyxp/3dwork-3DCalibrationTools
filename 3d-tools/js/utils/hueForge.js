@@ -715,7 +715,148 @@ window.HueForge = (function () {
         };
     }
 
+
+    // ── 9. Modo de imagen y paleta ──────────────────────────────────────
+    /**
+     * Pre-procesa la imagen según el modo de trabajo:
+     *   'color' → sin tocar
+     *   'gray'  → escala de grises (para paletas de gris/negro/blanco)
+     *   'bw'    → blanco y negro con umbral (elimina el tramado y sube el
+     *             contraste del relieve)
+     * @returns {Uint8ClampedArray} una copia procesada
+     */
+    function processImage(pixels, imgW, imgH, o) {
+        const mode = (o && o.mode) || 'color';
+        if (mode === 'color') return pixels;
+        const out = new Uint8ClampedArray(pixels.length);
+        const thr = o && o.threshold !== undefined ? o.threshold : 0.5;
+        for (let i = 0; i < pixels.length; i += 4) {
+            const g = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114) / 255;
+            let v;
+            if (mode === 'bw') v = g >= thr ? 255 : 0;
+            else v = g * 255;
+            out[i] = v; out[i + 1] = v; out[i + 2] = v; out[i + 3] = pixels[i + 3];
+        }
+        return out;
+    }
+
+    /**
+     * Colores dominantes de una imagen (k-means ligero sobre una muestra).
+     * @returns {Array<{r,g,b,hex,count}>} ordenados por peso
+     */
+    function dominantColors(pixels, imgW, imgH, n) {
+        const k = Math.max(1, Math.min(12, n | 0 || 4));
+        const step = Math.max(1, Math.floor(Math.sqrt((imgW * imgH) / 4000)));
+        const samples = [];
+        for (let y = 0; y < imgH; y += step) {
+            for (let x = 0; x < imgW; x += step) {
+                const i = (y * imgW + x) * 4;
+                samples.push([
+                    pixels[i] / 255, pixels[i + 1] / 255, pixels[i + 2] / 255
+                ]);
+            }
+        }
+        if (!samples.length) return [];
+        // Inicialización "farthest point": el primer centro es la media y
+        // los siguientes, la muestra más lejana de los ya elegidos. Con los
+        // quantiles el k-means se quedaba con dos clústeres.
+        const mean = [0, 0, 0];
+        samples.forEach(s => { mean[0] += s[0]; mean[1] += s[1]; mean[2] += s[2]; });
+        mean[0] /= samples.length; mean[1] /= samples.length; mean[2] /= samples.length;
+        let centers = [[mean[0], mean[1], mean[2]]];
+        while (centers.length < k) {
+            let best = null, bestD = -1;
+            for (const s of samples) {
+                let dMin = Infinity;
+                for (const c of centers) {
+                    const d = (s[0] - c[0]) ** 2 + (s[1] - c[1]) ** 2 + (s[2] - c[2]) ** 2;
+                    if (d < dMin) dMin = d;
+                }
+                if (dMin > bestD) { bestD = dMin; best = s; }
+            }
+            if (!best) break;
+            centers.push([best[0], best[1], best[2]]);
+        }
+        let assign = new Int32Array(samples.length);
+        for (let iter = 0; iter < 12; iter++) {
+            let moved = false;
+            for (let i = 0; i < samples.length; i++) {
+                const s = samples[i];
+                let best = 0, bestD = Infinity;
+                for (let c = 0; c < centers.length; c++) {
+                    const d = (s[0] - centers[c][0]) ** 2 +
+                        (s[1] - centers[c][1]) ** 2 + (s[2] - centers[c][2]) ** 2;
+                    if (d < bestD) { bestD = d; best = c; }
+                }
+                if (assign[i] !== best) { assign[i] = best; moved = true; }
+            }
+            const sums = centers.map(() => [0, 0, 0, 0]);
+            for (let i = 0; i < samples.length; i++) {
+                const c = assign[i], s = samples[i];
+                sums[c][0] += s[0]; sums[c][1] += s[1]; sums[c][2] += s[2]; sums[c][3]++;
+            }
+            for (let c = 0; c < centers.length; c++) {
+                if (sums[c][3]) {
+                    centers[c] = [sums[c][0] / sums[c][3], sums[c][1] / sums[c][3], sums[c][2] / sums[c][3]];
+                }
+            }
+            if (!moved && iter > 0) break;
+        }
+        const counts = centers.map(() => 0);
+        for (let i = 0; i < samples.length; i++) counts[assign[i]]++;
+        const out = [];
+        for (let c = 0; c < centers.length; c++) {
+            const [r, g, b] = centers[c];
+            const hex = '#' + [r, g, b].map(v =>
+                Math.round(clamp(v, 0, 1) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+            out.push({ r: r, g: g, b: b, hex: hex, count: counts[c] });
+        }
+        return out.sort((a, b) => b.count - a.count);
+    }
+
+    /**
+     * Elige los n filamentos de la biblioteca que más se parecen a los
+     * colores dominantes de la imagen.
+     * @param {Array} library - [{hex, name, brand, type, td}]
+     * @param {Array} dominant - de dominantColors()
+     * @param {number} n - cuántos colores hay disponibles
+     * @returns {Array} los filamentos elegidos (sin repetir)
+     */
+    function matchPalette(library, dominant, n) {
+        const count = Math.max(1, Math.min(library.length, n | 0 || 1));
+        const chosen = [];
+        const used = new Set();
+        // Se recorren los dominantes por peso: el color que más se repite es
+        // el que más superficie ocupa y el que más filamento necesita.
+        const dom = dominant.slice(0, Math.max(count, dominant.length));
+        for (const d of dom) {
+            if (chosen.length >= count) break;
+            let best = null, bestD = Infinity;
+            for (const f of library) {
+                if (used.has(f.id)) continue;
+                const c = hexToRgb(f.hex);
+                const dr = (d.r - c.r) * 0.9, dg = (d.g - c.g) * 1.2, db = (d.b - c.b) * 0.6;
+                const dist = dr * dr + dg * dg + db * db;
+                if (dist < bestD) { bestD = dist; best = f; }
+            }
+            if (best) { used.add(best.id); chosen.push(best); }
+        }
+        // Si la imagen tiene menos colores que los disponibles, se rellena con
+        // los filamentos más alejados para aprovechar los colores.
+        if (chosen.length < count) {
+            for (const f of library) {
+                if (chosen.length >= count) break;
+                if (used.has(f.id)) continue;
+                used.add(f.id); chosen.push(f);
+            }
+        }
+        return chosen;
+    }
+
     return {
+        processImage: processImage,
+        dominantColors: dominantColors,
+        matchPalette: matchPalette,
         sampleRelief: sampleRelief,
         assignFlatPaint: assignFlatPaint,
         buildFlatPaintSolid: buildFlatPaintSolid,
