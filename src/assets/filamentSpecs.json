@@ -1,0 +1,362 @@
+{
+ "updated": "2026-10-22 07:07 UTC",
+ "materials": {
+  "abs": {
+   "name": "ABS",
+   "nozzle_c": [
+    240,
+    280
+   ],
+   "bed_c": 90,
+   "chamber_c": 65,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 80,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "asa": {
+   "name": "ASA",
+   "nozzle_c": [
+    240,
+    280
+   ],
+   "bed_c": 100,
+   "chamber_c": 65,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 80,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "bvoh": {
+   "name": "BVOH",
+   "nozzle_c": [
+    190,
+    240
+   ],
+   "bed_c": 55,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 50,
+   "drying_time": "2-4 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pa": {
+   "name": "PA",
+   "nozzle_c": [
+    240,
+    280
+   ],
+   "bed_c": 100,
+   "chamber_c": 60,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 70,
+   "drying_time": "12-24 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pa-cf": {
+   "name": "PA-CF",
+   "nozzle_c": [
+    260,
+    300
+   ],
+   "bed_c": 100,
+   "chamber_c": 60,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": true,
+   "ams_compatible": true,
+   "drying_c": 70,
+   "drying_time": "12-24 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pc": {
+   "name": "PC",
+   "nozzle_c": [
+    260,
+    290
+   ],
+   "bed_c": 110,
+   "chamber_c": 60,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 80,
+   "drying_time": "6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "petg": {
+   "name": "PETG",
+   "nozzle_c": [
+    230,
+    270
+   ],
+   "bed_c": 70,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 65,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "petg-cf": {
+   "name": "PETG-CF",
+   "nozzle_c": [
+    240,
+    270
+   ],
+   "bed_c": 70,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": true,
+   "ams_compatible": true,
+   "drying_c": 65,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pla": {
+   "name": "PLA",
+   "nozzle_c": [
+    190,
+    240
+   ],
+   "bed_c": 55,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 50,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pla-cf": {
+   "name": "PLA-CF",
+   "nozzle_c": [
+    210,
+    250
+   ],
+   "bed_c": 55,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": true,
+   "ams_compatible": true,
+   "drying_c": 50,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "ppa-cf": {
+   "name": "PPA-CF",
+   "nozzle_c": [
+    280,
+    320
+   ],
+   "bed_c": 100,
+   "chamber_c": 60,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": true,
+   "ams_compatible": true,
+   "drying_c": 80,
+   "drying_time": "6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pps-cf": {
+   "name": "PPS-CF",
+   "nozzle_c": [
+    310,
+    340
+   ],
+   "bed_c": 110,
+   "chamber_c": 65,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": true,
+   "abrasive": true,
+   "ams_compatible": true,
+   "drying_c": 90,
+   "drying_time": "8 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "pva": {
+   "name": "PVA",
+   "nozzle_c": [
+    210,
+    250
+   ],
+   "bed_c": 55,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 50,
+   "drying_time": "2-4 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "support for abs": {
+   "name": "Support for ABS",
+   "nozzle_c": [
+    240,
+    270
+   ],
+   "bed_c": 90,
+   "chamber_c": 60,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": null,
+   "drying_time": null,
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "support for pa/pet": {
+   "name": "Support for PA/PET",
+   "nozzle_c": [
+    260,
+    300
+   ],
+   "bed_c": 100,
+   "chamber_c": 60,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": true,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": null,
+   "drying_time": null,
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "support for pla": {
+   "name": "Support for PLA",
+   "nozzle_c": [
+    190,
+    240
+   ],
+   "bed_c": 55,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": 50,
+   "drying_time": "4-6 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "support for pla/petg": {
+   "name": "Support for PLA/PETG",
+   "nozzle_c": [
+    190,
+    240
+   ],
+   "bed_c": 60,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": null,
+   "drying_time": null,
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "tpu 85a": {
+   "name": "TPU 85A",
+   "nozzle_c": [
+    200,
+    240
+   ],
+   "bed_c": 35,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": false,
+   "drying_c": null,
+   "drying_time": null,
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "tpu 90a": {
+   "name": "TPU 90A",
+   "nozzle_c": [
+    200,
+    240
+   ],
+   "bed_c": 35,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": false,
+   "drying_c": null,
+   "drying_time": null,
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "tpu 95a": {
+   "name": "TPU 95A",
+   "nozzle_c": [
+    200,
+    250
+   ],
+   "bed_c": 35,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": false,
+   "drying_c": 50,
+   "drying_time": "8 h",
+   "updated": "2026-10-22 07:07 UTC"
+  },
+  "tpu for ams": {
+   "name": "TPU for AMS",
+   "nozzle_c": [
+    220,
+    240
+   ],
+   "bed_c": 35,
+   "chamber_c": null,
+   "min_wall_mm": 0.9,
+   "needs_enclosure": false,
+   "needs_heated_chamber": false,
+   "abrasive": false,
+   "ams_compatible": true,
+   "drying_c": null,
+   "drying_time": null,
+   "updated": "2026-10-22 07:07 UTC"
+  }
+ }
+}

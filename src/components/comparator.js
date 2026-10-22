@@ -8,6 +8,14 @@ window.renderComparator = function (container, t, opts) {
 
     const SPEC_DEFS = {
         FDM: [
+            { key: 'materials_ok', label: { en: 'Materials OK', es: 'Materiales aptos' },
+              format: p => {
+                  const mk = p.materials_ok || {};
+                  const order = ['PLA', 'PETG', 'ABS', 'ASA', 'PA', 'PC', 'PPA-CF', 'PPS-CF', 'TPU'];
+                  const icon = { ok: '<span style="color:#22c55e">✓</span>', warn: '<span style="color:#f59e0b">~</span>', risk: '<span style="color:#f43f5e">✗</span>' };
+                  return order.filter(m => mk[m]).map(m =>
+                      `<span title="${m}">${icon[mk[m]] || ''}${m}</span>`).join(' ');
+              }, best: null },
             { key: 'build_volume', label: { en: 'Build Volume', es: 'Volumen impresión' }, format: p => `${p.specs.build_x}×${p.specs.build_y}×${p.specs.build_z} mm`, best: null },
             { key: 'speed_max', label: { en: 'Max Speed', es: 'Velocidad máx.' }, format: p => p.specs.speed_max ? `${p.specs.speed_max} mm/s` : '—', best: 'max' },
             { key: 'nozzle_temp_max', label: { en: 'Nozzle Temp', es: 'Temp. nozzle' }, format: p => p.specs.nozzle_temp_max ? `${p.specs.nozzle_temp_max}°C` : '—', best: 'max' },

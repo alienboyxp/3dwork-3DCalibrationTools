@@ -80,6 +80,10 @@ mesh_max = 275, 275
                             <span class="label">${t.meshMatrix}</span>
                             <span class="value" id="stats-matrix">-</span>
                         </div>
+                        <div class="stat-card">
+                            <span class="label">${t.meshSpacing}</span>
+                            <span class="value" id="stats-spacing">-</span>
+                        </div>
 
                         <div class="stat-card">
                             <span class="label">${t.meshRange}</span>
@@ -98,6 +102,7 @@ mesh_max = 275, 275
                             <span class="value" id="stats-min">-</span>
                         </div>
                     </div>
+                    <div id="mesh-verdict" style="display:none; margin-top:0.9rem;"></div>
                 </div>
 
                 <!-- Visualization Section -->
@@ -318,13 +323,45 @@ mesh_max = 275, 275
         const variance = flat.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / flat.length;
         const std = Math.sqrt(variance);
 
+        // Separación real entre puntos de sondeo: (rango sondado)/(puntos-1)
+        const spanX = meshData.maxX - meshData.minX;
+        const spanY = meshData.maxY - meshData.minY;
+        const spacingX = meshData.cols > 1 ? spanX / (meshData.cols - 1) : 0;
+        const spacingY = meshData.rows > 1 ? spanY / (meshData.rows - 1) : 0;
+        meshData.spacingX = spacingX;
+        meshData.spacingY = spacingY;
+
         document.getElementById('stats-bed-size').textContent = `${(meshData.bedW || 0).toFixed(0)}x${(meshData.bedH || 0).toFixed(0)} mm`;
         document.getElementById('stats-matrix').textContent = `${meshData.cols}x${meshData.rows}`;
+        const spEl = document.getElementById('stats-spacing');
+        if (spEl) {
+            spEl.textContent = spacingX
+                ? `${spacingX.toFixed(1)} x ${spacingY.toFixed(1)} mm`
+                : '-';
+        }
 
         document.getElementById('stats-range').textContent = (max - min).toFixed(3) + ' mm';
         document.getElementById('stats-std').textContent = std.toFixed(4) + ' mm';
         document.getElementById('stats-max').textContent = max.toFixed(3) + ' mm';
         document.getElementById('stats-min').textContent = min.toFixed(3) + ' mm';
+
+        // ── veredicto: ¿la cama está nivelada? ────────────────────────
+        const range = max - min;
+        const vEl = document.getElementById('mesh-verdict');
+        if (vEl) {
+            let color, icon, text;
+            if (range <= 0.05) {
+                color = '#22c55e'; icon = '✓'; text = t.meshVerdictOk;
+            } else if (range <= 0.15) {
+                color = '#f59e0b'; icon = '~'; text = t.meshVerdictWarn;
+            } else {
+                color = '#f43f5e'; icon = '✗'; text = t.meshVerdictBad;
+            }
+            vEl.style.display = 'block';
+            vEl.innerHTML = `<div style="display:flex;gap:0.5rem;align-items:flex-start;padding:0.6rem 0.75rem;border-radius:8px;border:1px solid ${color}44;background:${color}14;font-size:0.85rem;">
+                <span style="color:${color};font-weight:700;">${icon}</span>
+                <span>${text}</span></div>`;
+        }
     }
 
     function renderVisualizations() {
@@ -337,8 +374,11 @@ mesh_max = 275, 275
         const w = meshData.bedW || (meshData.maxX - meshData.minX);
         const h = meshData.bedH || (meshData.maxY - meshData.minY);
 
-        const sqW = w / meshData.cols;
-        const sqH = h / meshData.rows;
+        // Klipper QR-1: el cuadrado debe medir lo mismo que la separación
+        // entre dos puntos de sondeo (rango sondado / (puntos - 1)).
+        // Con la cama completa entre puntos el cuadrado sale mal de tamaño.
+        const sqW = meshData.spacingX || (w / meshData.cols);
+        const sqH = meshData.spacingY || (h / meshData.rows);
         document.getElementById('calc-square-size').textContent = `${sqW.toFixed(1)}mm x ${sqH.toFixed(1)}mm`;
 
         // Grid CSS

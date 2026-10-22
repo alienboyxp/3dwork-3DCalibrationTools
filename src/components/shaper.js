@@ -237,14 +237,13 @@ window.renderShaper = function (container, t) {
         }
         configInputShaper.textContent = shaperLines.join('\n');
 
-        // Printer acceleration
-        // Klipper's recommendation is usually min(accel_x, accel_y)
-        let maxAccels = [];
-        if (x) maxAccels.push(x.accel);
-        if (y) maxAccels.push(y.accel);
-
-        let minMaxAccel = maxAccels.length ? Math.min(...maxAccels) : 1000;
-        configPrinter.textContent = `max_accel: ${minMaxAccel}\n# max_accel_to_decel: ${Math.round(minMaxAccel / 2)}`;
+        // La aceleración máxima la fija SHAPER_CALIBRATE en la impresora:
+        // no se inventa un número aquí, se indica el comando exacto.
+        configPrinter.textContent =
+            `# ${t.shaperAccelComment}\n` +
+            `[printer]\nmax_accel: ${t.shaperAccelPlaceholder}\n` +
+            `# max_accel_to_decel: ${t.shaperAccelPlaceholder}\n\n` +
+            `# ${t.shaperCommand}\n# SHAPER_CALIBRATE`;
     }
 
     function renderChart() {
@@ -404,58 +403,96 @@ window.renderShaper = function (container, t) {
         });
     }
 
+    // Shapers: descripción cualitativa (sin inventar cifras de aceleración)
+    const SHAPER_INFO = {
+        ZV: { use: 'Un solo pico de resonancia, muy alto', smooth: 'mínimo', note: 'Cancela la vibración en una sola frecuencia; el menor suavizado, la mayor aceleración posible.' },
+        MZV: { use: 'Resonancia baja (menos de 40 Hz)', smooth: 'bajo', note: 'Cancela la vibración y también las frecuencias por debajo de la de resonancia.' },
+        EI: { use: 'Resonancia media-baja (30-50 Hz)', smooth: 'medio', note: 'Tres impulsos: funciona mejor que MZV en frecuencias bajas, a cambio de más suavizado.' },
+        '2HUMP_EI': { use: 'Resonancia media-alta (45-60 Hz)', smooth: 'medio', note: 'Dos impulsos: pensado para resonancias por encima de los 45 Hz.' },
+        '3HUMP_EI': { use: 'Resonancia alta (más de 60 Hz)', smooth: 'alto', note: 'Tres impulsos para resonancias altas; es el que más suaviza (y más aceleración pierde).' }
+    };
+
+    // Recomendación orientativa según la frecuencia de resonancia medida.
+    // Los valores definitivos (aceleración y vibración) los da
+    // SHAPER_CALIBRATE en tu impresora: aquí no se inventan.
+    function recommendShaper(freq) {
+        if (freq < 30) return 'MZV';
+        if (freq < 45) return 'EI';
+        if (freq < 60) return '2HUMP_EI';
+        return '3HUMP_EI';
+    }
+
+    function findPeaks(freqs, psd, maxPeaks) {
+        const peaks = [];
+        for (let i = 1; i < psd.length - 1; i++) {
+            if (psd[i] > psd[i - 1] && psd[i] >= psd[i + 1] && psd[i] > 0) {
+                peaks.push({ freq: freqs[i], amp: psd[i] });
+            }
+        }
+        peaks.sort((a, b) => b.amp - a.amp);
+        return peaks.slice(0, maxPeaks || 3).sort((a, b) => a.freq - b.freq);
+    }
+
     function processAxis(data, tableId, axisLabel) {
         const tableEl = document.getElementById(tableId);
 
-        // Simple Peak Detection
-        let maxVal = 0;
+        // Detección real de picos (locales, no solo el máximo global)
+        const peaks = findPeaks(data.freq, data.psd, 3);
         let peakFreq = 0;
+        let maxVal = 0;
         for (let i = 0; i < data.psd.length; i++) {
             if (data.psd[i] > maxVal) {
                 maxVal = data.psd[i];
                 peakFreq = data.freq[i];
             }
         }
+        if (peaks.length) peakFreq = peaks[0].freq;
 
-        // Shaper Suggestions (Simulated Logic based on Klipper scripts)
-        // types: ZV, MZV, EI, 2HUMP, 3HUMP
-        const shapers = [
-            { type: 'ZV', freq: peakFreq, accel: Math.round(peakFreq * peakFreq * 0.1), vib: '0.1%', smooth: '0.04' },
-            { type: 'MZV', freq: peakFreq, accel: Math.round(peakFreq * peakFreq * 0.08), vib: '0.05%', smooth: '0.06' },
-            { type: 'EI', freq: peakFreq, accel: Math.round(peakFreq * peakFreq * 0.05), vib: '0.02%', smooth: '0.10' }
-        ];
+        const recommended = recommendShaper(peakFreq);
+        const info = SHAPER_INFO[recommended] || SHAPER_INFO.MZV;
+        const order = ['ZV', 'MZV', 'EI', '2HUMP_EI', '3HUMP_EI'];
 
         let html = `
             <div class="shaper-recommendation" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
-                <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">${t.recommendedShaper}</p>
-                <p style="font-size: 1.1rem; font-weight: bold; color: var(--primary-light);">shaper_type_${axisLabel.toLowerCase()}: mzv</p>
-                <p style="font-size: 1.1rem; font-weight: bold; color: var(--primary-light);">shaper_freq_${axisLabel.toLowerCase()}: ${peakFreq.toFixed(1)}</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom:0.3rem;">${t.recommendedShaper}</p>
+                <p style="font-size: 1.1rem; font-weight: bold; color: var(--primary-light); margin-bottom:0.35rem;">shaper_type_${axisLabel.toLowerCase()}: ${recommended.toLowerCase()}</p>
+                <p style="font-size: 1.1rem; font-weight: bold; color: var(--primary-light); margin-bottom:0.4rem;">shaper_freq_${axisLabel.toLowerCase()}: ${peakFreq.toFixed(1)}</p>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin:0;">${info.note}</p>
+            </div>
+            <div style="margin-bottom:0.8rem;font-size:0.8rem;">
+                <span style="color:var(--text-muted);">${t.shaperPeaks}:</span>
+                ${peaks.map(p => `<span style="font-family:var(--font-mono);margin-left:0.4rem;">${p.freq.toFixed(1)} Hz</span>`).join('') || '<span style="color:var(--text-muted);">—</span>'}
             </div>
             <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
                 <thead>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-muted);">
                         <th style="padding: 0.5rem; text-align: left;">${t.shaperType}</th>
-                        <th style="padding: 0.5rem; text-align: right;">${t.maxAccel}</th>
-                        <th style="padding: 0.5rem; text-align: right;">${t.vibrations}</th>
+                        <th style="padding: 0.5rem; text-align: left;">${t.shaperUseWhen}</th>
+                        <th style="padding: 0.5rem; text-align: right;">${t.shaperSmoothing}</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
 
-        shapers.forEach(s => {
+        order.forEach(type => {
+            const s = SHAPER_INFO[type];
+            const isRec = type === recommended;
             html += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
-                    <td style="padding: 0.75rem 0.5rem;">${s.type} (${s.freq.toFixed(1)}Hz)</td>
-                    <td style="padding: 0.75rem 0.5rem; text-align: right;">${s.accel} mm/s²</td>
-                    <td style="padding: 0.75rem 0.5rem; text-align: right;">${s.vib}</td>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);${isRec ? 'background:rgba(34,197,94,0.08);' : ''}">
+                    <td style="padding: 0.6rem 0.5rem;">${isRec ? '★ ' : ''}${type}</td>
+                    <td style="padding: 0.6rem 0.5rem; color: var(--text-muted); font-size: 0.78rem;">${s.use}</td>
+                    <td style="padding: 0.6rem 0.5rem; text-align: right;">${s.smooth}</td>
                 </tr>
             `;
         });
 
-        html += `</tbody></table>`;
+        html += `</tbody></table>
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.7rem;">
+                ${t.shaperValidate}
+            </p>`;
         tableEl.innerHTML = html;
 
-        return shapers[1]; // MZV as default recommendation
+        return { type: recommended, freq: peakFreq, peaks: peaks };
     }
 
     // Initialize Icons

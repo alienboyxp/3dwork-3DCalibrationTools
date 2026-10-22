@@ -454,6 +454,18 @@ window.renderLogAnalyzer = function (container, t) {
             html += '<div style="font-size:0.8rem; color:#22c55e;">Sin hallazgos: no se ven errores en el log.</div>';
         }
 
+        if (diag.actions && diag.actions.length) {
+            html += '<div style="margin-top:0.9rem; border-top:1px solid var(--glass-border); padding-top:0.7rem;">';
+            html += '<div style="font-size:0.78rem; font-weight:700; margin-bottom:0.45rem;">📐 Llevar estos valores a las calculadoras</div>';
+            diag.actions.forEach((a, idx) => {
+                html += `<div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.35rem;">
+                    <button data-diag-tool="${a.tool}" data-diag-idx="${idx}" style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.4); color:#86efac; border-radius:6px; padding:0.3rem 0.65rem; font-size:0.72rem; cursor:pointer;">${a.label} →</button>
+                    <span style="font-size:0.7rem; color:var(--text-muted);">${a.note || ''}</span>
+                </div>`;
+            });
+            html += '</div>';
+        }
+
         if (diag.undetermined && diag.undetermined.length) {
             html += '<div style="margin-top:0.8rem; border-left:3px solid #475569; padding-left:0.75rem;">';
             diag.undetermined.forEach(u => {
@@ -467,6 +479,16 @@ window.renderLogAnalyzer = function (container, t) {
             <button id="btn-copy-diag" style="margin-left:0.6rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:#e2e8f0; border-radius:6px; padding:0.25rem 0.6rem; font-size:0.7rem; cursor:pointer;">Copiar diagnóstico</button>
         </div></div>`;
         box.innerHTML = html;
+
+        // Botones: pasar los valores a otra herramienta
+        box.querySelectorAll('button[data-diag-tool]').forEach(b => {
+            b.addEventListener('click', () => {
+                const a = diag.actions[parseInt(b.getAttribute('data-diag-idx'), 10)];
+                if (!a) return;
+                if (window.ToolPrefill) window.ToolPrefill.set(a.tool, a.payload || {});
+                window.location.hash = '#' + a.tool;
+            });
+        });
 
         const btn = document.getElementById('btn-copy-diag');
         if (btn) {

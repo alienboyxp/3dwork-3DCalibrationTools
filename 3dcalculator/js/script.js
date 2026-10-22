@@ -124,9 +124,10 @@ function updateTotalCost() {
         const laborCost = getCost('labor-cost-result');
         const packagingCost = getCost('packaging-cost-result');
         const shippingCost = getCost('shipping-cost-result');
+        const wearCost = getCost('wear-cost-result');
         
         // Calculate base cost as sum of all individual costs
-        const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost;
+        const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost + wearCost;
         
         // Update the base cost display
         const baseCostEl = document.getElementById('base-cost');
@@ -172,6 +173,20 @@ function updateTotalCost() {
             }
         }
         
+        // VAT (IVA) applied on the final price
+        const vatInput = document.getElementById('vat-rate');
+        const vatRate = vatInput ? (parseFloat(vatInput.value) || 0) : 0;
+        const vatAmount = total * (vatRate / 100);
+        const totalWithVat = total + vatAmount;
+        const vatAmountEl = document.getElementById('vat-amount');
+        if (vatAmountEl) {
+            vatAmountEl.textContent = `€${vatAmount.toFixed(2)} (${vatRate}%)`;
+        }
+        const totalWithVatEl = document.getElementById('total-with-vat');
+        if (totalWithVatEl) {
+            totalWithVatEl.textContent = `€${totalWithVat.toFixed(2)}`;
+        }
+        
         // Update the chart with the new margin
         updateCostAllocationChart(
             materialCost,
@@ -179,7 +194,8 @@ function updateTotalCost() {
             laborCost,
             packagingCost,
             shippingCost,
-            marginPercent
+            marginPercent,
+            wearCost
         );
         
     } catch (error) {
@@ -1014,6 +1030,10 @@ function toggleLanguage() {
             'failure-rate': 'Failure Rate',
             'electricity-cost': 'Electricity Cost',
             'labor-cost': 'Labor Cost',
+            'wear-cost': 'Machine Wear (nozzle, belts, service)',
+            'vat-rate': 'VAT (IVA)',
+            'vat-amount': 'VAT (IVA)',
+            'total-with-vat': 'Total with VAT',
             'labor-rate': 'Labor Rate',
             'labor-hours': 'Labor Hours',
             'calculation-type': 'Calculation',
@@ -1077,6 +1097,10 @@ function toggleLanguage() {
             'failure-rate': 'Tasa de Falla',
             'electricity-cost': 'Costo de Electricidad',
             'labor-cost': 'Costo de Mano de Obra',
+            'wear-cost': 'Desgaste (boquilla, correas, mantenimiento)',
+            'vat-rate': 'IVA',
+            'vat-amount': 'IVA',
+            'total-with-vat': 'Total con IVA',
             'labor-rate': 'Tarifa por Hora',
             'labor-hours': 'Horas de Trabajo',
             'calculation-type': 'Cálculo',
@@ -1279,6 +1303,11 @@ function calculateCosts(e) {
         // Calculate electricity cost
         const printerPower = parseFloat(document.getElementById('printer-power').value) || 0; // in watts
         const electricityCost = (printerPower * printTimeHours / 1000) * electricityRate; // Convert to kWh then multiply by rate
+
+        // Machine wear / maintenance (nozzle, belts, bearings, service):
+        // amortised per hour of machine use.
+        const wearRate = getElementValue('wear-cost', 0); // € per hour
+        const wearCost = wearRate * printTimeHours;
         console.log('Electricity cost calculated:', { printerPower, printTimeHours, electricityRate, electricityCost });
         
         // Calculate labor cost based on calculation type
@@ -1320,7 +1349,10 @@ function calculateCosts(e) {
         const finalMaterialCost = totalMaterialCost * failureMultiplier;
         
         // Calculate total base cost (materials with failure rate + other costs)
-        const baseCost = finalMaterialCost + electricityCost + laborCost + totalPackagingCost + totalShippingCost;
+        // The wear of the machine also happens on failed prints
+        const finalWearCost = wearCost * failureMultiplier;
+
+        const baseCost = finalMaterialCost + electricityCost + laborCost + totalPackagingCost + totalShippingCost + finalWearCost;
         
         // Electricity cost is for the total print time, not per piece
         const finalElectricityCost = electricityCost * failureMultiplier;
@@ -1350,10 +1382,10 @@ function calculateCosts(e) {
         });
         
         // Update the UI with the calculated costs
-        updateResults(finalMaterialCost, finalElectricityCost, finalLaborCost, finalPackagingCost, finalShippingCost);
+        updateResults(finalMaterialCost, finalElectricityCost, finalLaborCost, finalPackagingCost, finalShippingCost, finalWearCost);
         
         // Update the cost allocation chart
-        updateCostAllocationChart(finalMaterialCost, finalElectricityCost, finalLaborCost, finalPackagingCost, finalShippingCost);
+        updateCostAllocationChart(finalMaterialCost, finalElectricityCost, finalLaborCost, finalPackagingCost, finalShippingCost, 0, finalWearCost);
         
     } catch (error) {
         console.error('Error calculating costs:', error);
@@ -1361,7 +1393,7 @@ function calculateCosts(e) {
 }
 
 // Update the UI with calculated results
-function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, packagingCost = 0, shippingCost = 0) {
+function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, packagingCost = 0, shippingCost = 0, wearCost = 0) {
     try {
         // Format number with 2 decimal places
         const formatNumber = (num) => {
@@ -1417,7 +1449,7 @@ function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, pac
 }
 
 // Update the cost allocation chart
-function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborCost = 0, packagingCost = 0, shippingCost = 0, marginPercent = 0) {
+function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborCost = 0, packagingCost = 0, shippingCost = 0, marginPercent = 0, wearCost = 0) {
     console.log('Updating cost allocation chart with:', { materialCost, electricityCost, laborCost, packagingCost, shippingCost });
     const canvas = document.getElementById('costAllocationChart');
     if (!canvas) {
@@ -1443,9 +1475,10 @@ function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborC
     laborCost = parseFloat(laborCost) || 0;
     packagingCost = parseFloat(packagingCost) || 0;
     shippingCost = parseFloat(shippingCost) || 0;
+    wearCost = parseFloat(wearCost) || 0;
     
     // Calculate base cost (sum of material, electricity, labor, packaging, and shipping costs)
-    const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost;
+    const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost + (wearCost || 0);
     
     // If marginPercent is not provided, get it from the selected pricing option
     if (marginPercent === undefined || marginPercent === null) {
@@ -1489,6 +1522,7 @@ function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborC
             `Labor (€${laborCost.toFixed(2)})`,
             `Packaging (€${packagingCost.toFixed(2)})`,
             `Shipping (€${shippingCost.toFixed(2)})`,
+            `Wear (€${wearCost.toFixed(2)})`,
             `Margin ${marginPercent}% (€${marginAmount.toFixed(2)})`
         ],
         datasets: [{
@@ -1498,6 +1532,7 @@ function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborC
                 laborCost,
                 packagingCost,
                 shippingCost,
+                wearCost,
                 marginAmount
             ],
             backgroundColor: [
@@ -1506,6 +1541,7 @@ function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborC
                 '#f6c23e', // Labor - Yellow
                 '#e74a3b',  // Packaging - Red
                 '#9b59b6',  // Shipping - Purple
+                '#00b8d4',  // Wear - Cyan
                 '#ff69b4'  // Margin - Pink
             ],
             borderColor: [
@@ -1514,6 +1550,7 @@ function updateCostAllocationChart(materialCost = 0, electricityCost = 0, laborC
                 '#f6c23e',
                 '#e74a3b',
                 '#9b59b6',
+                '#00b8d4',
                 '#ff69b4'
             ],
             borderWidth: 2
@@ -1706,9 +1743,10 @@ function updateTotalCost() {
         const laborCost = getCost('labor-cost-result');
         const packagingCost = getCost('packaging-cost-result');
         const shippingCost = getCost('shipping-cost-result');
+        const wearCost = getCost('wear-cost-result');
         
         // Calculate base cost as sum of all individual costs
-        const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost;
+        const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost + wearCost;
         
         // Update the base cost display
         const baseCostEl = document.getElementById('base-cost');
@@ -1754,6 +1792,20 @@ function updateTotalCost() {
             }
         }
         
+        // VAT (IVA) applied on the final price
+        const vatInput = document.getElementById('vat-rate');
+        const vatRate = vatInput ? (parseFloat(vatInput.value) || 0) : 0;
+        const vatAmount = total * (vatRate / 100);
+        const totalWithVat = total + vatAmount;
+        const vatAmountEl = document.getElementById('vat-amount');
+        if (vatAmountEl) {
+            vatAmountEl.textContent = `€${vatAmount.toFixed(2)} (${vatRate}%)`;
+        }
+        const totalWithVatEl = document.getElementById('total-with-vat');
+        if (totalWithVatEl) {
+            totalWithVatEl.textContent = `€${totalWithVat.toFixed(2)}`;
+        }
+        
         // Update the chart with the new margin
         updateCostAllocationChart(
             materialCost,
@@ -1761,7 +1813,8 @@ function updateTotalCost() {
             laborCost,
             packagingCost,
             shippingCost,
-            marginPercent
+            marginPercent,
+            wearCost
         );
         
     } catch (error) {
@@ -1770,7 +1823,7 @@ function updateTotalCost() {
 }
 
 // Update the results in the UI
-function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, packagingCost = 0, shippingCost = 0) {
+function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, packagingCost = 0, shippingCost = 0, wearCost = 0) {
     console.log('Updating results with:', { materialCost, electricityCost, laborCost, packagingCost, shippingCost });
 
     // Ensure we have valid numbers
@@ -1779,11 +1832,12 @@ function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, pac
     laborCost = parseFloat(laborCost) || 0;
     packagingCost = parseFloat(packagingCost) || 0;
     shippingCost = parseFloat(shippingCost) || 0;
+    wearCost = parseFloat(wearCost) || 0;
 
     // Calculate base cost (sum of material, electricity, labor, packaging, and shipping costs)
     // These values already include quantity and failure rate multipliers
     // Calculate base cost (sum of all costs without margin)
-    const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost;
+    const baseCost = materialCost + electricityCost + laborCost + packagingCost + shippingCost + wearCost;
     window.currentBaseCost = baseCost; // Store for pricing calculations
     
     console.log('Base cost components:', {
@@ -1824,15 +1878,17 @@ function updateResults(materialCost = 0, electricityCost = 0, laborCost = 0, pac
     const laborCostEl = document.getElementById('labor-cost-result');
     const packagingCostEl = document.getElementById('packaging-cost-result');
     const shippingCostEl = document.getElementById('shipping-cost-result');
+    const wearCostEl = document.getElementById('wear-cost-result');
 
     if (materialCostEl) materialCostEl.textContent = `€${formatNumber(materialCost)}`;
     if (electricityCostEl) electricityCostEl.textContent = `€${formatNumber(electricityCost)}`;
     if (laborCostEl) laborCostEl.textContent = `€${formatNumber(laborCost)}`;
     if (packagingCostEl) packagingCostEl.textContent = `€${formatNumber(packagingCost)}`;
     if (shippingCostEl) shippingCostEl.textContent = `€${formatNumber(shippingCost)}`;
+    if (wearCostEl) wearCostEl.textContent = `€${formatNumber(wearCost)}`;
 
     // Update the cost allocation chart with the latest values (without margin)
-    updateCostAllocationChart(materialCost, electricityCost, laborCost, packagingCost, shippingCost, 0);
+    updateCostAllocationChart(materialCost, electricityCost, laborCost, packagingCost, shippingCost, 0, wearCost);
 
     // Update the suggested prices based on the new base cost
     updateSuggestedPrices(baseCost);
@@ -2093,9 +2149,12 @@ function exportToPdf() {
             totalSection.style.textAlign = 'right';
             totalSection.style.borderTop = '2px solid #3f51b5';
             
+            const vatTotalEl = document.getElementById('total-with-vat');
+            const vatAmountEl = document.getElementById('vat-amount');
             totalSection.innerHTML = `
                 <div style="font-size: 11px; color: #757575; margin-bottom: 2px;">TOTAL AMOUNT</div>
                 <div style="font-size: 20px; font-weight: 600; color: #3f51b5; font-family: monospace;">${totalCostEl.textContent}</div>
+                ${vatTotalEl ? `<div style="font-size: 10px; color: #757575; margin-top: 4px;">VAT: ${vatAmountEl ? vatAmountEl.textContent : ''} → ${vatTotalEl.textContent}</div>` : ''}
                 <div style="font-size: 9px; color: #9e9e9e; margin-top: 2px;">
                     (${quantity} ${quantity === 1 ? 'piece' : 'pieces'})
                 </div>
