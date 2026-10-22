@@ -145,6 +145,8 @@ window.renderLogAnalyzer = function (container, t) {
                                     <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i> ${t.detectedErrors}
                                 </h3>
                                 <div id="error-list" style="font-family: monospace; font-size: 0.8rem; line-height: 1.5;"></div>
+                                <!-- DIAGNÓSTICO: veredicto + nota + fixes (3Dwork) -->
+                                <div id="log-diagnosis" style="margin-top: 1rem;"></div>
                             </div>
                         </div>
 
@@ -398,6 +400,92 @@ window.renderLogAnalyzer = function (container, t) {
         reader.readAsText(file);
     }
 
+    function escDiag(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderLogDiagnosis(diag) {
+        const box = document.getElementById('log-diagnosis');
+        if (!box) return;
+        const STYLE = {
+            LISTO: '#22c55e', REPARABLE: '#f59e0b',
+            'ALTO RIESGO': '#f43f5e', 'NO SE PUEDE DETERMINAR': '#94a3b8'
+        };
+        const color = STYLE[diag.verdict] || '#94a3b8';
+        const ICON = { risk: '🔴', warn: '🟠', info: '🔵' };
+        const GUIDE_LABEL = {
+            klipper: 'Troubleshooting de Klipper', labs: 'Guías de 3Dwork Labs',
+            extrusor: 'Calibración FDM y filamento', tools: 'Herramientas de 3Dwork'
+        };
+        let html = `<div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1rem;">
+            <div style="display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.6rem;">
+                <span style="background:${color}; color:#06110b; font-weight:800; font-size:0.72rem; letter-spacing:0.04em; padding:0.35rem 0.7rem; border-radius:999px;">${diag.verdict.replace(/_/g, ' ')}</span>
+                <span style="font-size:1.4rem; font-weight:800;">${diag.score}<span style="font-size:0.75rem; color:var(--text-muted); font-weight:500;">/${diag.max}</span></span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">nota de estado de la impresora</span>
+            </div>`;
+
+        if (diag.deductions && diag.deductions.length) {
+            html += `<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:0.8rem;">`;
+            diag.deductions.forEach(d => {
+                html += `<div><b style="color:#e2e8f0;">${d.points > 0 ? '+' : ''}${d.points}</b> · ${d.check} — ${d.rule}</div>`;
+            });
+            diag.caps.forEach(c => {
+                html += `<div><b style="color:#f43f5e;">tope ${c.limit}</b> · ${c.rule}</div>`;
+            });
+            html += `</div>`;
+        }
+
+        if (diag.findings.length) {
+            html += '<div style="display:flex; flex-direction:column; gap:0.7rem;">';
+            diag.findings.forEach(f => {
+                const gc = f.severity === 'risk' ? '#f43f5e' : (f.severity === 'warn' ? '#f59e0b' : '#38bdf8');
+                html += `<div style="border-left:3px solid ${gc}; padding-left:0.75rem;">
+                    <div style="font-weight:700; font-size:0.85rem;">${ICON[f.severity] || '•'} ${f.title}</div>
+                    <div style="font-family:monospace; font-size:0.7rem; color:var(--text-muted); margin-top:0.2rem; word-break:break-word;">${escDiag(f.evidence)}</div>
+                    <div style="font-size:0.78rem; margin-top:0.3rem; color:#cbd5e1;">${escDiag(f.why)}</div>
+                    <div style="font-size:0.78rem; margin-top:0.2rem;">👉 <b>${escDiag(f.fix)}</b></div>
+                    ${f.guideUrl ? `<a href="${f.guideUrl}" target="_blank" rel="noopener" style="font-size:0.72rem; color:#22c55e;">${GUIDE_LABEL[f.guide] || 'Guía'} ↗</a>` : ''}
+                </div>`;
+            });
+            html += '</div>';
+        } else {
+            html += '<div style="font-size:0.8rem; color:#22c55e;">Sin hallazgos: no se ven errores en el log.</div>';
+        }
+
+        if (diag.undetermined && diag.undetermined.length) {
+            html += '<div style="margin-top:0.8rem; border-left:3px solid #475569; padding-left:0.75rem;">';
+            diag.undetermined.forEach(u => {
+                html += `<div style="font-size:0.75rem; color:var(--text-muted);">⚪ ${escDiag(u)}</div>`;
+            });
+            html += '</div>';
+        }
+
+        html += `<div style="margin-top:0.9rem; font-size:0.72rem; color:var(--text-muted); border-top:1px solid var(--glass-border); padding-top:0.6rem;">
+            Diagnóstico determinista de 3Dwork · <a href="https://3dwork.io/tools/" target="_blank" rel="noopener" style="color:#22c55e;">herramientas de 3Dwork</a>
+            <button id="btn-copy-diag" style="margin-left:0.6rem; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:#e2e8f0; border-radius:6px; padding:0.25rem 0.6rem; font-size:0.7rem; cursor:pointer;">Copiar diagnóstico</button>
+        </div></div>`;
+        box.innerHTML = html;
+
+        const btn = document.getElementById('btn-copy-diag');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const lines = [`Diagnóstico 3Dwork — ${diag.verdict} (${diag.score}/${diag.max})`];
+                diag.findings.forEach(f => {
+                    lines.push(`- [${f.severity}] ${f.title}`);
+                    lines.push(`  ${f.evidence}`);
+                    lines.push(`  ${f.fix}`);
+                });
+                diag.undetermined.forEach(u => lines.push(`- (no determinable) ${u}`));
+                navigator.clipboard.writeText(lines.join('\n')).then(() => {
+                    btn.textContent = '¡Copiado!';
+                    setTimeout(() => { btn.textContent = 'Copiar diagnóstico'; }, 1600);
+                });
+            });
+        }
+    }
+
     function processLogData(data) {
         noLogMsg.style.display = 'none';
         resultsContainer.style.display = 'flex';
@@ -597,6 +685,18 @@ window.renderLogAnalyzer = function (container, t) {
 
         // 5. Config Extraction
         extractConfig(currentLogData.klippy);
+
+        // Diagnóstico determinista (veredicto + nota con rúbrica + fixes)
+        try {
+            if (window.LogDiagnosis) {
+                const cfgText = (document.getElementById('config-view') || {}).textContent || '';
+                renderLogDiagnosis(window.LogDiagnosis.analyze({
+                    klippy: currentLogData.klippy, config: cfgText
+                }));
+            }
+        } catch (diagErr) {
+            console.error('No se pudo generar el diagnóstico', diagErr);
+        }
 
         // 6. Default Logs View
         setActiveLog(btnLogKlippy, currentLogData.klippy);
