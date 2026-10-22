@@ -609,8 +609,12 @@
             }, [processed, imgW, imgH, gridW, gridH, W, H, layers]);
 
             const sorted = useMemo(() => [...layers].sort((a, b) => a.stop - b.stop), [layers]);
+            // THREE.Color convierte de sRGB al espacio de trabajo (lineal):
+            // si se escriben los valores sRGB tal cual en el atributo de
+            // color, el renderer los interpreta como lineales y los oscuros
+            // salen más claros de lo que son.
             const paletteRgb = useMemo(() => layers.map(l => {
-                const c = window.HueForge.hexToRgb(l.hex);
+                const c = new THREE.Color(l.hex);
                 return [c.r, c.g, c.b];
             }), [layers]);
             // Porcentaje de la imagen que cubre cada filamento (Flat Paint)
