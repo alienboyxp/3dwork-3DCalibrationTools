@@ -165,6 +165,51 @@ console.log('\n── Muestreo (mapa de alturas) ──');
         Math.abs(bi.size[2] - 2.55) < 0.05, `grosor=${bi.size[2].toFixed(2)} esperado=2.55`);
 }
 
+console.log('\n── Orientación de la foto en la pieza ──');
+{
+    // Imagen con la mitad de ARRIBA blanca y la de ABAJO negra.
+    const px = new Uint8ClampedArray(10 * 10 * 4);
+    for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+            const i = (y * 10 + x) * 4;
+            const v = y < 5 ? 255 : 0;          // arriba blanco, abajo negro
+            px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
+        }
+    }
+    const up = Litho.build(px, 10, 10, Object.assign({}, BASE, { upright: true, res: 20, resV: 20, scaleMode: 'fit' }));
+    // En la pieza de pie: z = alto de la pieza, y = -grosor.
+    // La parte alta de la foto (blanca = fina) debe quedar en el z máximo.
+    let topThick = null, bottomThick = null;
+    for (let i = 0; i < up.positions.length; i += 3) {
+        const z = up.positions[i + 2], thick = -up.positions[i + 1];
+        if (z > 60 && topThick === null) topThick = thick;
+        if (z < 5 && bottomThick === null) bottomThick = thick;
+    }
+    check('la parte alta de la foto queda ARRIBA en la pieza',
+        topThick !== null && bottomThick !== null && topThick < bottomThick,
+        `arriba=${topThick} abajo=${bottomThick} (arriba debe ser más fino)`);
+
+    // Y de izquierda a derecha no se invierte
+    const pxh = new Uint8ClampedArray(10 * 10 * 4);
+    for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+            const i = (y * 10 + x) * 4;
+            const v = x < 5 ? 255 : 0;          // izquierda blanca
+            pxh[i] = v; pxh[i + 1] = v; pxh[i + 2] = v; pxh[i + 3] = 255;
+        }
+    }
+    const uph = Litho.build(pxh, 10, 10, Object.assign({}, BASE, { upright: true, res: 20, resV: 20, scaleMode: 'fit' }));
+    let leftThick = null, rightThick = null;
+    for (let i = 0; i < uph.positions.length; i += 3) {
+        const x = uph.positions[i], thick = -uph.positions[i + 1];
+        if (x < -30 && leftThick === null) leftThick = thick;
+        if (x > 30 && rightThick === null) rightThick = thick;
+    }
+    check('la parte izquierda de la foto queda a la IZQUIERDA',
+        leftThick !== null && rightThick !== null && leftThick < rightThick,
+        `izq=${leftThick} der=${rightThick} (izquierda debe ser más fina)`);
+}
+
 console.log('\n── Estadísticas ──');
 {
     const m = Litho.build(IMG, 120, 90, BASE);

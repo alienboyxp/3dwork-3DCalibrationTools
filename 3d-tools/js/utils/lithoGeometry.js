@@ -119,7 +119,11 @@ window.LithoGeometry = (function () {
                 }
                 // Coordenada normalizada dentro de la imagen (0..1)
                 const c = col - imgX0, r = row - imgY0;
-                const u = c / o.res, v = r / o.resV;
+                // La fila 0 de la malla es la BASE de la pieza (v mínima) y la
+                // última es la parte alta. Se muestrea la foto al revés en
+                // vertical para que la parte alta de la foto quede ARRIBA en
+                // la pieza (si no, la litofanía sale del revés al imprimir).
+                const u = c / o.res, v = (o.resV - r) / o.resV;
                 // Espejo horizontal: invierte el eje X de la muestreo.
                 const sx = oX + (o.mirror ? (1 - u) : u) * sW, sy = oY + v * sH;
                 let g = sampleBox(pixels, imgW, imgH, sx, sy, cellW, cellH);
