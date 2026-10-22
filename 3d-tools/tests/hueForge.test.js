@@ -321,6 +321,18 @@ console.log('\n── Modo de imagen y paleta automática ──');
     check('no se repite filamento',
         new Set(chosen.map(f => f.id)).size === chosen.length);
 
+    // Hasta 16 colores (los multicolor de verdad llegan a 16)
+    const many = HueForge.dominantColors(px, w, h, 16);
+    check('se admiten hasta 16 colores dominantes', many.length <= 16, `${many.length}`);
+    const lib16 = [];
+    for (let i = 0; i < 16; i++) {
+        lib16.push({ id: 'f' + i, hex: '#' + (i * 15).toString(16).padStart(2, '0') + '8080', name: 'F' + i });
+    }
+    const ramp16 = HueForge.neutralRamp(lib16, 16, px, w, h);
+    check('la rampa neutra admite 16 filamentos', ramp16.length === 16, `${ramp16.length}`);
+    check('la rampa de 16 no repite filamento',
+        new Set(ramp16.map(f => f.id)).size === 16);
+
     // Escala de grises y blanco y negro
     const gray = HueForge.processImage(px, w, h, { mode: 'gray' });
     check('el modo gris deja los tres canales iguales',

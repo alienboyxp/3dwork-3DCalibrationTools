@@ -768,7 +768,7 @@ window.HueForge = (function () {
      * @returns {Array<{r,g,b,hex,count}>} ordenados por peso
      */
     function dominantColors(pixels, imgW, imgH, n) {
-        const k = Math.max(1, Math.min(12, n | 0 || 4));
+        const k = Math.max(1, Math.min(16, n | 0 || 4));
         const step = Math.max(1, Math.floor(Math.sqrt((imgW * imgH) / 4000)));
         const samples = [];
         for (let y = 0; y < imgH; y += step) {
