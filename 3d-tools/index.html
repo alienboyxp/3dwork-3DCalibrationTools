@@ -540,9 +540,11 @@
             const [imgUrl, setImgUrl] = useState(null), [pix, setPix] = useState(null), [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
             const [W, setW] = useState(100), [H, setH] = useState(100), [lock, setLock] = useState(true);
             const [bright, setBr] = useState(1.0), [contrast, setCt] = useState(1.0), [blackP, setBp] = useState(0.0), [whiteP, setWp] = useState(1.0);
-            const [baseT, setBt] = useState(0.48), [relT, setRt] = useState(1.8), [res, setRes] = useState(100), [lh, setLh] = useState(0.08);
+            const [baseT, setBt] = useState(0.48), [relT, setRt] = useState(1.8), [lh, setLh] = useState(0.08);
             const [maxH, setMaxH] = useState(2.4), [autoSort, setAutoSort] = useState(true), [tab, setTab] = useState('stack');
-            const [mode, setMode] = useState('layered');        // layered | flat
+            const [mode, setMode] = useState('flat');            // layered | flat
+            const [nozzle, setNozzle] = useState(0.4);            // diámetro de boquilla (mm)
+            const [fine, setFine] = useState(false);              // celda = media boquilla
             const [imgMode, setImgMode] = useState('color');    // color | gray | bw
             const [threshold, setThreshold] = useState(0.5);
             const [numColors, setNumColors] = useState(4);
@@ -571,8 +573,13 @@
                     .catch(() => setLibrary([]));
             }, []);
 
-            const gridW = Math.max(20, res);
-            const gridH = Math.max(20, Math.round(res / (imgR || 1)));
+            // La resolución de la malla la manda la boquilla: el detalle en
+            // XY no puede ser más fino que el diámetro de la boquilla (ni
+            // medio, si queremos que el perímetro siga la forma).
+            const cellSize = fine ? nozzle / 2 : nozzle;
+            const gridW = Math.max(20, Math.min(600, Math.round(W / cellSize)));
+            const gridH = Math.max(20, Math.min(600, Math.round(H / cellSize)));
+            const cells = gridW * gridH;
             const reliefH = Math.max(0, Math.min(relT, Math.max(0, maxH - baseT)));
             const maxZ = baseT + reliefH;
 
@@ -958,17 +965,34 @@
                         <div className="section-label">MESH DETAIL & PRINT</div>
                         <div className="thickness-grid">
                             <div className="thickness-item" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <label>Mesh Detail</label>
-                                <input type="range" min="40" max="250" step="10" value={res} onChange={e => setRes(parseInt(e.target.value))} />
+                                <label>Nozzle (mm)</label>
+                                <select value={nozzle} onChange={e => setNozzle(parseFloat(e.target.value))} style={{ background: '#1E293B', color: 'white', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 6px', fontSize: 11 }}>
+                                    <option value="0.2">0.2</option>
+                                    <option value="0.4">0.4</option>
+                                    <option value="0.6">0.6</option>
+                                    <option value="0.8">0.8</option>
+                                </select>
                             </div>
                             <div className="thickness-item">
                                 <label>Layer Height (mm)</label>
                                 <input type="number" step="0.01" min="0.02" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={lh} onChange={e => setLh(parseFloat(e.target.value))} />
                             </div>
                         </div>
-                        <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px' }}>
-                            {relief ? `${relief.gridW} × ${relief.gridH} vértices · ${Math.round(maxZ / lh)} capas · alto total ${maxZ.toFixed(2)} mm` : 'Carga una imagen para ver los datos'}
+                        <label className="toggle-row" style={{ fontSize: 9, marginTop: '6px', gap: 6, cursor: 'pointer' }} onClick={() => setFine(!fine)}>
+                            <input type="checkbox" checked={fine} onChange={e => setFine(e.target.checked)} style={{ display: 'none' }} />
+                            <div className={`aspect-lock ${fine ? 'active' : ''}`} style={{ width: 16, height: 16, fontSize: 9 }}>½</div>
+                            <span className="toggle-label">Fine detail (half nozzle)</span>
+                        </label>
+                        <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px', lineHeight: 1.45 }}>
+                            {relief
+                                ? `Cell ${cellSize.toFixed(2)} mm → ${gridW} × ${gridH} cells (${(cells / 1000).toFixed(0)}k) · ${Math.round(maxZ / lh)} layers · ${maxZ.toFixed(2)} mm high`
+                                : 'Load an image to see the data'}
                         </p>
+                        {cells > 120000 && (
+                            <p style={{ fontSize: 9, color: '#f59e0b', marginTop: '2px', lineHeight: 1.45 }}>
+                                ⚠ Very fine mesh ({Math.round(cells / 1000)}k cells): the 3MF will be heavy and the browser will take a while. Use a bigger nozzle unless you need it.
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="canvas-center">

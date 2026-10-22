@@ -221,6 +221,11 @@ console.log('\n── Flat Paint (color en XY) ──');
     check('cada región ocupa la mitad del volumen',
         Math.abs(Mesh.signedVolume(s0.positions) - half) < 1,
         `negro=${Mesh.signedVolume(s0.positions).toFixed(0)} esperado=${half}`);
+    // La fusión de celdas en rectángulos reduce mucho la geometría
+    const cells = 20 * 20;
+    check('la fusión reduce la geometría (no una malla por celda)',
+        s1.triangles < cells * 4, `triángulos=${s1.triangles} (por celda serían ${cells * 4})`);
+
     const files = HueForge.buildFlatPaint3MF(flat, palette, { thickness: 2 });
     const objs = files['3D/3dmodel.model'].split('<object ').slice(1);
     check('el 3MF tiene un objeto por filamento', objs.length === 2, `${objs.length}`);

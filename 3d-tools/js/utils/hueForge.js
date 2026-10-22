@@ -459,19 +459,42 @@ window.HueForge = (function () {
             ? false : assignment[row * gridW + col] === filamentIndex;
         const P = (x, y, z) => [x, y, z];
 
+        // FUSIÓN DE CELDAS EN RECTÁNGULOS.
+        // Con una celda por triángulo el 3MF de 100×100 mm a 0,4 mm pesaba
+        // 45 MB. Las celdas de una misma región se fusionan en rectángulos
+        // (barrido voraz): el interior de la región no necesita malla fina.
+        // Las paredes sólo se ponen en la FRONTERA de la región, así que el
+        // resultado sigue siendo un sólido cerrado y sin aristas sueltas.
+        const used = new Uint8Array(gridW * gridH);
         for (let row = 0; row < gridH; row++) {
             for (let col = 0; col < gridW; col++) {
-                if (!mine(col, row)) continue;
-                const x0 = xs[col], x1 = xs[col + 1];
-                const y0 = ys[row], y1 = ys[row + 1];
-                // Cara superior (+Z)
+                const ci = row * gridW + col;
+                if (used[ci] || assignment[ci] !== filamentIndex) continue;
+                // ancho del bloque
+                let w = 1;
+                while (col + w < gridW && !used[ci + w] && assignment[ci + w] === filamentIndex) w++;
+                // alto del bloque (mientras la fila entera encaje)
+                let h = 1;
+                while (row + h < gridH) {
+                    let ok = true;
+                    for (let k = 0; k < w; k++) {
+                        const c2 = (row + h) * gridW + col + k;
+                        if (used[c2] || assignment[c2] !== filamentIndex) { ok = false; break; }
+                    }
+                    if (!ok) break;
+                    h++;
+                }
+                for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) used[(row + r) * gridW + col + c] = 1;
+
+                const x0 = xs[col], x1 = xs[col + w];
+                const y0 = ys[row], y1 = ys[row + h];
+                // Cara superior (+Z) e inferior (-Z)
                 tri(P(x0, y0, zTop), P(x0, y1, zTop), P(x1, y1, zTop));
                 tri(P(x0, y0, zTop), P(x1, y1, zTop), P(x1, y0, zTop));
-                // Cara inferior (-Z)
                 tri(P(x0, y0, zBot), P(x1, y1, zBot), P(x0, y1, zBot));
                 tri(P(x0, y0, zBot), P(x1, y0, zBot), P(x1, y1, zBot));
-                // Paredes en la frontera de la región
-                if (!mine(col, row + 1)) {
+                // Paredes: sólo en la frontera de la región
+                if (!mine(col, row + h)) {
                     tri(P(x0, y1, zBot), P(x1, y1, zBot), P(x1, y1, zTop));
                     tri(P(x0, y1, zBot), P(x1, y1, zTop), P(x0, y1, zTop));
                 }
@@ -483,7 +506,7 @@ window.HueForge = (function () {
                     tri(P(x0, y0, zBot), P(x0, y1, zBot), P(x0, y1, zTop));
                     tri(P(x0, y0, zBot), P(x0, y1, zTop), P(x0, y0, zTop));
                 }
-                if (!mine(col + 1, row)) {
+                if (!mine(col + w, row)) {
                     tri(P(x1, y1, zBot), P(x1, y0, zBot), P(x1, y0, zTop));
                     tri(P(x1, y1, zBot), P(x1, y0, zTop), P(x1, y1, zTop));
                 }
