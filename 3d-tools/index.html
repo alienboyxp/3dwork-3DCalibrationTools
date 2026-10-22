@@ -822,13 +822,149 @@
             const exportGuide = () => {
                 if (!layers.length) return;
                 const s = [...layers].sort((a, b) => a.stop - b.stop);
-                const txt = `HUEFORGE PAINTING INSTRUCTIONS\n=============================\n` +
-                    (mode === 'flat'
-                        ? `Mode: FLAT PAINT (multicolor)\nThickness: ${flatThick}mm\nFilaments: ${s.map(l => l.name + ' (' + l.hex + ')').join(', ')}\n`
-                        : `Mode: LAYERED\nBase Height: ${baseT}mm\nRelief Height: ${reliefH}mm\nTotal Height: ${maxZ.toFixed(2)}mm\nLayer Height: ${lh}mm (${Math.round(maxZ / lh)} layers)\n\nSwap Heights (Bottom to Top):\n` +
-                        s.map(l => `- ${l.name} (${l.hex})${l.brand ? ' [' + l.brand + ' ' + (l.type || '') + ']' : ''}: Swap at ${l.stop.toFixed(2)}mm  |  TD ${l.td}mm`).join('\n')) +
-                    `\n\nPrint: 100% infill, ${lh}mm layer height, no spiral vase, no supports.\n`;
-                const bl = new Blob([txt], { type: 'text/plain' });
+                const est = window.HueForge.estimateMaterial({
+                    mode: mode, layers: layers, relief: relief, flat: flat,
+                    thickness: flatThick, width: W, height: H
+                });
+                const estOf = (l) => est.find(e => e.name === l.name && e.hex === l.hex) || { share: 0, grams: 0 };
+                const L = [];
+                const rule = '─'.repeat(66);
+                const pad = (v, n) => String(v).padEnd(n);
+                const rpad = (v, n) => String(v).padStart(n);
+
+                L.push('═'.repeat(68));
+                L.push('  HUEFORGE — PRINT INSTRUCTIONS');
+                L.push('  3Dwork.io/tools');
+                L.push('═'.repeat(68));
+                L.push('');
+                L.push('PROJECT');
+                L.push(rule);
+                L.push('  ' + pad('Mode', 20) + (mode === 'flat'
+                    ? 'Flat Paint (colour by area · multicolor / AMS)'
+                    : 'Layered (colour by height · M600 changes)'));
+                L.push('  ' + pad('Size', 20) + W + ' × ' + H + ' mm');
+                L.push('  ' + pad('Nozzle', 20) + nozzle + ' mm' + (fine ? '  (fine: half-nozzle cells)' : ''));
+                L.push('  ' + pad('Layer height', 20) + lh + ' mm');
+                if (mode === 'flat') {
+                    L.push('  ' + pad('Thickness', 20) + flatThick + ' mm');
+                    L.push('  ' + pad('Cells', 20) + gridW + ' × ' + gridH + '  (' + cellSize.toFixed(2) + ' mm per cell)');
+                } else {
+                    L.push('  ' + pad('Base depth', 20) + baseT + ' mm');
+                    L.push('  ' + pad('Relief height', 20) + reliefH + ' mm');
+                    L.push('  ' + pad('Total height', 20) + maxZ.toFixed(2) + ' mm  (' + Math.round(maxZ / lh) + ' layers)');
+                    L.push('  ' + pad('Cells', 20) + gridW + ' × ' + gridH + '  (' + cellSize.toFixed(2) + ' mm per cell)');
+                }
+                L.push('');
+
+                L.push(mode === 'flat' ? 'FILAMENTS (load in this order)' : 'FILAMENTS (load in this order)');
+                L.push(rule);
+                L.push('  ' + pad('#', 3) + pad('Colour', 16) + pad('Material', 11) +
+                    rpad('TD', 8) + rpad('Starts at', 12) + rpad('Of piece', 10) + rpad('Filament', 11));
+                s.forEach((l, i) => {
+                    const e = estOf(l);
+                    const start = mode === 'flat' ? '-' : (i === 0 ? '0.00 mm' : l.stop.toFixed(2) + ' mm');
+                    L.push('  ' + pad(i + 1, 3) + pad(l.name + ' ' + l.hex, 16) +
+                        pad((l.type || 'PLA') + (l.brand ? ' ' + l.brand : ''), 11) +
+                        rpad(l.td + ' mm', 8) + rpad(start, 12) +
+                        rpad(Math.round(e.share * 100) + ' %', 10) + rpad(e.grams.toFixed(1) + ' g', 11));
+                });
+                L.push('');
+
+                L.push('PRINT SEQUENCE');
+                L.push(rule);
+                if (mode === 'flat') {
+                    L.push('  1. Load the filaments in the order above (extruder 1 = first row).');
+                    L.push('  2. Slice the 3MF with one extruder per colour (Bambu Studio / PrusaSlicer');
+                    L.push('     assign them in the same order as the list).');
+                    L.push('  3. Print. There is NO colour change during the print: the tool does it.');
+                    L.push('  4. The colour boundaries follow the nozzle path: keep the perimeters');
+                    L.push('     so the edges of each colour stay clean.');
+                } else {
+                    L.push('  1. Load filament 1 (' + s[0].name + ') in the first extruder.');
+                    L.push('  2. Start the print. The first layers use that filament:');
+                    L.push('     • from 0.00 mm to ' + s[1].stop.toFixed(2) + ' mm: ' + s[0].name +
+                        ' (' + s[0].hex + ')');
+                    s.forEach((l, i) => {
+                        if (i === 0) return;
+                        L.push('  ' + (i + 2) + '. At Z = ' + l.stop.toFixed(2) + ' mm the tool pauses:');
+                        L.push('     change to filament ' + (i + 1) + ' (' + l.name + ', ' + l.hex + ')');
+                        L.push('     purge ~20-30 mm before resuming' +
+                            (l.td > maxZ ? '  ← this one hides light fast, purge well' : ''));
+                        L.push('     (the M600 commands are in hueforge_swaps.gcode)');
+                    });
+                    L.push('  ' + (s.length + 2) + '. The print finishes on its own.');
+                    L.push('');
+                    L.push('  NOTE: the first filament of the list is the one already loaded when the');
+                    L.push('  print starts, so there is no change at its own height.');
+                }
+                L.push('');
+
+                L.push('SLICER SETTINGS');
+                L.push(rule);
+                L.push('  ' + pad('Infill', 20) + '100 % (rectilinear) — the panel must be solid');
+                L.push('  ' + pad('Spiral vase', 20) + 'OFF');
+                L.push('  ' + pad('Supports', 20) + 'None');
+                L.push('  ' + pad('Layer height', 20) + lh + ' mm (the model is already quantised to it)');
+                L.push('  ' + pad('First layer', 20) + '0.2 mm, slow, good adhesion');
+                L.push('  ' + pad('Seam', 20) + 'Random (or aligned so it hides in a dark area)');
+                L.push('  ' + pad('Perimeters', 20) + (mode === 'flat'
+                    ? '3-4 (clean colour edges)'
+                    : '2 (the relief carries the shape)'));
+                L.push('');
+
+                L.push('ESTIMATED MATERIAL');
+                L.push(rule);
+                let totalG = 0;
+                est.forEach(e => {
+                    if (e.grams <= 0) return;
+                    totalG += e.grams;
+                    L.push('  ' + pad(e.name, 18) + rpad(e.grams.toFixed(1) + ' g', 10) +
+                        rpad('(' + e.volumeCm3.toFixed(2) + ' cm³)', 16));
+                });
+                L.push('  ' + pad('TOTAL', 18) + rpad(totalG.toFixed(1) + ' g', 10) +
+                    rpad('  (dry, without the spool weight)', 36));
+                L.push('');
+
+                L.push('CHECK BEFORE PRINTING');
+                L.push(rule);
+                const warns = [];
+                s.forEach(l => {
+                    if (l.td > maxZ) {
+                        warns.push('TD of ' + l.name + ' is ' + l.td + ' mm but the piece is only ' +
+                            maxZ.toFixed(2) + ' mm tall: that colour will look more washed out than the preview.');
+                    }
+                });
+                const unused = s.filter(l => (estOf(l).share * 100) < 0.5);
+                if (unused.length) {
+                    warns.push('These filaments are barely used by the image: ' +
+                        unused.map(l => l.name).join(', ') + '. Swap them for other tones.');
+                }
+                if (mode === 'flat' && flat) {
+                    warns.push('The colours of a multicolor print depend on the purge between changes:');
+                    warns.push('purge well or the edges get contaminated.');
+                } else {
+                    warns.push('The piece is ' + maxZ.toFixed(2) + ' mm tall: check it fits your printer.');
+                }
+                warns.push('Dry the filament before printing: wet PETG/PLA bubbles and ruins the surface.');
+                warns.push('Let the piece cool completely before handling it: the layers are soft.');
+                if (!warns.length) warns.push('Nothing to check. Good print!');
+                warns.forEach(w => L.push('  • ' + w));
+                L.push('');
+
+                L.push('TIPS');
+                L.push(rule);
+                L.push('  • White or translucent filament works best (white PLA, natural PETG).');
+                L.push('  • In layered mode the colour comes from the STACK, not from the photo:');
+                L.push('    the darkest filament goes at the bottom and the lightest on top.');
+                L.push('  • Use a bright, even backlight to see the image (LED panel behind the piece).');
+                L.push('  • If the colours look muddy, the purge between changes was too short.');
+                L.push('  • If the surface is rough, the filament was damp or the layer height too high.');
+                L.push('');
+                L.push('═'.repeat(68));
+                L.push('  Made with 3Dwork.io/tools — HueForge creator');
+                L.push('═'.repeat(68));
+
+                const bl = new Blob([L.join('\n')], { type: 'text/plain;charset=utf-8' });
                 const u = URL.createObjectURL(bl); const a = document.createElement('a');
                 a.href = u; a.download = 'hueforge_instructions.txt'; a.click();
                 setTimeout(() => URL.revokeObjectURL(u), 1000);

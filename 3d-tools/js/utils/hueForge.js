@@ -956,7 +956,73 @@ window.HueForge = (function () {
         });
     }
 
+
+    // ── 10. Estimación de material ─────────────────────────────────────
+    const DENSITY = {           // g/cm³
+        PLA: 1.24, PLA_PLUS: 1.25, PLA_CF: 1.24, PETG: 1.27, PETG_CF: 1.29,
+        ABS: 1.04, ASA: 1.07, PA: 1.14, PA_CF: 1.17, PC: 1.20, TPU: 1.21,
+        PPS_CF: 1.30, PPA_CF: 1.18
+    };
+
+    function densityOf(type) {
+        const key = String(type || 'PLA').toUpperCase().replace(/[ -]/g, '_');
+        return DENSITY[key] !== undefined ? DENSITY[key] : 1.24;
+    }
+
+    /**
+     * Volumen y peso de filamento por color.
+     *  · Layered: el volumen de cada capa es el área de la pieza por la
+     *    altura que ocupa ese filamento en cada celda.
+     *  · Flat Paint: el área que le toca a cada color por el grosor.
+     * @returns {Array<{index,name,hex,type,volumeCm3,grams,share}>}
+     */
+    function estimateMaterial(o) {
+        const { mode, layers, relief, flat, thickness } = o;
+        const out = layers.map((l, i) => ({
+            index: i, name: l.name, hex: l.hex, type: l.type || 'PLA',
+            volumeCm3: 0, grams: 0, share: 0
+        }));
+        if (mode === 'flat' && flat) {
+            const cellArea = (o.width * o.height) / (flat.gridW * flat.gridH);
+            const counts = {};
+            for (let i = 0; i < flat.assignment.length; i++) {
+                const k = flat.assignment[i];
+                if (k >= 0 && k < out.length) counts[k] = (counts[k] || 0) + 1;
+            }
+            const total = flat.assignment.length || 1;
+            Object.keys(counts).forEach(k => {
+                out[k].volumeCm3 = counts[k] * cellArea * thickness / 1000;  // mm³ → cm³
+                out[k].share = counts[k] / total;
+            });
+        } else if (relief) {
+            const cellArea = (o.width * o.height) / (relief.gridW * relief.gridH);
+            const sorted = [...layers].sort((a, b) => a.stop - b.stop);
+            let prev = 0;
+            sorted.forEach((l, i) => {
+                const zBot = prev, zTop = l.stop;
+                prev = zTop;
+                const idx = out.findIndex(x => x.name === l.name && x.hex === l.hex);
+                if (idx < 0) return;
+                let vol = 0;
+                for (let r = 0; r < relief.gridH; r++) {
+                    for (let c = 0; c < relief.gridW; c++) {
+                        const h = relief.heights[r * (relief.gridW + 1) + c];
+                        const t = Math.min(Math.max(h, zBot), zTop) - zBot;
+                        if (t > 0) vol += cellArea * t;
+                    }
+                }
+                out[idx].volumeCm3 += vol / 1000;
+            });
+            const totalVol = out.reduce((s, x) => s + x.volumeCm3, 0) || 1;
+            out.forEach(x => { x.share = x.volumeCm3 / totalVol; });
+        }
+        out.forEach(x => { x.grams = x.volumeCm3 * densityOf(x.type); });
+        return out;
+    }
+
     return {
+        estimateMaterial: estimateMaterial,
+        densityOf: densityOf,
         neutralRamp: neutralRamp,
         processImage: processImage,
         dominantColors: dominantColors,
