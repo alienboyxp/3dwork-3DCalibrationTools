@@ -562,6 +562,7 @@
             const [calibPix, setCalibPix] = useState(null);
             const [calibSize, setCalibSize] = useState({ w: 0, h: 0 });
             const [calibResult, setCalibResult] = useState(null);
+            const [calibOpen, setCalibOpen] = useState(false);
             const [calibMsg, setCalibMsg] = useState('');
             const scene = useRef(null), mRef = useRef(null), api = useRef(null);
             const clipPlane = useRef(new THREE.Plane(new THREE.Vector3(0, 0, -1), 0));
@@ -608,6 +609,23 @@
             }, [processed, imgW, imgH, gridW, gridH, W, H, layers]);
 
             const sorted = useMemo(() => [...layers].sort((a, b) => a.stop - b.stop), [layers]);
+            const paletteRgb = useMemo(() => layers.map(l => {
+                const c = window.HueForge.hexToRgb(l.hex);
+                return [c.r, c.g, c.b];
+            }), [layers]);
+            // Porcentaje de la imagen que cubre cada filamento (Flat Paint)
+            const colorShare = useMemo(() => {
+                if (!flat) return {};
+                const counts = {};
+                for (let i = 0; i < flat.assignment.length; i++) {
+                    const k = flat.assignment[i];
+                    counts[k] = (counts[k] || 0) + 1;
+                }
+                const total = flat.assignment.length || 1;
+                const out = {};
+                Object.keys(counts).forEach(k => { out[k] = Math.round(counts[k] / total * 100); });
+                return out;
+            }, [flat]);
 
             const autoStack = () => {
                 const planned = window.HueForge.planStack(layers, {
@@ -687,9 +705,15 @@
                             pos[i * 3] = flat.xs[col];
                             pos[i * 3 + 1] = flat.ys[row];
                             pos[i * 3 + 2] = flatThick;
-                            cols[i * 3] = flat.cellColor[ci * 3];
-                            cols[i * 3 + 1] = flat.cellColor[ci * 3 + 1];
-                            cols[i * 3 + 2] = flat.cellColor[ci * 3 + 2];
+                            // El preview tiene que enseñar el color del FILAMENTO
+                            // que se va a imprimir (el de la paleta), no el de
+                            // la foto: lo que se imprime es el filamento.
+                            const fi = flat.assignment[ci];
+                            const pc = fi >= 0 && fi < paletteRgb.length
+                                ? paletteRgb[fi] : [flat.cellColor[ci * 3], flat.cellColor[ci * 3 + 1], flat.cellColor[ci * 3 + 2]];
+                            cols[i * 3] = pc[0];
+                            cols[i * 3 + 1] = pc[1];
+                            cols[i * 3 + 2] = pc[2];
                         }
                     }
                     const idx = [];
@@ -704,7 +728,9 @@
                     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
                     geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
                     geo.setIndex(idx); geo.computeVertexNormals();
-                    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, clippingPlanes: [clipPlane.current] });
+                    // Sin luz: el preview enseña el color exacto del filamento,
+                    // que es lo que se va a imprimir (una losa plana y plana).
+                    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, clippingPlanes: [clipPlane.current] });
                     group.add(new THREE.Mesh(geo, mat));
                 } else if (view === 'layers' && relief) {
                     // Pila real: un sólido por filamento, coloreado, y se corta
@@ -755,7 +781,7 @@
                 }
                 scene.current.add(group);
                 mRef.current = group;
-            }, [relief, flat, sorted, mode, view, flatThick, clip]);
+            }, [relief, flat, sorted, paletteRgb, mode, view, flatThick, clip]);
 
             // ── Exportación ────────────────────────────────────────────────
             const export3MF = async () => {
@@ -1028,7 +1054,6 @@
                         <div style={{ display: 'flex', width: '100%' }}>
                             <button className={`nav-tab ${tab === 'stack' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('stack')}>LAYER STACK</button>
                             <button className={`nav-tab ${tab === 'library' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('library')}>FILAMENTS</button>
-                            <button className={`nav-tab ${tab === 'calib' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('calib')}>CALIBRATE</button>
                             <button className={`nav-tab ${tab === 'help' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('help')}>HOW IT WORKS</button>
                         </div>
                     </div>
@@ -1104,35 +1129,28 @@
                                     ? 'El 3MF lleva un objeto por color con su extrusor: es un multicolor (AMS), no un cambio por capas.'
                                     : 'El 3MF lleva un objeto por filamento con su tramo en Z. El G-code mete los M600 en las alturas de cambio (Klipper/Marlin).'}
                             </p>
-                        </div>
-                    ) : tab === 'library' ? (
-                        <div className="panel-body">
-                            <div className="section-label">FILAMENT LIBRARY</div>
-                            <input
-                                type="text"
-                                placeholder="Filtrar por marca, tipo o color…"
-                                value={libFilter}
-                                onChange={e => setLibFilter(e.target.value)}
-                                className="dim-input"
-                                style={{ width: '100%', marginBottom: 8, background: '#1E293B', color: 'white', border: '1px solid var(--border)' }}
-                            />
-                            {library.length === 0 && <p style={{ fontSize: 10, color: '#64748B' }}>No se ha podido cargar la biblioteca.</p>}
-                            <div className="filament-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, maxHeight: '58vh', overflowY: 'auto' }}>
-                                {libShown.map(f => (
-                                    <div key={f.id} className="f-item" style={{ margin: 0, fontSize: 9, padding: 4 }} onClick={() => addFilament(f)}>
-                                        <div style={{ width: 12, height: 12, background: f.hex, borderRadius: 2, flexShrink: 0 }} />
-                                        <div style={{ lineHeight: 1.3 }}>
-                                            <div>{f.colorName}</div>
-                                            <div style={{ color: '#64748B', fontSize: 8 }}>{f.brand} {f.type} · TD {f.td}</div>
+                            {mode === 'flat' && (
+                                <div style={{ fontSize: 9, color: '#93C5FD', marginTop: 8, lineHeight: 1.5, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 8, padding: '6px 8px' }}>
+                                    En <b>Flat Paint</b> esta lista es tu <b>paleta</b>: cada fila es un color que se usa en la pieza, no una capa. El apilado por alturas (Base Depth, Relief Height, AUTO-CALC STACK y las alturas de cambio) es del modo <b>Layered</b>.
+                                </div>
+                            )}
+                            {mode === 'flat' && (
+                                <div style={{ marginTop: 8 }}>
+                                    {layers.map((l, i) => (
+                                        <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#64748B', padding: '2px 0' }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                                <span style={{ width: 8, height: 8, background: l.hex, borderRadius: 2, display: 'inline-block' }} />
+                                                {l.name}
+                                            </span>
+                                            <span style={{ fontFamily: 'var(--mono)' }}>{colorShare[i] !== undefined ? colorShare[i] + ' % de la imagen' : 'sin uso'}</span>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <p style={{ fontSize: 9, color: '#64748B', marginTop: 8, lineHeight: 1.5 }}>
-                                TD = distancia de ocultación: los milímetros que tarda el filamento en dejar pasar la luz. Con más TD hace falta más altura para que el color se imponga.
-                            </p>
-                        </div>
-                    ) : tab === 'calib' ? (
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Calibración del TD: botón desplegable hacia arriba */}
+                            {calibOpen && (
+                                <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
                         <div className="panel-body">
                             <div className="section-label">CALIBRATE TD</div>
                             <p style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.55, marginBottom: 10 }}>
@@ -1171,6 +1189,43 @@
                                     </p>
                                 </>
                             )}
+                        </div>
+                                </div>
+                            )}
+                            <button
+                                className="download-btn"
+                                style={{ background: 'rgba(34,197,94,0.10)', color: '#86efac', margin: '10px 0 0', fontSize: 10, border: '1px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                                onClick={() => setCalibOpen(!calibOpen)}
+                            >
+                                ⚙ CALIBRATE TD {calibOpen ? '▲' : '▼'}
+                            </button>
+                        </div>
+                    ) : tab === 'library' ? (
+                        <div className="panel-body">
+                            <div className="section-label">FILAMENT LIBRARY</div>
+                            <input
+                                type="text"
+                                placeholder="Filtrar por marca, tipo o color…"
+                                value={libFilter}
+                                onChange={e => setLibFilter(e.target.value)}
+                                className="dim-input"
+                                style={{ width: '100%', marginBottom: 8, background: '#1E293B', color: 'white', border: '1px solid var(--border)' }}
+                            />
+                            {library.length === 0 && <p style={{ fontSize: 10, color: '#64748B' }}>No se ha podido cargar la biblioteca.</p>}
+                            <div className="filament-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, maxHeight: '58vh', overflowY: 'auto' }}>
+                                {libShown.map(f => (
+                                    <div key={f.id} className="f-item" style={{ margin: 0, fontSize: 9, padding: 4 }} onClick={() => addFilament(f)}>
+                                        <div style={{ width: 12, height: 12, background: f.hex, borderRadius: 2, flexShrink: 0 }} />
+                                        <div style={{ lineHeight: 1.3 }}>
+                                            <div>{f.colorName}</div>
+                                            <div style={{ color: '#64748B', fontSize: 8 }}>{f.brand} {f.type} · TD {f.td}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p style={{ fontSize: 9, color: '#64748B', marginTop: 8, lineHeight: 1.5 }}>
+                                TD = distancia de ocultación: los milímetros que tarda el filamento en dejar pasar la luz. Con más TD hace falta más altura para que el color se imponga.
+                            </p>
                         </div>
                     ) : (
                         <div className="panel-body help-box" style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--text-dim)', overflowY: 'auto' }}>
