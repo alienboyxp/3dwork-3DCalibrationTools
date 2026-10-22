@@ -23,6 +23,9 @@
 
     <!-- Generador de litofanía (lógica + tests en 3d-tools/tests/) -->
     <script src="js/utils/lithoGeometry.js?v=1.0"></script>
+    <!-- Motor de HueForge y comprobaciones de malla (tests en 3d-tools/tests/) -->
+    <script src="js/utils/meshChecks.js?v=1.0"></script>
+    <script src="js/utils/hueForge.js?v=1.0"></script>
 
     <link rel="stylesheet" href="css/app.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -539,35 +542,47 @@
             const [baseT, setBt] = useState(0.48), [relT, setRt] = useState(1.8), [res, setRes] = useState(100), [lh, setLh] = useState(0.08);
             const [maxH, setMaxH] = useState(2.4), [autoSort, setAutoSort] = useState(true), [tab, setTab] = useState('stack');
             const [layers, setLayers] = useState([
-                { id: 1, name: 'Black', hex: '#000000', td: 0.5, stop: 0.48 },
-                { id: 2, name: 'Gray', hex: '#555555', td: 1.5, stop: 1.2 },
-                { id: 3, name: 'White', hex: '#FFFFFF', td: 5.0, stop: 2.2 }
+                { id: 1, name: 'Black', hex: '#000000', td: 0.5, stop: 0.48, brand: 'Generic', type: 'PLA' },
+                { id: 2, name: 'Gray', hex: '#555555', td: 1.5, stop: 1.2, brand: 'Generic', type: 'PLA' },
+                { id: 3, name: 'White', hex: '#FFFFFF', td: 5.0, stop: 2.2, brand: 'Generic', type: 'PLA' }
             ]);
+            const [library, setLibrary] = useState([]);
+            const [libFilter, setLibFilter] = useState('');
+            const [inspect, setInspect] = useState(0);
             const scene = useRef(null), mRef = useRef(null), api = useRef(null);
 
-            const getLum = (hex) => {
-                const c = new THREE.Color(hex);
-                return c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
-            };
+            // Biblioteca real de filamentos con su distancia de ocultación (TD)
+            useEffect(() => {
+                fetch('assets/data/filaments.json')
+                    .then(r => r.json())
+                    .then(d => setLibrary(Array.isArray(d) ? d : []))
+                    .catch(() => setLibrary([]));
+            }, []);
 
-            const autoStack = () => {
-                let current = [...layers];
-                if (autoSort) current.sort((a, b) => getLum(a.hex) - getLum(b.hex));
+            // ── Cálculo del relieve (módulo con tests) ─────────────────────
+            const gridW = Math.max(20, res);
+            const gridH = Math.max(20, Math.round(res / (imgR || 1)));
 
-                // Foundation zone: ~95% opaque -> TD * 1.35
-                let lastStop = baseT;
-                const updated = current.map((l, i) => {
-                    const transition = i === 0 ? Math.max(lh * 2, Math.round((l.td * 1.35) / lh) * lh) : Math.max(lh, Math.round((l.td * 0.45) / lh) * lh);
-                    lastStop += transition;
-                    return { ...l, stop: Math.round(lastStop / lh) * lh };
+            const relief = useMemo(() => {
+                if (!pix) return null;
+                const reliefH = Math.max(0, Math.min(relT, Math.max(0, maxH - baseT)));
+                return window.HueForge.sampleRelief(pix, imgW, imgH, {
+                    gridW: gridW, gridH: gridH, width: W, height: H,
+                    baseT: baseT, relief: reliefH, layerHeight: lh,
+                    bright: bright, contrast: contrast, blackP: blackP, whiteP: whiteP
                 });
+            }, [pix, imgW, imgH, gridW, gridH, W, H, baseT, relT, maxH, lh, bright, contrast, blackP, whiteP]);
 
-                const total = updated[updated.length - 1].stop;
-                if (total > maxH) {
-                    const ratio = maxH / total;
-                    updated.forEach(l => l.stop = Math.round((l.stop * ratio) / lh) * lh);
-                }
-                setLayers(updated);
+            const sorted = useMemo(() => [...layers].sort((a, b) => a.stop - b.stop), [layers]);
+            const reliefH = Math.max(0, Math.min(relT, Math.max(0, maxH - baseT)));
+            const maxZ = baseT + reliefH;
+
+            // ── Auto-apilado con la física del TD ─────────────────────────
+            const autoStack = () => {
+                const planned = window.HueForge.planStack(layers, {
+                    baseT: baseT, relief: reliefH, layerHeight: lh, maxHeight: maxZ
+                });
+                setLayers(planned.map((l, i) => Object.assign({}, l, { id: l.id || Date.now() + i })));
             };
 
             const moveLayer = (idx, dir) => {
@@ -579,134 +594,118 @@
                 if (autoSort) setAutoSort(false);
             };
 
-            const export3MF = async () => {
-                if (!pix || !layers.length) return;
-                const zip = new JSZip();
-                const sorted = [...layers].sort((a, b) => a.stop - b.stop);
-                const gW = 100, gH = Math.round(100 / imgR);
-                const objects = [];
+            const addFilament = (f) => {
+                if (layers.length >= 8) return;
+                const last = [...layers].sort((a, b) => a.stop - b.stop);
+                const stop = (last.length ? last[last.length - 1].stop : 0) + 0.4;
+                setLayers([...layers, {
+                    id: Date.now(), name: f.colorName || f.name,
+                    hex: f.hex, td: f.td, stop: stop,
+                    brand: f.brand || '', type: f.type || ''
+                }]);
+            };
 
-                // Helper to build model XML with colors
-                const buildXML = (meshes) => {
-                    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">\n<metadata name="Application">3Dwork HueForge</metadata>\n<resources>\n`;
-                    xml += `<basematerials id="0">\n`;
-                    meshes.forEach(m => xml += `<base name="${m.name}" displaycolor="${m.color.toUpperCase()}FF" />\n`);
-                    xml += `</basematerials>\n`;
-                    meshes.forEach((m, idx) => {
-                        xml += `<object id="${idx + 1}" type="model" pid="0" pindex="${idx}">\n<mesh>\n<vertices>\n${m.v}</vertices>\n<triangles>\n${m.t}</triangles>\n</mesh>\n</object>\n`;
-                    });
-                    xml += `</resources>\n<build>\n`;
-                    meshes.forEach((m, idx) => xml += `<item objectid="${idx + 1}" />\n`);
-                    xml += `</build>\n</model>`;
-                    return xml;
-                };
+            const removeFilament = (idx) => setLayers(layers.filter((_, i) => i !== idx));
 
-                // Create segmented meshes
-                for (let lidx = 0; lidx < sorted.length; lidx++) {
-                    const prevStop = lidx === 0 ? 0 : sorted[lidx - 1].stop;
-                    const stop = sorted[lidx].stop;
-                    let vStr = '', tStr = '';
-                    let vCount = 0;
-
-                    for (let row = 0; row < gH; row++) {
-                        for (let col = 0; col < gW; col++) {
-                            const sample = (r, c) => {
-                                const px = Math.round((c / gW) * (imgW - 1)), py = Math.round((r / gH) * (imgH - 1));
-                                const bidx = (py * imgW + px) * 4;
-                                let b = (pix[bidx] * 0.299 + pix[bidx + 1] * 0.587 + pix[bidx + 2] * 0.114) / 255;
-                                b = Math.max(0, Math.min(1, (b - blackP) / (whiteP - blackP || 0.01)));
-                                b = (b - 0.5) * contrast + 0.5 + (bright - 1);
-                                const zTotal = baseT + Math.max(0, b) * relT;
-                                return Math.max(0, Math.min(zTotal, stop) - prevStop);
-                            };
-
-                            const z00 = sample(row, col), z10 = sample(row, col + 1), z01 = sample(row + 1, col), z11 = sample(row + 1, col + 1);
-                            const x = (col / gW - 0.5) * W, y = (0.5 - row / gH) * H, dx = W / gW, dy = H / gH;
-                            const x1 = x + dx, y1 = y - dy;
-
-                            if (z00 <= 0 && z10 <= 0 && z01 <= 0 && z11 <= 0) continue;
-
-                            vStr += `<vertex x="${x.toFixed(3)}" y="${y.toFixed(3)}" z="${z00.toFixed(3)}" />\n`;
-                            vStr += `<vertex x="${x1.toFixed(3)}" y="${y.toFixed(3)}" z="${z10.toFixed(3)}" />\n`;
-                            vStr += `<vertex x="${x.toFixed(3)}" y="${y1.toFixed(3)}" z="${z01.toFixed(3)}" />\n`;
-                            vStr += `<vertex x="${x1.toFixed(3)}" y="${y1.toFixed(3)}" z="${z11.toFixed(3)}" />\n`;
-                            tStr += `<triangle v1="${vCount}" v2="${vCount + 1}" v3="${vCount + 3}" />\n`;
-                            tStr += `<triangle v1="${vCount}" v2="${vCount + 3}" v3="${vCount + 2}" />\n`;
-                            vCount += 4;
-                        }
+            // ── Vista 3D (usa el mismo relieve que la exportación) ─────────
+            useEffect(() => {
+                if (!relief || !scene.current) return;
+                if (mRef.current) { scene.current.remove(mRef.current); mRef.current.geometry.dispose(); }
+                const n = (relief.gridW + 1) * (relief.gridH + 1);
+                const pos = new Float32Array(n * 3);
+                const cols = new Float32Array(n * 3);
+                const colors = window.HueForge.blendGrid(sorted, relief);
+                for (let row = 0; row <= relief.gridH; row++) {
+                    for (let col = 0; col <= relief.gridW; col++) {
+                        const i = row * (relief.gridW + 1) + col;
+                        pos[i * 3] = relief.xs[col];
+                        pos[i * 3 + 1] = relief.ys[row];
+                        pos[i * 3 + 2] = relief.heights[i];
+                        cols[i * 3] = colors[i * 3];
+                        cols[i * 3 + 1] = colors[i * 3 + 1];
+                        cols[i * 3 + 2] = colors[i * 3 + 2];
                     }
-                    if (vCount > 0) objects.push({ v: vStr, t: tStr, color: sorted[lidx].hex, name: sorted[lidx].name });
                 }
+                const idx = [];
+                for (let row = 0; row < relief.gridH; row++) {
+                    for (let col = 0; col < relief.gridW; col++) {
+                        const a = row * (relief.gridW + 1) + col;
+                        const b = a + 1, c = a + relief.gridW + 1, d = c + 1;
+                        idx.push(a, c, b, b, c, d);
+                    }
+                }
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+                geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+                geo.setIndex(idx);
+                geo.computeVertexNormals();
+                const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, metalness: 0.05 }));
+                scene.current.add(m); mRef.current = m;
+            }, [relief, sorted]);
 
-                zip.file("3D/3dmodel.model", buildXML(objects));
-                zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>`);
-                zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>`);
+            // ── Exportación ────────────────────────────────────────────────
+            const export3MF = async () => {
+                if (!relief || !layers.length) return;
+                const zip = new JSZip();
+                const files = window.HueForge.build3MFFiles(relief, sorted, {});
+                Object.keys(files).forEach(p => zip.file(p, files[p]));
+                const blob = await zip.generateAsync({ type: 'blob' });
+                const u = URL.createObjectURL(blob); const a = document.createElement('a');
+                a.href = u; a.download = 'hueforge_project.3mf'; a.click();
+                setTimeout(() => URL.revokeObjectURL(u), 1000);
+            };
 
-                let configXml = `<?xml version="1.0" encoding="UTF-8"?>\n<config>\n`;
-                objects.forEach((o, i) => configXml += `<object id="${i + 1}"><metadata key="extruder" value="${i + 1}"/></object>\n`);
-                configXml += `</config>`;
-                zip.file("Metadata/model_settings.config", configXml);
+            const exportGcode = () => {
+                if (!layers.length) return;
+                const txt = window.HueForge.buildSwapGcode(sorted, { layerHeight: lh, purge: 20 });
+                const bl = new Blob([txt], { type: 'text/plain' });
+                const u = URL.createObjectURL(bl); const a = document.createElement('a');
+                a.href = u; a.download = 'hueforge_swaps.gcode'; a.click();
+                setTimeout(() => URL.revokeObjectURL(u), 1000);
+            };
 
-                const blob = await zip.generateAsync({ type: "blob" });
-                const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = 'project.3mf'; a.click();
+            const exportGuide = () => {
+                if (!layers.length) return;
+                const s = [...layers].sort((a, b) => a.stop - b.stop);
+                const txt = `HUEFORGE PAINTING INSTRUCTIONS\n=============================\n` +
+                    `Base Height: ${baseT}mm\nRelief Height: ${reliefH}mm\nTotal Height: ${maxZ.toFixed(2)}mm\n` +
+                    `Layer Height: ${lh}mm (${Math.round(maxZ / lh)} layers)\n\n` +
+                    `Swap Heights (Bottom to Top):\n` +
+                    s.map(l => `- ${l.name} (${l.hex})${l.brand ? ' [' + l.brand + ' ' + (l.type || '') + ']' : ''}: Swap at ${l.stop.toFixed(2)}mm  |  TD ${l.td}mm`).join('\n') +
+                    `\n\nPrint: 100% infill, ${lh}mm layer height, no spiral vase, no supports.\n`;
+                const bl = new Blob([txt], { type: 'text/plain' });
+                const u = URL.createObjectURL(bl); const a = document.createElement('a');
+                a.href = u; a.download = 'hueforge_instructions.txt'; a.click();
+                setTimeout(() => URL.revokeObjectURL(u), 1000);
             };
 
             const handleImg = (file) => {
-                const i = new Image(); i.onload = () => {
+                if (!file) return;
+                const i = new Image();
+                i.onload = () => {
                     const r = i.width / i.height; setImgR(r); setImgW(i.width); setImgH(i.height);
                     if (lock) setH(Math.round(W / r));
                     const c = document.createElement('canvas'); c.width = i.width; c.height = i.height;
                     const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0);
-                    setPix(ctx.getImageData(0, 0, i.width, i.height).data); setImgUrl(URL.createObjectURL(file));
-                }; i.src = URL.createObjectURL(file);
+                    setPix(ctx.getImageData(0, 0, i.width, i.height).data);
+                    setImgUrl(URL.createObjectURL(file));
+                };
+                i.src = URL.createObjectURL(file);
             };
 
             const upW = (v) => { setW(v); if (lock) setH(Math.round(v / imgR)); };
             const upH = (v) => { setH(v); if (lock) setW(Math.round(v * imgR)); };
 
-            useEffect(() => {
-                if (!pix || !scene.current) return;
-                if (mRef.current) scene.current.remove(mRef.current);
+            const libShown = library.filter(f =>
+                !libFilter || (f.brand + ' ' + f.type + ' ' + f.colorName).toLowerCase().indexOf(libFilter.toLowerCase()) >= 0);
 
-                const gW = res, gH = Math.round(res / imgR);
-                const geo = new THREE.PlaneGeometry(W, H, gW, gH);
-                const pos = geo.getAttribute('position'), cols = new Float32Array(pos.count * 3);
-                const sorted = [...layers].sort((a, b) => a.stop - b.stop);
-
-                for (let i = 0; i < pos.count; i++) {
-                    const gx = (pos.getX(i) / W + 0.5) * (imgW - 1), gy = (0.5 - pos.getY(i) / H) * (imgH - 1);
-                    const idx = (Math.round(gy) * imgW + Math.round(gx)) * 4;
-                    // Kromacut-like luminance mapping
-                    let b_lum = (pix[idx] * 0.299 + pix[idx + 1] * 0.587 + pix[idx + 2] * 0.114) / 255;
-                    b_lum = Math.max(0, Math.min(1, (b_lum - blackP) / Math.max(0.01, whiteP - blackP)));
-                    b_lum = Math.max(0, Math.min(1, (b_lum - 0.5) * contrast + 0.5 + (bright - 1)));
-
-                    // Discretize Z into layer heights
-                    const rawZ = baseT + b_lum * relT;
-                    const z = Math.round(rawZ / lh) * lh;
-                    pos.setZ(i, z);
-
-                    // Kromacut Beer-Lambert blending logic
-                    let r = 0, g = 0, b_val = 0, prevStop = 0;
-                    sorted.forEach((l, idx) => {
-                        const start = prevStop, stop = (idx === sorted.length - 1) ? 100 : l.stop;
-                        const thick = Math.max(0, Math.min(z, stop) - start);
-                        if (thick > 0) {
-                            const lc = new THREE.Color(l.hex);
-                            const t = Math.pow(0.1, thick / Math.max(0.01, l.td));
-                            r = lc.r * (1 - t) + r * t;
-                            g = lc.g * (1 - t) + g * t;
-                            b_val = lc.b * (1 - t) + b_val * t;
-                        }
-                        prevStop = stop;
-                    });
-                    cols[i * 3] = r; cols[i * 3 + 1] = g; cols[i * 3 + 2] = b_val;
-                }
-                geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-                geo.computeVertexNormals();
-                const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }));
-                scene.current.add(m); mRef.current = m;
-            }, [pix, layers, bright, contrast, blackP, whiteP, baseT, relT, W, H, res, lh]);
+            // El filamento que se ve a la altura inspeccionada
+            const inspectLayer = sorted.filter(l => l.stop <= inspect + 1e-6).pop();
+            const inspectColor = window.HueForge.blendAt(sorted, inspect);
+            const css = (c) => 'rgb(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ')';
+            // Aviso: un filamento muy transparente (TD alto) necesita más
+            // altura de la que tiene la pieza para llegar a verse.
+            const tdWarning = sorted.filter(l => l.td > maxZ).map(l => l.name + ' (TD ' + l.td + ' mm)');
 
             return <div className="tool-page"><div className="tool-layout">
                 <div className="panel-left">
@@ -715,9 +714,9 @@
                         <label className={`upload-zone ${imgUrl ? 'has-image' : ''}`}>{imgUrl ? <img src={imgUrl} /> : <><span>📷</span> Load Image</>}<input type="file" accept="image/*" onChange={e => handleImg(e.target.files[0])} style={{ display: 'none' }} /></label>
                         <div className="section-label">SIZE (mm)</div>
                         <div className="dimension-inputs">
-                            <div><label>Width</label><input type="number" className="dim-input" value={W} onChange={e => { setW(parseFloat(e.target.value)); if (lock) setH(Math.round(parseFloat(e.target.value) / imgR)); }} /></div>
+                            <div><label>Width</label><input type="number" className="dim-input" value={W} onChange={e => upW(parseFloat(e.target.value))} /></div>
                             <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)}>🔗</div>
-                            <div><label>Height</label><input type="number" className="dim-input" value={H} onChange={e => { setH(parseFloat(e.target.value)); if (lock) setW(Math.round(parseFloat(e.target.value) * imgR)); }} /></div>
+                            <div><label>Height</label><input type="number" className="dim-input" value={H} onChange={e => upH(parseFloat(e.target.value))} /></div>
                         </div>
                         <div className="section-label">IMAGE FILTERS</div>
                         <div className="control-group"><div className="control-label"><span>Exposure</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
@@ -734,25 +733,52 @@
                             </div>
                             <div className="thickness-item">
                                 <label>Layer Height (mm)</label>
-                                <input type="number" step="0.01" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={lh} onChange={e => setLh(parseFloat(e.target.value))} />
+                                <input type="number" step="0.01" min="0.02" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={lh} onChange={e => setLh(parseFloat(e.target.value))} />
                             </div>
                         </div>
+                        <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px' }}>
+                            {relief ? `${relief.gridW} × ${relief.gridH} vértices · ${Math.round(maxZ / lh)} capas · alto total ${maxZ.toFixed(2)} mm` : 'Carga una imagen para ver los datos'}
+                        </p>
                     </div>
                 </div>
-                <div className="canvas-center"><Canvas3D onMount={o => { scene.current = o.scene; api.current = o; }} hint="Painting Simulation Preview" info={imgUrl ? `Simulating ${layers.length} Layers` : "Load image to start"} /></div>
+                <div className="canvas-center">
+                    <Canvas3D onMount={o => { scene.current = o.scene; api.current = o; }} initialView={{ theta: 30, phi: 68, radius: 240 }} hint="Painting Simulation Preview" info={imgUrl ? `Simulating ${layers.length} filaments · ${maxZ.toFixed(2)} mm` : "Load image to start"} />
+                    {relief && (
+                        <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12, background: 'rgba(8,14,26,0.85)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <span style={{ fontSize: 9, color: '#94A3B8', whiteSpace: 'nowrap' }}>LAYER</span>
+                                <input type="range" min="0" max={maxZ} step={lh} value={inspect} onChange={e => setInspect(parseFloat(e.target.value))} style={{ flex: 1 }} />
+                                <span style={{ fontSize: 9, fontFamily: 'var(--mono)', color: 'white', minWidth: '52px', textAlign: 'right' }}>{inspect.toFixed(2)} mm</span>
+                                <div style={{ width: 16, height: 16, borderRadius: 3, background: css(inspectColor), border: '1px solid rgba(255,255,255,0.3)' }} />
+                                <span style={{ fontSize: 9, color: '#94A3B8', minWidth: '70px' }}>{inspectLayer ? inspectLayer.name : 'base'}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <div className="panel-right">
                     <div className="panel-header" style={{ padding: 0, borderBottom: 'none' }}>
                         <div style={{ display: 'flex', width: '100%' }}>
                             <button className={`nav-tab ${tab === 'stack' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('stack')}>LAYER STACK</button>
+                            <button className={`nav-tab ${tab === 'library' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('library')}>FILAMENTS</button>
                             <button className={`nav-tab ${tab === 'help' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('help')}>HOW IT WORKS</button>
                         </div>
                     </div>
                     {tab === 'stack' ? (
                         <div className="panel-body">
                             <div className="thickness-grid">
-                                <div className="thickness-item"><label>Min Depth</label><input type="number" step="0.01" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={baseT} onChange={e => setBt(parseFloat(e.target.value))} /></div>
-                                <div className="thickness-item"><label>Max Print</label><input type="number" step="0.01" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={maxH} onChange={e => setMaxH(parseFloat(e.target.value))} /></div>
+                                <div className="thickness-item"><label>Base Depth</label><input type="number" step="0.01" min="0" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={baseT} onChange={e => setBt(Math.max(0, parseFloat(e.target.value) || 0))} /></div>
+                                <div className="thickness-item"><label>Relief Height</label><input type="number" step="0.01" min="0" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={relT} onChange={e => setRt(Math.max(0, parseFloat(e.target.value) || 0))} /></div>
                             </div>
+                            <div className="thickness-grid" style={{ marginTop: '6px' }}>
+                                <div className="thickness-item"><label>Max Height</label><input type="number" step="0.01" min="0" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={maxH} onChange={e => setMaxH(Math.max(0, parseFloat(e.target.value) || 0))} /></div>
+                                <div className="thickness-item"><label>Layers</label><div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 700, paddingTop: 4 }}>{Math.round(maxZ / lh)}</div></div>
+                            </div>
+
+                            {tdWarning.length > 0 && (
+                                <div style={{ fontSize: 9, color: '#f59e0b', marginTop: '8px', lineHeight: 1.5 }}>
+                                    ⚠ {tdWarning.join(', ')} necesita más altura de la que tiene la pieza (TD mayor que el alto total): el color se verá más apagado de lo simulado.
+                                </div>
+                            )}
 
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '10px 0' }}>
                                 <button className="download-btn" style={{ flex: 1, padding: 8, fontSize: 10, background: 'rgba(255,255,255,0.05)', color: 'var(--accent)', boxShadow: 'none', border: '1px solid var(--border-accent)' }} onClick={autoStack}>⚡ AUTO-CALC STACK</button>
@@ -771,6 +797,7 @@
                                                         const nl = [...layers]; nl[i].hex = e.target.value; setLayers(nl);
                                                     }} style={{ width: 20, height: 20, border: 'none', padding: 0, background: 'none', cursor: 'pointer' }} />
                                                     <b>{l.name}</b>
+                                                    {l.brand ? <span style={{ fontSize: 8, color: '#64748B' }}>{l.brand}</span> : null}
                                                 </div>
                                                 <div style={{ display: 'flex', gap: 2 }}>
                                                     <button className="canvas-ctrl-btn" style={{ width: 18, height: 18 }} onClick={() => moveLayer(i, -1)}>↑</button>
@@ -779,50 +806,75 @@
                                             </div>
                                             <div className="control-group">
                                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: 9 }}>Swap at: {l.stop}mm</span>
+                                                    <span style={{ fontSize: 9 }}>Swap at: {l.stop.toFixed(2)}mm</span>
                                                     <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>TD: <input type="number" step="0.1" value={l.td} onChange={e => {
                                                         const nl = [...layers]; nl[i].td = parseFloat(e.target.value); setLayers(nl);
                                                     }} style={{ width: 30, background: 'none', border: 'none', color: 'var(--accent)', fontSize: 9 }} /></div>
                                                 </div>
-                                                <input type="range" min="0" max={maxH} step={lh} value={l.stop} onChange={e => {
+                                                <input type="range" min="0" max={maxZ} step={lh} value={l.stop} onChange={e => {
                                                     const nl = [...layers]; nl[i].stop = parseFloat(e.target.value); setLayers(nl);
                                                 }} />
                                             </div>
                                         </div>
-                                        <button onClick={() => setLayers(layers.filter(x => x.id !== l.id))}>×</button>
+                                        <button onClick={() => removeFilament(i)}>×</button>
                                     </div>
                                 ))}
                             </div>
-                            <div className="section-label" style={{ marginTop: 15 }}>QUICK LIBRARY</div>
-                            <div className="filament-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-                                {[{ name: 'Black', hex: '#000000', td: 0.5 }, { name: 'White', hex: '#FFFFFF', td: 5.0 }, { name: 'Red', hex: '#FF0000', td: 2.5 }, { name: 'Blue', hex: '#0000FF', td: 1.8 }, { name: 'Yellow', hex: '#FFFF00', td: 4.0 }, { name: 'Gray', hex: '#888888', td: 2.0 }].map(f => (
-                                    <div key={f.name} className="f-item" style={{ margin: 0, fontSize: 10, padding: 4 }} onClick={() => setLayers([...layers, { ...f, id: Date.now(), stop: (layers[layers.length - 1]?.stop || 0) + 0.4 }])}>
-                                        <div style={{ width: 12, height: 12, background: f.hex, borderRadius: 2 }} /> {f.name}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginTop: 16 }}>
+                                <button className="download-btn" style={{ background: 'rgba(59,130,246,0.1)', color: '#93C5FD', margin: 0, fontSize: 10, border: '1px solid rgba(59,130,246,0.3)' }} disabled={!imgUrl} onClick={exportGuide}>GUIDE</button>
+                                <button className="download-btn" style={{ background: 'rgba(168,85,247,0.12)', color: '#C4B5FD', margin: 0, fontSize: 10, border: '1px solid rgba(168,85,247,0.35)' }} disabled={!imgUrl} onClick={exportGcode}>M600 GCODE</button>
+                                <button className="download-btn" style={{ background: 'var(--accent)', color: 'black', margin: 0, fontSize: 10 }} disabled={!imgUrl} onClick={export3MF}>PROJECT 3MF</button>
+                            </div>
+                            <p style={{ fontSize: 9, color: '#64748B', marginTop: 6, lineHeight: 1.5 }}>
+                                El 3MF lleva un objeto por filamento con su tramo en Z. El G-code mete los M600 en las alturas de cambio (Klipper/Marlin).
+                            </p>
+                        </div>
+                    ) : tab === 'library' ? (
+                        <div className="panel-body">
+                            <div className="section-label">FILAMENT LIBRARY</div>
+                            <input
+                                type="text"
+                                placeholder="Filtrar por marca, tipo o color…"
+                                value={libFilter}
+                                onChange={e => setLibFilter(e.target.value)}
+                                className="dim-input"
+                                style={{ width: '100%', marginBottom: 8, background: '#1E293B', color: 'white', border: '1px solid var(--border)' }}
+                            />
+                            {library.length === 0 && <p style={{ fontSize: 10, color: '#64748B' }}>No se ha podido cargar la biblioteca.</p>}
+                            <div className="filament-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, maxHeight: '58vh', overflowY: 'auto' }}>
+                                {libShown.map(f => (
+                                    <div key={f.id} className="f-item" style={{ margin: 0, fontSize: 9, padding: 4 }} onClick={() => addFilament(f)}>
+                                        <div style={{ width: 12, height: 12, background: f.hex, borderRadius: 2, flexShrink: 0 }} />
+                                        <div style={{ lineHeight: 1.3 }}>
+                                            <div>{f.colorName}</div>
+                                            <div style={{ color: '#64748B', fontSize: 8 }}>{f.brand} {f.type} · TD {f.td}</div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 }}>
-                                <button className="download-btn" style={{ background: 'rgba(59,130,246,0.1)', color: '#93C5FD', margin: 0, fontSize: 11, border: '1px solid rgba(59,130,246,0.3)' }} disabled={!imgUrl} onClick={() => {
-                                    const txt = `HUEFORGE PAINTING INSTRUCTIONS\n=============================\nBase Height: ${baseT}mm\nRelief Height: ${relT}mm\nLayer Height: ${lh}mm\n\nSwap Heights (Bottom to Top):\n` + [...layers].sort((a, b) => a.stop - b.stop).map(l => `- ${l.name} (${l.hex}): Swap at ${l.stop}mm`).join('\n');
-                                    const bl = new Blob([txt], { type: 'text/plain' });
-                                    const u = URL.createObjectURL(bl); const a = document.createElement('a'); a.href = u; a.download = 'instructions.txt'; a.click();
-                                }}>TEXT GUIDE</button>
-                                <button className="download-btn" style={{ background: 'var(--accent)', color: 'black', margin: 0, fontSize: 11 }} disabled={!imgUrl} onClick={export3MF}>PROJECT 3MF</button>
-                            </div>
+                            <p style={{ fontSize: 9, color: '#64748B', marginTop: 8, lineHeight: 1.5 }}>
+                                TD = distancia de ocultación: los milímetros que tarda el filamento en dejar pasar la luz. Con más TD hace falta más altura para que el color se imponga.
+                            </p>
                         </div>
                     ) : (
                         <div className="panel-body help-box" style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--text-dim)', overflowY: 'auto' }}>
                             <h4 style={{ color: 'white', marginBottom: 10 }}>How it works (step by step)</h4>
                             <ol style={{ paddingLeft: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <li><b>Define filaments</b> — Add colors and Transmission Distances (TD). TD controls how light blends through the layer.</li>
-                                <li><b>Filament ordering</b> — By default filaments are sorted by luminance (darkest bottom, lightest top). Use the 'Sort' toggle to auto-order.</li>
-                                <li><b>Transition calculation</b> — For each pair, the algorithm simulates Beer-Lambert logic. The first filament gets a foundation ~95% opaque (TD × 1.35).</li>
-                                <li><b>Height compression</b> — If total height exceeds <b>Max Print</b>, zones are compressed to fit while maintaining color ratios.</li>
-                                <li><b>Virtual swatch sampling</b> — Layers are sampled at each <b>Layer Height</b> increment to drive the 3D preview and instructions.</li>
+                                <li><b>Elige los filamentos</b> — En la pestaña FILAMENTS tienes la biblioteca con su TD (distancia de ocultación) real de cada marca y color.</li>
+                                <li><b>Orden de impresión</b> — Por defecto se ordenan de oscuro a claro: el inferior es el que hace de fondo y el superior el que aporta la luz.</li>
+                                <li><b>Apilado automático</b> — <b>⚡ AUTO-CALC STACK</b> reparte la altura entre los colores de forma proporcional a su TD. Si no cabe en el alto máximo, se escala todo por el mismo factor (si se escalase cada zona por separado los colores salirían distintos de lo simulado).</li>
+                                <li><b>Relieve cuantizado</b> — Las alturas se redondean a múltiplos de la altura de capa: lo que ves es lo que imprime la máquina.</li>
+                                <li><b>Mezcla Beer-Lambert</b> — Cada capa transmite el 10 % de la luz por cada TD de profundidad; el color final es la composición de todas las capas por debajo.</li>
+                                <li><b>Exporta</b> — El 3MF lleva un objeto por filamento, cada uno en su tramo de Z (sin solapes). El G-code mete los <b>M600</b> en las alturas de cambio para Klipper/Marlin.</li>
                             </ol>
                             <div style={{ marginTop: 20, padding: 10, borderRadius: 8, background: 'rgba(255,120,0,0.05)', border: '1px solid var(--border-accent)' }}>
                                 <p style={{ color: 'var(--accent)', fontWeight: 700, marginBottom: 5 }}>Pro Tip:</p>
-                                Toggle <b>⚡ AUTO-CALC STACK</b> after adding new filaments to immediately get a optimized prediction.
+                                Desliza el <b>LAYER</b> bajo el preview para ver qué filamento se ve a cada altura y comprobar el degradado antes de imprimir.
+                            </div>
+                            <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                                <p style={{ color: '#93C5FD', fontWeight: 700, marginBottom: 5 }}>Para imprimir bien:</p>
+                                Relleno 100 %, sin espiral (spiral vase), sin soportes, altura de capa 0,08–0,16 mm y pausas M600 con la purga de cada filamento.
                             </div>
                         </div>
                     )}
