@@ -14,6 +14,9 @@
     <script src="https://unpkg.com/react-i18next@14.0.5/dist/umd/react-i18next.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
+    <!-- Generador de litofanía (lógica + tests en 3d-tools/tests/) -->
+    <script src="js/utils/lithoGeometry.js?v=1.0"></script>
+
     <link rel="stylesheet" href="css/app.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -251,73 +254,29 @@
                 }
                 return b;
             },
+            // La geometría vive en js/utils/lithoGeometry.js (tiene tests:
+            // estanqueidad de la malla, orientación, marco y cuantización).
             buildLitho: (pix, imgW, imgH, S) => {
-                const { width, height, baseT, maxT, bright, contrast, invert, geom, res, numColors, frameW, frameT, scaleMode } = S;
-                const gW = res, gH = Math.round(res * (height / width));
-                const grid = new Float32Array((gW + 1) * (gH + 1));
-                const tRange = maxT - baseT;
-
-                // Sampling Logic (Fitz/Crop)
-                const outR = width / height, inR = imgW / imgH;
-                let sW = imgW, sH = imgH, oX = 0, oY = 0;
-                if (scaleMode === 'fill') {
-                    if (inR > outR) { sW = imgH * outR; oX = (imgW - sW) / 2; }
-                    else { sH = imgW / outR; oY = (imgH - sH) / 2; }
-                }
-
-                for (let r = 0; r <= gH; r++) {
-                    for (let c = 0; c <= gW; c++) {
-                        const px = Math.min(Math.floor(oX + (c / gW) * sW), imgW - 1), py = Math.min(Math.floor(oY + (r / gH) * sH), imgH - 1);
-                        const idx = (py * imgW + px) * 4;
-                        let g = (pix[idx] * 0.299 + pix[idx + 1] * 0.587 + pix[idx + 2] * 0.114) / 255;
-                        g = Math.max(0, Math.min(1, (g - 0.5) * contrast + 0.5 + (bright - 0.5)));
-                        if (invert) g = 1 - g;
-                        if (numColors < 20) g = Math.round(g * (numColors - 1)) / (numColors - 1);
-                        grid[r * (gW + 1) + c] = baseT + g * tRange;
-                    }
-                }
-
-                const pos = [], col = [];
-                const getP = (c, r, z) => {
-                    let x = (c / gW - 0.5) * width, y = (0.5 - r / gH) * height;
-                    if (geom === 'cylindrical') { const a = (c / gW - 0.5) * Math.PI, rd = width / Math.PI; return [Math.sin(a) * (rd + z), y, Math.cos(a) * (rd + z) - rd]; }
-                    if (geom === 'curved') { const a = (c / gW - 0.5) * Math.PI * 0.5, rd = width / (Math.PI * 0.5); return [Math.sin(a) * (rd + z), y, Math.cos(a) * (rd + z) - rd]; }
-                    return [x, y, z];
-                };
-
-                const pushTri = (a, b, c, z) => {
-                    const vA = getP(a.c, a.r, a.z), vB = getP(b.c, b.r, b.z), vC = getP(c.c, c.r, c.z);
-                    pos.push(...vA, ...vB, ...vC);
-                    const level = (a.z + b.z + c.z) / 3 / maxT;
-                    const gc = 0.4 + level * 0.6;
-                    col.push(gc, gc, gc, gc, gc, gc, gc, gc, gc);
-                };
-
-                for (let r = 0; r < gH; r++) {
-                    for (let c = 0; c < gW; c++) {
-                        const z00 = grid[r * (gW + 1) + c], z10 = grid[r * (gW + 1) + c + 1], z01 = grid[(r + 1) * (gW + 1) + c], z11 = grid[(r + 1) * (gW + 1) + c + 1];
-                        // Front
-                        pushTri({ c, r, z: z00 }, { c: c + 1, r, z: z10 }, { c: c + 1, r: r + 1, z: z11 });
-                        pushTri({ c, r, z: z00 }, { c: c + 1, r: r + 1, z: z11 }, { c, r: r + 1, z: z01 });
-                        // Back
-                        pushTri({ c, r, z: 0 }, { c: c + 1, r: r + 1, z: 0 }, { c: c + 1, r, z: 0 });
-                        pushTri({ c, r, z: 0 }, { c, r: r + 1, z: 0 }, { c: c + 1, r: r + 1, z: 0 });
-                    }
-                }
-                // Walls
-                for (let r = 0; r < gH; r++) {
-                    pushTri({ c: 0, r, z: grid[r * (gW + 1)] }, { c: 0, r: r + 1, z: 0 }, { c: 0, r, z: 0 }); pushTri({ c: 0, r, z: grid[r * (gW + 1)] }, { c: 0, r: r + 1, z: grid[(r + 1) * (gW + 1)] }, { c: 0, r: r + 1, z: 0 });
-                    pushTri({ c: gW, r, z: grid[r * (gW + 1) + gW] }, { c: gW, r, z: 0 }, { c: gW, r: r + 1, z: 0 }); pushTri({ c: gW, r, z: grid[r * (gW + 1) + gW] }, { c: gW, r: r + 1, z: 0 }, { c: gW, r: r + 1, z: grid[(r + 1) * (gW + 1) + gW] });
-                }
-                for (let c = 0; c < gW; c++) {
-                    pushTri({ c, r: 0, z: grid[c] }, { c, r: 0, z: 0 }, { c: c + 1, r: 0, z: 0 }); pushTri({ c, r: 0, z: grid[c] }, { c: c + 1, r: 0, z: 0 }, { c: c + 1, r: 0, z: grid[c + 1] });
-                    pushTri({ c, r: gH, z: grid[gH * (gW + 1) + c] }, { c: c + 1, r: gH, z: 0 }, { c, r: gH, z: 0 }); pushTri({ c, r: gH, z: grid[gH * (gW + 1) + c] }, { c: c + 1, r: gH, z: grid[gH * (gW + 1) + c + 1] }, { c: c + 1, r: gH, z: 0 });
-                }
-
+                const built = window.LithoGeometry.build(pix, imgW, imgH, {
+                    width: S.width, height: S.height, baseT: S.baseT, maxT: S.maxT,
+                    bright: S.bright, contrast: S.contrast, invert: S.invert,
+                    gamma: S.gamma, smoothing: S.smoothing, mirror: S.mirror,
+                    res: S.res, layerHeight: S.layerHeight, geom: S.geom,
+                    curveAngle: S.curveAngle, border: S.border,
+                    scaleMode: S.scaleMode, upright: S.upright
+                });
                 const geo = new THREE.BufferGeometry();
-                geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pos), 3));
-                geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(col), 3));
-                geo.computeVertexNormals(); return geo;
+                geo.setAttribute('position', new THREE.BufferAttribute(built.positions, 3));
+                // Color por nivel de grosor: simula how much light passes
+                const cols = new Float32Array(built.positions.length);
+                for (let i = 0, v = 0; i < built.positions.length; i += 3, v++) {
+                    const c = 0.35 + built.levels[v] * 0.65;
+                    cols[i] = c; cols[i + 1] = c; cols[i + 2] = c;
+                }
+                geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+                geo.computeVertexNormals();
+                geo.userData = { stats: built.stats };
+                return geo;
             }
         };
 
@@ -366,9 +325,13 @@
             useEffect(() => { document.title = 'Lithophane Creator – 3Dwork'; }, []);
             const [imgUrl, setImgUrl] = useState(null), [pix, setPix] = useState(null), [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
             const [W, setW] = useState(100), [H, setH] = useState(100), [lock, setLock] = useState(true), [mode, setMode] = useState('fit');
-            const [bright, setBr] = useState(0.8), [contrast, setCt] = useState(1.0), [inv, setInv] = useState(false);
-            const [baseT, setBt] = useState(0.8), [maxT, setMt] = useState(3.0), [res, setRes] = useState(120), [geom, setGeom] = useState('flat');
-            const [back, setBack] = useState(false), [colors, setColors] = useState(20);
+            const [bright, setBr] = useState(0.8), [contrast, setCt] = useState(1.0), [gamma, setGm] = useState(1.0), [smooth, setSm] = useState(0);
+            const [inv, setInv] = useState(false), [mirror, setMir] = useState(false);
+            const [baseT, setBt] = useState(0.8), [maxT, setMt] = useState(3.0), [lh, setLh] = useState(0.12), [border, setBd] = useState(0);
+            const [res, setRes] = useState(120), [geom, setGeom] = useState('flat'), [angle, setAng] = useState(180);
+            const [upright, setUp] = useState(true);
+            const [back, setBack] = useState(false);
+            const [stats, setStats] = useState(null);
             const sRef = useRef(null), mRef = useRef(null), gRef = useRef(null), api = useRef(null), lRef = useRef(null);
 
             const handleImg = (file) => {
@@ -387,11 +350,16 @@
             useEffect(() => {
                 if (!pix || !sRef.current) return;
                 const s = sRef.current; if (mRef.current) s.remove(mRef.current);
-                const g = STLExporter.buildLitho(pix, imgW, imgH, { width: W, height: H, baseT, maxT, bright, contrast, invert: inv, geom, res, numColors: colors, scaleMode: mode });
+                const g = STLExporter.buildLitho(pix, imgW, imgH, {
+                    width: W, height: H, baseT, maxT, bright, contrast, invert: inv,
+                    gamma, smoothing: smooth, mirror, res, layerHeight: lh, geom,
+                    curveAngle: angle, border, scaleMode: mode, upright
+                });
                 const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: back ? 0xFFEFC0 : 0xE8E0D5, vertexColors: !back, roughness: back ? 0.3 : 0.7, metalness: 0.1, emissive: back ? new THREE.Color(0x331100) : new THREE.Color(0), emissiveIntensity: back ? 0.4 : 0 }));
                 const b = new THREE.Box3().setFromObject(m); const c = new THREE.Vector3(); b.getCenter(c); m.position.sub(c);
                 s.add(m); mRef.current = m; gRef.current = g;
-            }, [pix, W, H, mode, baseT, maxT, res, geom, colors, bright, contrast, inv, back]);
+                setStats(g.userData && g.userData.stats ? g.userData.stats : null);
+            }, [pix, W, H, mode, baseT, maxT, res, geom, bright, contrast, inv, back, gamma, smooth, mirror, lh, angle, border, upright]);
 
             useEffect(() => {
                 if (!sRef.current) return;
@@ -424,11 +392,35 @@
                             <div className="thickness-item"><label>Base (mm)</label><input type="number" step="0.1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={baseT} onChange={e => setBt(parseFloat(e.target.value))} /></div>
                             <div className="thickness-item"><label>Max (mm)</label><input type="number" step="0.1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={maxT} onChange={e => setMt(parseFloat(e.target.value))} /></div>
                         </div>
+                        <div className="section-label">PRINT SETTINGS</div>
+                        <div className="control-group">
+                            <div className="control-label"><span>Orientation</span><span>{upright ? 'Upright' : 'Flat on bed'}</span></div>
+                            <div className="geo-btn-group" style={{ display: 'flex', gap: '6px' }}>
+                                <button className={`geo-btn ${upright ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setUp(true)}>Upright</button>
+                                <button className={`geo-btn ${!upright ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setUp(false)}>Flat</button>
+                            </div>
+                            <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px', lineHeight: 1.4 }}>
+                                Upright puts the image in the vertical plane: each layer captures a horizontal line of the photo. Flat prints as a relief on the bed and blurs the detail.
+                            </p>
+                        </div>
+                        <div className="thickness-grid">
+                            <div className="thickness-item"><label>Layer Height (mm)</label><input type="number" step="0.01" min="0.04" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={lh} onChange={e => setLh(parseFloat(e.target.value))} /></div>
+                            <div className="thickness-item"><label>Border (mm)</label><input type="number" step="0.5" min="0" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={border} onChange={e => setBd(Math.max(0, parseFloat(e.target.value) || 0))} /></div>
+                        </div>
                         <div className="section-label">GEOMETRY</div>
-                        <div className="geo-btn-group">{['flat', 'cylindrical', 'curved'].map(v => <button key={v} className={`geo-btn ${geom === v ? 'active' : ''}`} onClick={() => setGeom(v)}>{v}</button>)}</div>
+                        <div className="geo-btn-group">{['flat', 'cylindrical', 'curved'].map(v => <button key={v} className={`geo-btn ${geom === v ? 'active' : ''}`} onClick={() => { setGeom(v); setAng(v === 'curved' ? 90 : 180); }}>{v}</button>)}</div>
+                        {geom !== 'flat' && (
+                            <div className="control-group" style={{ marginTop: '8px' }}>
+                                <div className="control-label"><span>Curve Angle</span><span>{angle}°</span></div>
+                                <input type="range" min="60" max="360" step="15" value={angle} onChange={e => setAng(parseInt(e.target.value))} />
+                            </div>
+                        )}
                         <div className="section-label">MESH DETAIL</div>
                         <input type="range" min="60" max="250" step="10" value={res} onChange={e => setRes(parseInt(e.target.value))} />
-                        <button className="download-btn" disabled={!pix} style={{ marginTop: 20 }} onClick={() => STLExporter.download(STLExporter.exportBinary(gRef.current), 'litho.stl')}>EXPORT SOLID STL</button>
+                        <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px' }}>
+                            Horizontal detail: {res} px. Vertical detail follows the layer height: {stats ? stats.resY : '…'} rows.
+                        </p>
+                        <button className="download-btn" disabled={!pix} style={{ marginTop: 20 }} onClick={() => STLExporter.download(STLExporter.exportBinary(gRef.current), '3dwork_lithophane.stl')}>EXPORT SOLID STL</button>
                     </div>
                 </div>
                 <div className="canvas-center">
@@ -445,17 +437,46 @@
                         <div className="section-label">IMAGE FILTER</div>
                         <div className="control-group"><div className="control-label"><span>Brightness</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
                         <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast}</span></div><input type="range" min="0" max="3" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Gamma</span><span>{gamma}</span></div><input type="range" min="0.2" max="3" step="0.05" value={gamma} onChange={e => setGm(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Smoothing</span><span>{smooth}</span></div><input type="range" min="0" max="4" step="1" value={smooth} onChange={e => setSm(parseInt(e.target.value))} /></div>
                         <div className="toggle-row"><span className="toggle-label">Invert Heights</span><label className="toggle"><input type="checkbox" checked={inv} onChange={e => setInv(e.target.checked)} /><span className="toggle-slider"></span></label></div>
-                        <div className="section-label">COLOR / STEPS</div>
-                        <div className="control-group"><div className="control-label"><span>Simulated Colors</span><span>{colors}</span></div><input type="range" min="2" max="20" step="1" value={colors} onChange={e => setColors(parseInt(e.target.value))} /></div>
-                        <div className="palette-grid">{[...Array(Math.min(colors, 60))].map((_, i) => <div key={i} className="palette-swatch" style={{ background: `hsl(0,0%,${100 - (i / (colors - 1)) * 90}%)` }} />)}</div>
+                        <div className="toggle-row"><span className="toggle-label">Mirror horizontally</span><label className="toggle"><input type="checkbox" checked={mirror} onChange={e => setMir(e.target.checked)} /><span className="toggle-slider"></span></label></div>
+
+                        <div className="section-label" style={{ marginTop: 20 }}>MODEL</div>
+                        <div className="thickness-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                            {[
+                                { k: 'Size', v: stats ? `${stats.widthMM} × ${stats.heightMM} mm` : '—' },
+                                { k: 'Thickness', v: stats ? `${stats.effectiveBase} – ${maxT} mm` : '—' },
+                                { k: 'Resolution', v: stats ? `${stats.resX} × ${stats.resY}` : '—' },
+                                { k: 'Thickness steps', v: stats && stats.steps ? `${stats.steps}` : '—' },
+                                { k: 'Triangles', v: stats ? stats.triangles.toLocaleString('en-US') : '—' },
+                                { k: 'STL size', v: stats ? `${(stats.fileSize / 1048576).toFixed(1)} MB` : '—' }
+                            ].map(r => (
+                                <div key={r.k} className="thickness-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '6px' }}>
+                                    <label style={{ fontSize: 9 }}>{r.k}</label>
+                                    <span style={{ fontSize: 9, color: 'var(--accent)', fontWeight: 700 }}>{r.v}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="palette-grid" style={{ marginTop: '8px' }}>
+                            {[...Array(Math.min(stats && stats.steps ? stats.steps : 12, 40))].map((_, i, arr) => (
+                                <div key={i} className="palette-swatch" style={{ background: `hsl(0,0%,${100 - (i / Math.max(1, arr.length - 1)) * 90}%)` }} />
+                            ))}
+                        </div>
+                        {stats && stats.fileSize > 8 * 1048576 && (
+                            <p style={{ fontSize: 9, color: '#f59e0b', marginTop: '6px', lineHeight: 1.4 }}>
+                                Heavy STL ({Math.round(stats.fileSize / 1048576)} MB): raise the layer height to 0.16 or lower the horizontal detail if the download feels slow.
+                            </p>
+                        )}
+
                         <div className="section-label" style={{ marginTop: 20 }}>PRINT TIPS</div>
                         <div style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.6 }}>
-                            • Use high-contrast images.<br />
-                            • 0.8mm base recommended.<br />
-                            • Max 3.2mm for good light transmission.<br />
-                            • 100% infill (rectilinear) is best.<br />
-                            • Print vertically for better detail.
+                            • White or translucent filament (PLA / PETG).<br />
+                            • 100% infill (rectilinear) — the panel must be solid.<br />
+                            • Layer height 0.08–0.16 mm for the detail.<br />
+                            • Base 0.6–1.0 mm, max 2.5–3.5 mm for contrast.<br />
+                            • Print upright: each layer then holds a line of the image.<br />
+                            • Backlight with an LED panel or a lamp from behind.
                         </div>
                     </div>
                 </div>
