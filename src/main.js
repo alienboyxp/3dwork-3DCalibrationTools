@@ -53,7 +53,10 @@ function handleRouting() {
 
     if (currentView === 'lithophane' || currentView === 'hueforge') {
         const toolHash = currentView === 'lithophane' ? '#litho' : '#hue';
-        window.location.href = `3d-tools/index.html${toolHash}`;
+        // El parámetro de versión evita que el navegador (o el CDN) sirva el
+        // HTML cacheado: sin él se puede quedar con una versión antigua de la
+        // herramienta, que exportaba la litofanía tumbada.
+        window.location.href = `3d-tools/index.html?v=1.0${toolHash}`;
         return;
     }
 

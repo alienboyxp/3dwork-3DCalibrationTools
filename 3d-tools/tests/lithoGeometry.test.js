@@ -144,11 +144,25 @@ console.log('\n── Muestreo (mapa de alturas) ──');
             px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
         }
     }
-    const m = Litho.build(px, 100, 10, Object.assign({}, BASE, { upright: false, res: 40, resV: 40, border: 0, bright: 0.8 }));
+    const m = Litho.build(px, 100, 10, Object.assign({}, BASE, { upright: false, res: 40, resV: 40, border: 0, bright: 0.8, scaleMode: 'fit' }));
     const b = bbox(m.positions);
-    // Con brillo 0.8 la zona negra se aclara: el grosor mínimo baja de 3,0
-    check('la zona clara es más fina que la oscura',
-        b.size[2] < 3.0 && b.size[2] > 0.5, `grosor máx=${b.size[2].toFixed(2)}`);
+    // CONVENCIÓN DE LITOFANÍA: la mitad oscura es la gruesa (tapa la luz,
+    // 3 mm) y la clara la fina (deja pasar la luz, 1,24 mm con brillo 0,8).
+    check('la zona oscura es la gruesa',
+        Math.abs(b.size[2] - 3.0) < 0.05, `grosor=${b.size[2].toFixed(2)} esperado=3.00`);
+    // El punto más grueso debe estar en la mitad oscura (x negativa)
+    let thickestX = 0, thickestZ = -1;
+    for (let i = 0; i < m.positions.length; i += 3) {
+        if (m.positions[i + 2] > thickestZ) { thickestZ = m.positions[i + 2]; thickestX = m.positions[i]; }
+    }
+    check('el punto más grueso cae en la mitad oscura',
+        thickestX < -20, `x=${thickestX.toFixed(1)} (negativo = mitad izquierda)`);
+    // Con el interruptor "invert" la relación se invierte: la zona clara
+    // pasa a ser la gruesa.
+    const mi = Litho.build(px, 100, 10, Object.assign({}, BASE, { upright: false, res: 40, resV: 40, border: 0, bright: 0.8, scaleMode: 'fit', invert: true }));
+    const bi = bbox(mi.positions);
+    check('con "invert" la zona clara es la gruesa',
+        Math.abs(bi.size[2] - 2.55) < 0.05, `grosor=${bi.size[2].toFixed(2)} esperado=2.55`);
 }
 
 console.log('\n── Estadísticas ──');

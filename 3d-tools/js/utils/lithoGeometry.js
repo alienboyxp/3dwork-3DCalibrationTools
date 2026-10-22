@@ -56,12 +56,12 @@ window.LithoGeometry = (function () {
         return n ? sum / n : 0;
     }
 
-    /** Aplica la curva de tono: brillo, contraste, gamma, inversión y niveles. */
+    /** Aplica la curva de tono: brillo, contraste y gamma. */
     function tone(g, o) {
         g = (g - 0.5) * o.contrast + 0.5 + (o.bright - 1);
         g = clamp(g, 0, 1);
         if (o.gamma && o.gamma !== 1) g = Math.pow(g, o.gamma);
-        if (o.invert) g = 1 - g;
+        // La inversión se aplica una sola vez, al mapear a grosor.
         return g;
     }
 
@@ -124,7 +124,12 @@ window.LithoGeometry = (function () {
                 const sx = oX + (o.mirror ? (1 - u) : u) * sW, sy = oY + v * sH;
                 let g = sampleBox(pixels, imgW, imgH, sx, sy, cellW, cellH);
                 g = tone(g, o);
-                heights[row * nx + col] = o.baseT + g * (o.maxT - o.baseT);
+                // CONVENCIÓN DE LITOFANÍA: lo claro de la foto va FINO (deja
+                // pasar la luz) y lo oscuro va GROSSO (la tapa). Mapear al
+                // revés sale la imagen en negativo al retroiluminarla.
+                // El interruptor "invert" mantiene el criterio contrario.
+                const thick = o.invert ? g : (1 - g);
+                heights[row * nx + col] = o.baseT + thick * (o.maxT - o.baseT);
             }
         }
 

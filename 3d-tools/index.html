@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>3Dwork – 3D Creation Tools</title>
 
+    <!-- Sin caché: esta herramienta cambia (orientación de impresión,
+         resolución vertical, malla estanca). Si el navegador se queda con
+         una versión antigua, la litofanía sale exportada tumbada. -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -270,12 +277,14 @@
                 // Color por nivel de grosor: simula how much light passes
                 const cols = new Float32Array(built.positions.length);
                 for (let i = 0, v = 0; i < built.positions.length; i += 3, v++) {
-                    const c = 0.35 + built.levels[v] * 0.65;
+                    // Panel de filamento blanco: lo más grueso queda un poco
+                    // más apagado (absorbe más), el relieve lo da la luz.
+                    const c = 1.0 - built.levels[v] * 0.38;
                     cols[i] = c; cols[i + 1] = c; cols[i + 2] = c;
                 }
                 geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
                 geo.computeVertexNormals();
-                geo.userData = { stats: built.stats };
+                geo.userData = { stats: built.stats, levels: built.levels };
                 return geo;
             }
         };
@@ -285,16 +294,21 @@
          * 2. UI COMPONENTS & APP
          * ========================================================================
          */
-        const Canvas3D = ({ onMount, hint, info, children }) => {
+        const Canvas3D = ({ onMount, hint, info, children, initialView }) => {
             const mount = useRef(null);
-            const state = useRef({ theta: 45, phi: 65, radius: 200 });
+            const state = useRef(initialView || { theta: 45, phi: 65, radius: 200 });
 
             useEffect(() => {
                 const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(mount.current.clientWidth, mount.current.clientHeight);
                 r.outputColorSpace = THREE.SRGBColorSpace; mount.current.appendChild(r.domElement);
                 const s = new THREE.Scene(); s.background = new THREE.Color(0x080E1A);
                 const c = new THREE.PerspectiveCamera(45, mount.current.clientWidth / mount.current.clientHeight, 1, 1000);
-                s.add(new THREE.AmbientLight(0xffffff, 0.4)); const pl = new THREE.PointLight(0xffffff, 1.5, 600); pl.position.set(100, 100, 100); s.add(pl);
+                // Luces a escala milimétrica: con la caída cuadrática por
+                // defecto (decay 2) una luz a 150 mm queda a cero y el modelo
+                // sale plano y oscuro. decay 0 = intensidad constante.
+                s.add(new THREE.AmbientLight(0xffffff, 0.5));
+                const pl = new THREE.PointLight(0xffffff, 1.05, 0, 0); pl.position.set(140, 160, 220); s.add(pl);
+                const fill = new THREE.PointLight(0xC8DCFF, 0.4, 0, 0); fill.position.set(-200, -120, 140); s.add(fill);
 
                 const update = () => {
                     const t = state.current.theta * (Math.PI / 180), p = Math.max(5, Math.min(175, state.current.phi)) * (Math.PI / 180);
@@ -355,7 +369,33 @@
                     gamma, smoothing: smooth, mirror, res, layerHeight: lh, geom,
                     curveAngle: angle, border, scaleMode: mode, upright
                 });
-                const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: back ? 0xFFEFC0 : 0xE8E0D5, vertexColors: !back, roughness: back ? 0.3 : 0.7, metalness: 0.1, emissive: back ? new THREE.Color(0x331100) : new THREE.Color(0), emissiveIntensity: back ? 0.4 : 0 }));
+                // Retroiluminación: lo fino deja pasar la luz, lo grueso la tapa.
+                // El color de cada vértice pasa a ser "luz transmitida".
+                if (back) {
+                    const cols = g.getAttribute('color');
+                    const lv = (g.userData && g.userData.levels) || [];
+                    for (let i = 0, v = 0; i < cols.count; i++, v++) {
+                        const thru = 1 - (lv[v] || 0);
+                        const warm = 0.22 + thru * 0.78;
+                        cols.setXYZ(i, warm, warm * 0.90, warm * 0.68);
+                    }
+                    cols.needsUpdate = true;
+                }
+                // En retroiluminación el material no se ilumina: el color de
+                // cada vértice ES la luz que atraviesa el panel (lo fino
+                // brilla, lo grueso tapa). Con un emisivo uniforme el detalle
+                // se perdía.
+                const m = back
+                    ? new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }))
+                    : new THREE.Mesh(g, new THREE.MeshStandardMaterial({
+                        color: 0xffffff, vertexColors: true,
+                        roughness: 0.72, metalness: 0.05
+                    }));
+                // El modelo de pie tiene la altura en Z (eje de la cama). Para
+                // verlo como se va a imprimir (de pie, con el alto hacia
+                // arriba) se gira la malla en el preview: la imagen queda
+                // vertical en pantalla y el grosor mira hacia el espectador.
+                if (upright) m.rotation.x = -Math.PI / 2;
                 const b = new THREE.Box3().setFromObject(m); const c = new THREE.Vector3(); b.getCenter(c); m.position.sub(c);
                 s.add(m); mRef.current = m; gRef.current = g;
                 setStats(g.userData && g.userData.stats ? g.userData.stats : null);
@@ -365,10 +405,14 @@
                 if (!sRef.current) return;
                 if (lRef.current) { sRef.current.remove(lRef.current); lRef.current = null; }
                 if (back) {
-                    const pl = new THREE.PointLight(0xFFF5E0, 4, 300); pl.position.set(0, 0, -50);
+                    // La luz va DETRÁS del panel: de pie el panel está en el
+                    // plano XZ (la luz viene de -Y); tumbado, en XY (de -Z).
+                    // decay 0 para que la luz no se apague con la distancia.
+                    const pl = new THREE.PointLight(0xFFF0D0, 1.6, 0, 0);
+                    pl.position.set(0, upright ? -70 : 0, upright ? 0 : -70);
                     sRef.current.add(pl); lRef.current = pl;
                 }
-            }, [back]);
+            }, [back, upright]);
 
             return <div className="tool-page"><div className="tool-layout">
                 <div className="panel-left">
@@ -424,11 +468,15 @@
                     </div>
                 </div>
                 <div className="canvas-center">
-                    <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} hint="3D Preview" info={pix ? `Solid Block: ${W}x${H}mm` : "Waiting for image..."}>
+                    <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} initialView={{ theta: 32, phi: 72, radius: 250 }} hint="3D Preview" info={pix ? `Solid Block: ${W}x${H}mm` : "Waiting for image..."}>
                         <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
                             <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? 'black' : '#94A3B8', padding: '6px 12px', borderRadius: 20 }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>
                         </div>
-                        <div className="view-btns"><button className="v-btn" onClick={() => api.current.reset()}>Reset</button><button className="v-btn" onClick={() => api.current.set(0, 90)}>Top</button><button className="v-btn" onClick={() => api.current.set(0, 0)}>Front</button></div>
+                        <div className="view-btns">
+                            <button className="v-btn" onClick={() => api.current.reset()}>Reset</button>
+                            <button className="v-btn" onClick={() => api.current.set(0, 10)}>Top</button>
+                            <button className="v-btn" onClick={() => api.current.set(0, 85)}>Front</button>
+                        </div>
                     </Canvas3D>
                 </div>
                 <div className="panel-right">
