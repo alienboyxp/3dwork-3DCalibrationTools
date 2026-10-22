@@ -230,6 +230,17 @@ window.renderSkew = function (container, t) {
                             <div class="code-note">SAVE_CONFIG</div>
                         </div>
                     </div>
+
+                    <div class="code-group">
+                        <label>${t.skewHScaleTitle}</label>
+                        <div class="code-block">
+                            <code id="klipper-hscale">[stepper_x]
+scale_x: 1.000000
+[stepper_y]
+scale_y: 1.000000</code>
+                        </div>
+                        <div class="code-note">${t.skewHScaleNote}</div>
+                    </div>
                 </div>
 
                 <!-- Marlin -->
@@ -447,6 +458,23 @@ window.renderSkew = function (container, t) {
             document.getElementById('klipper-skew-cmd').textContent = `SET_SKEW XY=...`;
             document.getElementById('marlin-skew-defines').textContent = `#define SKEW_CORRECTION...`;
             document.getElementById('skew-warning-box').style.display = 'none';
+            const hsClear = document.getElementById('klipper-hscale');
+            if (hsClear) {
+                hsClear.textContent = `[stepper_x]\nscale_x: -\n[stepper_y]\nscale_y: -`;
+            }
+        }
+
+        // Escalado H (método alternativo, típico en CoreXY):
+        // scale = 1 / (1 + desviación) → compensa la diagonal escorada.
+        const hsEl = document.getElementById('klipper-hscale');
+        if (hsEl) {
+            const sx = xDevPercent !== null ? 1 / (1 + xDevPercent) : null;
+            const sy = yDevPercent !== null ? 1 / (1 + yDevPercent) : null;
+            if (sx !== null && sy !== null) {
+                hsEl.textContent = `[stepper_x]\nscale_x: ${sx.toFixed(6)}\n[stepper_y]\nscale_y: ${sy.toFixed(6)}`;
+            } else {
+                hsEl.textContent = `[stepper_x]\nscale_x: -\n[stepper_y]\nscale_y: -`;
+            }
         }
 
         // Update Steps Calculation

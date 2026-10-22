@@ -109,6 +109,88 @@
       guide: 'klipper'
     },
     {
+      id: 'extrude_below_temp', sev: 'warn',
+      detect: (log) => firstMatch(log, [
+        /Extrude below minimum temp/i,
+        /Move out of range: .*extruder/i,
+        /Heating failed/i
+      ]),
+      title: 'El extrusor intentó extruir sin llegar a temperatura',
+      why: 'Si el hotend está por debajo del mínimo, el filamento no fluye: la capa sale con huecos y la máquina se atasca.',
+      fix: 'Sube la temperatura objetivo del hotend para ese material y revisa que el termistor mida bien (si marca menos de lo real, el slicer cree que está caliente antes de tiempo).',
+      guide: 'labs'
+    },
+    {
+      id: 'homing_failed', sev: 'warn',
+      detect: (log) => firstMatch(log, [
+        /Homing failed/i,
+        /Endstop .* still triggered/i,
+        /Probe .* failed/i
+      ]),
+      title: 'El homing o el sondeo del sensor falló',
+      why: 'Si el eje no sabe dónde está el origen, la primera capa sale malplacing y la pieza se despega.',
+      fix: 'Comprueba el endstop o el sensor (BLTouch/CR touch), el valor de posición del fin de carrera y que el carro llegue a esa posición.',
+      guide: 'labs'
+    },
+    {
+      id: 'filament_runout', sev: 'warn',
+      detect: (log) => firstMatch(log, [
+        /Filament runout/i,
+        /Runout detected/i
+      ]),
+      title: 'Se agotó el filamento o se saltó el sensor',
+      why: 'La impresión sigue con el hueco de material: capas incompletas y la pieza no vale.',
+      fix: 'Mira el sensor de filamento y el recorrido; si el sensor no está, añade un M600 (pausa) con el filamento.',
+      guide: 'klipper'
+    },
+    {
+      id: 'out_of_range', sev: 'warn',
+      detect: (log) => firstMatch(log, [
+        /Move out of range/i,
+        /Probe out of range/i
+      ]),
+      title: 'Un movimiento se salió de los límites',
+      why: 'Normalmente es que el objeto es más grande que la zona permitida o que los topes están mal ajustados.',
+      fix: 'Revisa los limites de la cama y el tamaño del objeto; si es el BLTouch, su posición de montaje.',
+      guide: 'labs'
+    },
+    {
+      id: 'python_error', sev: 'risk',
+      detect: (log) => firstMatch(log, [
+        /Python exception detected/i,
+        /Traceback \(most recent call last\)/i,
+        /Klippy exited/i
+      ]),
+      title: 'Klipper Petó con un error de Python',
+      why: 'Un módulo mal configurado (macro, sensor, display) tumba Klipper: no imprime nada hasta que lo arregles.',
+      fix: 'Mira el traceback del log para saber qué módulo falla; comenta temporalmente la línea problemática del printer.cfg.',
+      guide: 'klipper'
+    },
+    {
+      id: 'invalid_command', sev: 'warn',
+      detect: (log) => firstMatch(log, [
+        /Invalid command format/i,
+        /Unknown command:? /i,
+        /Bad command format/i
+      ]),
+      title: 'Un comando del config no es válido',
+      why: 'Suele ser un salto de línea pegado en el config o un typo en el nombre de una opción.',
+      fix: 'Revisa las líneas que el log marca como error: casi siempre es un salto de línea de más al copiar y pegar.',
+      guide: 'klipper'
+    },
+    {
+      id: 'sd_write_fail', sev: 'warn',
+      detect: (log) => firstMatch(log, [
+        /OSError: \[Errno 28\] No space left/i,
+        /No space left on device/i,
+        /IO error.*SD card/i
+      ]),
+      title: 'La microSD se quedó sin espacio o falla',
+      why: 'Klipper no puede guardar el estado: se para al final de la impresión o pierde la del medio.',
+      fix: 'Libera espacio en la SD y, si es una tarjeta mala, cámbiala (usa tarjetas de marca: los fallos de escritura matan impresiones).',
+      guide: 'klipper'
+    },
+    {
       id: 'klippy_mcu_mismatch', sev: 'warn',
       // solo si el MCU llegó a hablar (si no se conectó, el aviso de versión
       // sería un falso positivo: no hay build del MCU con el que comparar)
@@ -308,6 +390,87 @@
     return out;
   }
 
+
+  /** E-steps que está usando Klipper, deducidos de la config:
+   *  E-steps = microsteps × pasos_vuelta / rotation_distance
+   *  200 pasos/vuelta en motor 1.8 GT2 (rotation_distance ≈ 40)
+   *  400 pasos/vuelta en motor 2.3 tipo Bambu (rotation_distance ≈ 8,06) */
+  function deriveEsteps(cfg) {
+    const ext = firstSectionStarting(cfg, 'extruder');
+    if (!ext) return null;
+    const rd = parseFloat(cfgGet(cfg, ext, 'rotation_distance'));
+    const ms = parseInt(cfgGet(cfg, ext, 'microsteps'), 10);
+    if (isNaN(rd) || isNaN(ms) || rd <= 0) return null;
+    let stepsPerRev = 200;
+    let stepAngle = 1.8;
+    if (Math.abs(rd - 8.0588) / 8.0588 < 0.05) {
+      stepsPerRev = 400; stepAngle = 2.3;
+    } else if (Math.abs(rd - 40) / 40 > 0.1) {
+      return null;   // geometría desconocida: no arriesgamos un E-steps inventado
+    }
+    return {
+      esteps: Math.round(ms * stepsPerRev / rd * 100) / 100,
+      microsteps: ms,
+      rotation_distance: rd,
+      steps_per_rev: stepsPerRev,
+      step_angle: stepAngle
+    };
+  }
+
+  /** Acciones sugeridas: abrir otra herramienta con los valores ya puestos */
+  function buildActions(cfg) {
+    const actions = [];
+    const e = deriveEsteps(cfg);
+    if (e) {
+      actions.push({
+        tool: 'esteps', label: 'Calibrar E-steps con estos valores',
+        payload: {
+          'current-val': e.esteps,
+          'microsteps': String(e.microsteps),
+          'motor-type': String(e.step_angle)
+        },
+        note: 'Klipper usa rotation_distance ' + e.rotation_distance +
+          ' con ' + e.microsteps + ' microsteps → ' + e.esteps +
+          ' steps/mm (asumiendo ' + e.steps_per_rev +
+          ' pasos/vuelta; comprueba que coincide con tu slicer)'
+      });
+      actions.push({
+        tool: 'rotation', label: 'Revisar el rotation distance',
+        payload: {
+          'rd-value': e.rotation_distance,
+          'microsteps': e.microsteps,
+          'step-angle': e.step_angle
+        },
+        note: 'El valor exacto que tienes en el config (' +
+          e.rotation_distance + ' mm/vuelta)'
+      });
+    }
+    // Driver TMC detectado → la calculadora de Vref
+    for (const section of Object.keys(cfg)) {
+      if (/^tmc\d+$/.test(section)) {
+        const rs = parseFloat(cfg[section].sense_resistor);
+        // el select usa los valores reales disponibles en el calculadora
+        const RS_OPTIONS = ['0.11', '0.075', '0.1', '0.05', '0.2', '0.025'];
+        let rsValue = null;
+        if (!isNaN(rs)) {
+          const match = RS_OPTIONS.find(o => Math.abs(parseFloat(o) - rs) < 0.001);
+          rsValue = match || rs;
+        }
+        actions.push({
+          tool: 'vref', label: 'Calcular el Vref del ' + section.toUpperCase(),
+          payload: {
+            'driver-type': section.toLowerCase(),
+            'sense-resistor': rsValue
+          },
+          note: 'Detectado ' + section.toUpperCase() +
+            (rsValue ? ' con Rsense ' + rsValue + ' Ω' : ' en tu configuración')
+        });
+        break;
+      }
+    }
+    return actions;
+  }
+
   // ── análisis ────────────────────────────────────────────────────────────
 
   function analyze(input) {
@@ -403,7 +566,9 @@
       caps: caps,
       undetermined: undetermined,
       counts: counts,
-      has_config: !!Object.keys(cfg).length
+      has_config: !!Object.keys(cfg).length,
+      actions: buildActions(cfg),
+      esteps: deriveEsteps(cfg)
     };
   }
 

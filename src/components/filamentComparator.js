@@ -80,6 +80,9 @@ window.renderFilamentComparator = function (container, t, opts) {
                     <div class="spec-box">
                         <span class="spec-label">${lang === 'es' ? 'Nozzle' : 'Nozzle'}</span>
                         <span class="spec-value">${f.nozzle_temp_min}–${f.nozzle_temp_max}°C</span>
+                ${f.drying_c ? `<span class="spec-value" title="${lang === 'es' ? 'Secado' : 'Drying'}">💧 ${f.drying_c}°C ${f.drying_time || ''}</span>` : ''}
+                ${f.min_wall_mm ? `<span class="spec-value" title="${lang === 'es' ? 'Muro mínimo' : 'Min wall'}">▫ ${f.min_wall_mm} mm</span>` : ''}
+                ${f.ams_compatible === false ? `<span class="spec-value" style="color:#f43f5e" title="AMS">✗ AMS</span>` : ''}
                     </div>
                     <div class="spec-box">
                         <span class="spec-label">${lang === 'es' ? 'Cama' : 'Bed'}</span>
@@ -311,6 +314,14 @@ window.renderFilamentComparator = function (container, t, opts) {
         }).join('');
 
         const specRows = [
+            { key: 'drying', label: { en: 'Drying', es: 'Secado' },
+              format: f => f.drying_c ? `${f.drying_c}°C · ${f.drying_time || ''}` : '—', best: null },
+            { key: 'min_wall', label: { en: 'Min Wall', es: 'Muro mín.' },
+              format: f => f.min_wall_mm ? `${f.min_wall_mm} mm` : '—', best: 'max' },
+            { key: 'ams', label: { en: 'AMS', es: 'AMS' },
+              format: f => f.ams_compatible === false ? '<span style="color:#f43f5e">✗</span>' : (f.ams_compatible ? '<span style="color:#22c55e">✓</span>' : '—'), best: null },
+            { key: 'enclosure', label: { en: 'Enclosure', es: 'Cerrada' },
+              format: f => f.needs_enclosure ? '<span style="color:#f59e0b">necesaria</span>' : '—', best: null },
             { key: 'nozzle_temp', label: { en: 'Nozzle', es: 'Nozzle' }, format: f => `${f.nozzle_temp_min}–${f.nozzle_temp_max}°C` },
             { key: 'bed_temp', label: { en: 'Bed', es: 'Cama' }, format: f => `${f.bed_temp_min}–${f.bed_temp_max}°C` },
             { key: 'enclosure', label: { en: 'Enclosed', es: 'Cerrada' }, format: f => f.enclosure_needed ? '✓' : '✗' },
