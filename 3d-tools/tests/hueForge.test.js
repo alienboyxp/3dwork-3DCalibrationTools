@@ -337,5 +337,41 @@ console.log('\n── Modo de imagen y paleta automática ──');
     check('el relieve en B&W tiene sólo 2 alturas', heights.size === 2, [...heights].join(', '));
 }
 
+console.log('\n── Rampa neutra (modo Layered) ──');
+{
+    const lib = [
+        { id: 'a', hex: '#1A1A1A', name: 'Negro' },
+        { id: 'b', hex: '#C0392B', name: 'Rojo' },
+        { id: 'c', hex: '#2980B9', name: 'Azul' },
+        { id: 'd', hex: '#F1C40F', name: 'Amarillo' },
+        { id: 'e', hex: '#FFFFFF', name: 'Blanco' },
+        { id: 'f', hex: '#7F8C8D', name: 'Gris' },
+        { id: 'g', hex: '#E67E22', name: 'Naranja' },
+        { id: 'h', hex: '#27AE60', name: 'Verde' }
+    ];
+    const w = 100, h = 100;
+    const px = new Uint8ClampedArray(w * h * 4);
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const v = Math.round(255 * x / (w - 1));
+            px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
+        }
+    }
+    const ramp = HueForge.neutralRamp(lib, 4, px, w, h);
+    check('la rampa devuelve 4 filamentos', ramp.length === 4, `${ramp.length}`);
+    const lums = ramp.map(f => {
+        const c = HueForge.hexToRgb(f.hex);
+        return c.r * 0.299 + c.g * 0.587 + c.b * 0.114;
+    });
+    check('la rampa va de oscuro a claro',
+        lums.every((l, i) => i === 0 || l >= lums[i - 1] - 1e-6), lums.map(l => l.toFixed(2)).join(' '));
+    // Con pocos colores disponibles se prefieren los neutros (si no, sale sepia)
+    const hasNeutral = ramp.some(f => f.name === 'Negro' || f.name === 'Blanco' || f.name === 'Gris');
+    check('con 4 colores se eligen tonos neutros', hasNeutral,
+        ramp.map(f => f.name).join(', '));
+    check('no se repite filamento', new Set(ramp.map(f => f.id)).size === ramp.length);
+}
+
 console.log(`\n${pass} correctas, ${fail} fallidas\n`);
 process.exit(fail ? 1 : 0);

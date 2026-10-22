@@ -853,7 +853,88 @@ window.HueForge = (function () {
         return chosen;
     }
 
+
+    /**
+     * Rampa neutra para el modo Layered: los n filamentos más próximo a los
+     * percentiles de luminosidad de la imagen, ordenados de más oscuro a más
+     * claro.
+     *
+     * En Layered el color NO sale de la foto: sale de la pila. Con una pila
+     * de tonos de la foto (piel, pelo, marrón) el resultado sale sepia. Con
+     * una rampa neutra el resultado es un gris limpio y el relieve se lee
+     * como la foto.
+     * @param {Array} library - [{hex, name, ...}]
+     * @param {number} n - cuántos filamentos hay disponibles
+     * @param {Uint8ClampedArray} pixels - la imagen (para la distribución)
+     */
+    function neutralRamp(library, n, pixels, imgW, imgH) {
+        const count = Math.max(1, Math.min(library.length, n | 0 || 1));
+        const withLum = library.map(f => {
+            const c = hexToRgb(f.hex);
+            const mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b);
+            return {
+                f: f,
+                lum: c.r * 0.299 + c.g * 0.587 + c.b * 0.114,
+                sat: mx - mn            // saturación: 0 = gris neutro
+            };
+        });
+        if (!pixels || !imgW || !imgH) {
+            // Sin imagen: rampa equiponderada por luminosidad
+            return withLum.sort((a, b) => a.lum - b.lum).slice(0, count).map(x => x.f);
+        }
+        // Histograma de luminosidad de la imagen
+        const bins = 32, hist = new Float64Array(bins);
+        const step = Math.max(1, Math.floor(Math.sqrt((imgW * imgH) / 20000)));
+        let total = 0;
+        for (let y = 0; y < imgH; y += step) {
+            for (let x = 0; x < imgW; x += step) {
+                const i = (y * imgW + x) * 4;
+                const g = (pixels[i] * 0.299 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.114) / 255;
+                hist[Math.min(bins - 1, Math.floor(g * bins))]++;
+                total++;
+            }
+        }
+        // Percentiles objetivo: donde se concentra la imagen
+        const cum = new Float64Array(bins);
+        let acc = 0;
+        for (let b = 0; b < bins; b++) { acc += hist[b]; cum[b] = total ? acc / total : 0; }
+        const targets = [];
+        for (let k = 0; k < count; k++) {
+            const p = (k + 0.5) / count;
+            let b = 0;
+            while (b < bins - 1 && cum[b] < p) b++;
+            targets.push((b + 0.5) / bins);
+        }
+        // Un filamento por percentil, el más próximo en luminosidad
+        const used = new Set(), chosen = [];
+        // La distancia penaliza la saturación: si hay un gris o un blanco
+        // cerca del tono buscado, se prefiere antes que un color intenso
+        // (si no, la rampa sale sepia y no se parece a la foto).
+        const score = (x, target) => Math.abs(x.lum - target) + x.sat * 0.35;
+        for (const target of targets) {
+            let best = null, bestD = Infinity;
+            for (const x of withLum) {
+                if (used.has(x.f.id)) continue;
+                const d = score(x, target);
+                if (d < bestD) { bestD = d; best = x; }
+            }
+            if (!best) {
+                for (const x of withLum) {
+                    const d = score(x, target);
+                    if (d < bestD) { bestD = d; best = x; }
+                }
+            }
+            if (best) { used.add(best.f.id); chosen.push(best.f); }
+        }
+        return chosen.sort((a, b) => {
+            const la = hexToRgb(a.hex), lb = hexToRgb(b.hex);
+            return (la.r * 0.299 + la.g * 0.587 + la.b * 0.114) -
+                (lb.r * 0.299 + lb.g * 0.587 + lb.b * 0.114);
+        });
+    }
+
     return {
+        neutralRamp: neutralRamp,
         processImage: processImage,
         dominantColors: dominantColors,
         matchPalette: matchPalette,

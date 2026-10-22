@@ -622,8 +622,18 @@
             // parecen a los colores dominantes de la imagen.
             const autoPalette = () => {
                 if (!processed || !library.length) return;
-                const dom = window.HueForge.dominantColors(processed, imgW, imgH, Math.max(2, numColors));
-                const chosen = window.HueForge.matchPalette(library, dom, numColors);
+                let chosen;
+                if (mode === 'flat') {
+                    // Flat Paint: el color lo pone el filamento → los que más
+                    // se parecen a los colores dominantes de la foto.
+                    const dom = window.HueForge.dominantColors(processed, imgW, imgH, Math.max(2, numColors));
+                    chosen = window.HueForge.matchPalette(library, dom, numColors);
+                } else {
+                    // Layered: el color lo da la PILA, no la foto → rampa
+                    // neutra repartida según la luminosidad de la imagen, para
+                    // que el resultado sea un gris limpio y no un sepia.
+                    chosen = window.HueForge.neutralRamp(library, numColors, processed, imgW, imgH);
+                }
                 if (!chosen.length) return;
                 const planned = window.HueForge.planStack(
                     chosen.map((f, i) => ({
@@ -866,7 +876,8 @@
             const inspectLayer = sorted.filter(l => l.stop <= inspect + 1e-6).pop();
             const inspectColor = window.HueForge.blendAt(sorted, inspect);
             const css = (c) => 'rgb(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ')';
-            const tdWarning = sorted.filter(l => l.td > maxZ).map(l => l.name + ' (TD ' + l.td + ' mm)');
+            const tdWarning = sorted.filter(l => l.td > maxZ).map(l =>
+                l.name + (l.brand ? ' (' + l.brand + ')' : '') + ' (TD ' + l.td + ' mm)');
 
             return <div className="tool-page"><div className="tool-layout">
                 <div className="panel-left">
@@ -884,6 +895,11 @@
                                 ? 'El color se consigue con el relieve: cada altura de la pieza es un filamento distinto (multifilamento por capas).'
                                 : 'Flat Paint: pieza plana de grosor constante y el color lo pone el filamento (AMS / multicolor).'}
                         </p>
+                        {mode === 'layered' && (
+                            <div style={{ fontSize: 9, color: '#93C5FD', marginTop: '6px', lineHeight: 1.5, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 8, padding: '6px 8px' }}>
+                                <b>Ojo:</b> en Layered la foto se convierte en relieve, así que <b>el color sale de tu pila de filamentos, no de la foto</b>: una foto en color sale en tonos de la pila. Para reproducir los colores de la foto usa <b>Flat Paint</b> (multicolor).
+                            </div>
+                        )}
 
                         {mode === 'flat' && (
                             <div className="thickness-grid" style={{ marginTop: '6px' }}>
@@ -927,7 +943,9 @@
                             </div>
                         </div>
                         <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '2px', lineHeight: 1.45 }}>
-                            AUTO PALETTE coge de la biblioteca los {numColors} filamentos que más se parecen a los colores de tu imagen y rehace la pila.
+                            {mode === 'flat'
+                                ? 'AUTO PALETTE coge de la biblioteca los ' + numColors + ' filamentos más parecidos a los colores de tu foto y rehace la pieza por colores.'
+                                : 'AUTO PALETTE elige ' + numColors + ' filamentos neutros repartidos según la luminosidad de tu foto (para que el relieve salga en gris, no en sepia) y rehace la pila.'}
                         </p>
 
                         <div className="section-label">IMAGE FILTERS</div>
