@@ -187,5 +187,95 @@ console.log('\n── G-code de cambios de filamento ──');
     check('el G-code tiene cabecera y final', g.includes('M600') && g.includes('M84'));
 }
 
+console.log('\n── Flat Paint (color en XY) ──');
+{
+    const w2 = 100, h2 = 100;
+    const px = new Uint8ClampedArray(w2 * h2 * 4);
+    for (let y = 0; y < h2; y++) {
+        for (let x = 0; x < w2; x++) {
+            const i = (y * w2 + x) * 4;
+            const v = x < w2 / 2 ? 0 : 255;
+            px[i] = v; px[i + 1] = v; px[i + 2] = v; px[i + 3] = 255;
+        }
+    }
+    const palette = [{ hex: '#000000', name: 'Negro' }, { hex: '#FFFFFF', name: 'Blanco' }];
+    const flat = HueForge.assignFlatPaint(px, w2, h2, {
+        gridW: 20, gridH: 20, width: 100, height: 100, palette: palette
+    });
+    check('la mitad oscura va al filamento negro',
+        flat.assignment[0] === 0, `asignado=${flat.assignment[0]}`);
+    check('la mitad clara va al filamento blanco',
+        flat.assignment[19] === 1, `asignado=${flat.assignment[19]}`);
+    let s0 = null, s1 = null;
+    palette.forEach((f, k) => {
+        const s = HueForge.buildFlatPaintSolid(flat, k, 0, 2);
+        if (k === 0) s0 = s; else s1 = s;
+        const w = Mesh.checkWatertight(s.positions);
+        check(`región ${f.name}: malla estanca`, w.closed,
+            `abiertas=${w.open} invertidas=${w.flipped}`);
+        check(`región ${f.name}: volumen con signo positivo`,
+            Mesh.signedVolume(s.positions) > 0);
+    });
+    // El volumen de cada región debe ser la mitad de la pieza
+    const half = 100 * 100 * 2 / 2;
+    check('cada región ocupa la mitad del volumen',
+        Math.abs(Mesh.signedVolume(s0.positions) - half) < 1,
+        `negro=${Mesh.signedVolume(s0.positions).toFixed(0)} esperado=${half}`);
+    const files = HueForge.buildFlatPaint3MF(flat, palette, { thickness: 2 });
+    const objs = files['3D/3dmodel.model'].split('<object ').slice(1);
+    check('el 3MF tiene un objeto por filamento', objs.length === 2, `${objs.length}`);
+    check('la config asigna extrusor a cada objeto',
+        (files['Metadata/model_settings.config'].match(/key="extruder"/g) || []).length === 2);
+}
+
+console.log('\n── Calibración del TD ──');
+{
+    const filaments = [{ name: 'Negro', hex: '#000000' }, { name: 'Blanco', hex: '#FFFFFF' }];
+    const thicknesses = [0.2, 0.4, 0.8, 1.2, 1.6, 2.0];
+    const chart = HueForge.buildCalibrationChart({ filaments: filaments, thicknesses: thicknesses, swatch: 10, gap: 2 });
+    const w = Mesh.checkWatertight(chart.positions);
+    check('la carta de calibración es un sólido estanco', w.closed,
+        `abiertas=${w.open} invertidas=${w.flipped}`);
+    check('la carta tiene una muestra por filamento y grosor',
+        chart.patches.filter(p => p.kind === 'swatch').length === filaments.length * thicknesses.length);
+    check('la carta tiene las dos referencias',
+        chart.patches.filter(p => p.kind === 'reference').length === 2);
+
+    // Foto sintética con un TD conocido (Beer-Lambert)
+    const TD = 1.6;
+    const W = 400, H = 300;
+    const photo = new Uint8ClampedArray(W * H * 4);
+    // Misma proyección que usa el analizador
+    const lay = HueForge.chartLayout(chart, W, H, { margin: 0 });
+    const scale = lay.scale, offX = lay.offX, offY = lay.offY;
+    // Muestra sobre fondo: L = negro + (blanco - negro)·T
+    const lum = (T) => 20 + (255 - 20) * T;
+    for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+            const i = (y * W + x) * 4;
+            let L = 128;
+            for (const p of chart.patches) {
+                const px0 = offX + p.x * scale, py0 = offY + (chart.height - p.y - p.h) * scale;
+                const pw = p.w * scale, ph = p.h * scale;
+                if (x >= px0 && x < px0 + pw && y >= py0 && y < py0 + ph) {
+                    if (p.kind === 'reference') L = p.role === 'black' ? 20 : 255;
+                    else {
+                        const T = Math.pow(10, -p.thickness / TD);
+                        L = lum(T);
+                    }
+                }
+            }
+            photo[i] = L; photo[i + 1] = L; photo[i + 2] = L; photo[i + 3] = 255;
+        }
+    }
+    const res = HueForge.analyzeCalibrationPhoto(photo, W, H, chart, { margin: 0 });
+    check('el análisis de la foto devuelve un TD', res.ok && res.results.length === 2,
+        res.message || 'sin resultados');
+    const neg = res.results.find(r => r.name === 'Negro');
+    check('el TD recuperado coincide con el real (' + TD + ' mm)',
+        neg && neg.td && Math.abs(neg.td - TD) < 0.35,
+        neg ? 'td=' + (neg.td ? neg.td.toFixed(3) : 'null') : 'sin resultado');
+}
+
 console.log(`\n${pass} correctas, ${fail} fallidas\n`);
 process.exit(fail ? 1 : 0);
