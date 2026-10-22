@@ -6,7 +6,7 @@
 
 window.App = function App() {
     const { t, i18n } = ReactI18next.useTranslation();
-    const [view, setView] = React.useState('home');    // 'home' | 'lithophane' | 'hueforge'
+    const [view, setView] = React.useState('home');    // 'home' | 'lithophane' | 'hueforge' | 'clicker'
     const [lang, setLang] = React.useState(window.__i18nLang || 'en');
 
     // Sync language with i18next
@@ -28,6 +28,7 @@ window.App = function App() {
         { id: 'home', labelKey: null, label: '⌂ Home' },
         { id: 'lithophane', labelKey: 'nav_litho' },
         { id: 'hueforge', labelKey: 'nav_hueforge' },
+        { id: 'clicker', labelKey: 'nav_clicker' },
     ];
 
     return (
@@ -64,6 +65,12 @@ window.App = function App() {
                     >
                         {t('nav_hueforge')}
                     </button>
+                    <button
+                        className={`nav-tab${view === 'clicker' ? ' active' : ''}`}
+                        onClick={() => setView('clicker')}
+                    >
+                        Clicker
+                    </button>
                 </div>
 
                 {/* Language + back link */}
@@ -92,6 +99,7 @@ window.App = function App() {
                 {view === 'home' && <window.Home onNavigate={setView} />}
                 {view === 'lithophane' && <window.LithophaneTool onNavigate={setView} />}
                 {view === 'hueforge' && <window.HueForgeTool onNavigate={setView} />}
+                {view === 'clicker' && <window.ClickerTool onNavigate={setView} />}
             </div>
         </div>
     );

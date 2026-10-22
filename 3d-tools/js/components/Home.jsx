@@ -45,6 +45,36 @@ window.Home = function Home({ onNavigate }) {
                     </button>
                 </div>
 
+                {/* ══ Clicker Card ══ */}
+                <div className="tool-entry-card clicker" onClick={() => onNavigate('clicker')}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <div className="tool-entry-icon green">⌨️</div>
+                        <span className="tool-badge green">
+                            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" /></svg>
+                            Clicker Tool
+                        </span>
+                    </div>
+
+                    <div className="tool-entry-info">
+                        <h2>Clicker Factory</h2>
+                        <p>Convert any image into a printable 3D clicker with a real mechanical switch. Inspired by Clicker Factory, with our own improvements.</p>
+                    </div>
+
+                    <ul className="tool-feature-list">
+                        <li>MX switch housing (standard)</li>
+                        <li>Image carved into key face</li>
+                        <li>Mono and multi-color export</li>
+                        <li>Keychain loop option</li>
+                    </ul>
+
+                    <button className="tool-cta green" onClick={e => { e.stopPropagation(); onNavigate('clicker'); }}>
+                        <svg fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                        Open Tool
+                    </button>
+                </div>
+
                 {/* ══ HueForge Card ══ */}
                 <div className="tool-entry-card hueforge" onClick={() => onNavigate('hueforge')}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
