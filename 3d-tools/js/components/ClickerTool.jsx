@@ -218,7 +218,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                                             style={{ width: '100%', minHeight: '60px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: '0.85rem', resize: 'vertical' }}
                                         />
                                         <div style={{ display: 'flex', gap: '0.3rem' }}>
-                                            <select value={fontFamily} onChange={e => setFontFamily(e.target.value)} style={{ flex: 1, fontSize: '0.75rem' }}>
+                                            <select value={fontFamily} onChange={e => setFontFamily(e.target.value)} title="Font" style={{ flex: 1, fontSize: '0.75rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
                                                 <option value="Arial">Arial</option>
                                                 <option value="Helvetica">Helvetica</option>
                                                 <option value="Georgia">Georgia</option>
@@ -226,7 +226,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                                                 <option value="Courier New">Courier New</option>
                                                 <option value="Verdana">Verdana</option>
                                             </select>
-                                            <input type="number" value={fontSize} onChange={e => setFontSize(parseInt(e.target.value) || 120)} min={40} max={200} style={{ width: '60px', fontSize: '0.75rem' }} />
+                                            <input type="number" value={fontSize} onChange={e => setFontSize(parseInt(e.target.value) || 120)} min={40} max={200} title="Font size" style={{ width: '60px', fontSize: '0.75rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }} />
                                         </div>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                                             <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -282,14 +282,14 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                                                 <button onClick={() => removeClicker(c.id)} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '0.8rem' }}>✕</button>
                                             </div>
                                             <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
-                                                <select value={c.size} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, size: e.target.value } : x))} style={{ fontSize: '0.7rem' }}>
+                                                <select value={c.size} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, size: e.target.value } : x))} title="Key size" style={{ flex: 1, fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }}>
                                                     <option value="1u">1u</option>
                                                     <option value="2u">2u</option>
                                                     <option value="space">space</option>
                                                 </select>
-                                                <input type="number" value={c.x} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, x: parseFloat(e.target.value) || 0 } : x))} placeholder="X" style={{ width: '50px', fontSize: '0.7rem' }} />
-                                                <input type="number" value={c.y} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, y: parseFloat(e.target.value) || 0 } : x))} placeholder="Y" style={{ width: '50px', fontSize: '0.7rem' }} />
-                                                <select value={c.rotation} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, rotation: parseInt(e.target.value) } : x))} style={{ fontSize: '0.7rem' }}>
+                                                <input type="number" value={c.x} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, x: parseFloat(e.target.value) || 0 } : x))} title="Position X (mm)" placeholder="X" style={{ width: '52px', fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }} />
+                                                <input type="number" value={c.y} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, y: parseFloat(e.target.value) || 0 } : x))} title="Position Y (mm)" placeholder="Y" style={{ width: '52px', fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }} />
+                                                <select value={c.rotation} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, rotation: parseInt(e.target.value) } : x))} title="Rotation" style={{ fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }}>
                                                     <option value={0}>0°</option>
                                                     <option value={90}>90°</option>
                                                     <option value={180}>180°</option>
@@ -357,8 +357,8 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
 
                         <div style={{ marginTop: 'auto' }}>
                             <div style={{
-                                background: 'linear-gradient(135deg, rgba(255,120,0,0.08), transparent)',
-                                border: '1px solid rgba(255,120,0,0.2)',
+                                background: 'linear-gradient(135deg, rgba(158,119,237,0.08), transparent)',
+                                border: '1px solid rgba(158,119,237,0.2)',
                                 borderRadius: 'var(--radius)',
                                 padding: '0.75rem',
                                 fontSize: '0.73rem',
