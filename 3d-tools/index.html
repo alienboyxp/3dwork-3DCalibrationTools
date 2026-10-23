@@ -496,9 +496,9 @@
                     <div className="panel-header"><span className="panel-title">ADJUSTMENTS</span></div>
                     <div className="panel-body">
                         <div className="section-label">IMAGE FILTER</div>
-                        <div className="control-group"><div className="control-label"><span>Brightness</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
-                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast}</span></div><input type="range" min="0" max="3" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
-                        <div className="control-group"><div className="control-label"><span>Gamma</span><span>{gamma}</span></div><input type="range" min="0.2" max="3" step="0.05" value={gamma} onChange={e => setGm(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Brightness</span><span>{bright.toFixed(2)}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast.toFixed(2)}</span></div><input type="range" min="0" max="3" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Gamma</span><span>{gamma.toFixed(2)}</span></div><input type="range" min="0.2" max="3" step="0.05" value={gamma} onChange={e => setGm(parseFloat(e.target.value))} /></div>
                         <div className="control-group"><div className="control-label"><span>Smoothing</span><span>{smooth}</span></div><input type="range" min="0" max="4" step="1" value={smooth} onChange={e => setSm(parseInt(e.target.value))} /></div>
                         <div className="toggle-row"><span className="toggle-label">Invert Heights</span><label className="toggle"><input type="checkbox" checked={inv} onChange={e => setInv(e.target.checked)} /><span className="toggle-slider"></span></label></div>
                         <div className="toggle-row"><span className="toggle-label">Mirror horizontally</span><label className="toggle"><input type="checkbox" checked={mirror} onChange={e => setMir(e.target.checked)} /><span className="toggle-slider"></span></label></div>
@@ -1131,8 +1131,8 @@
                         </p>
 
                         <div className="section-label">IMAGE FILTERS</div>
-                        <div className="control-group"><div className="control-label"><span>Exposure</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
-                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast}</span></div><input type="range" min="0" max="4" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Exposure</span><span>{bright.toFixed(2)}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast.toFixed(2)}</span></div><input type="range" min="0" max="4" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
                         <div className="thickness-grid">
                             <div className="thickness-item"><label>Black Point</label><input type="range" min="0" max="1" step="0.01" value={blackP} onChange={e => setBp(parseFloat(e.target.value))} /></div>
                             <div className="thickness-item"><label>White Point</label><input type="range" min="0" max="1" step="0.01" value={whiteP} onChange={e => setWp(parseFloat(e.target.value))} /></div>
