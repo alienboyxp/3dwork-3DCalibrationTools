@@ -28,6 +28,7 @@
     <script src="js/utils/hueForge.js?v=1.0"></script>
     <script src="js/utils/clickerGeometry.js?v=1.0"></script>
     <script src="js/utils/clickerLayout.js?v=1.0"></script>
+    <script src="js/utils/stlExporter.js?v=1.0"></script>
 
     <link rel="stylesheet" href="css/app.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -232,6 +233,11 @@
 
 <body>
     <div id="root"></div>
+
+    <!-- Clicker Factory (modular components, window globals; no conflicto con el app inline) -->
+    <script type="text/babel" src="js/components/Slider.jsx?v=1.0"></script>
+    <script type="text/babel" src="js/components/ClickerViewer.jsx?v=1.0"></script>
+    <script type="text/babel" src="js/components/ClickerTool.jsx?v=1.0"></script>
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useId, useCallback } = React;
@@ -1381,7 +1387,7 @@
                                 <li><b>Vista por capas</b> — Con <b>LAYERS 3D</b> ves la pila real y puedes mover el <b>CUT</b> para ver el interior y las bandas de filamento.</li>
                                 <li><b>Mezcla Beer-Lambert</b> — Cada capa transmite el 10 % de la luz por cada TD de profundidad; el color final es la composición de todas las capas por debajo.</li>
                             </ol>
-                            <div style={{ marginTop: 20, padding: 10, borderRadius: 8, background: 'rgba(255,120,0,0.05)', border: '1px solid var(--border-accent)' }}>
+                            <div style={{ marginTop: 20, padding: 10, borderRadius: 8, background: 'rgba(158,119,237,0.05)', border: '1px solid var(--border-accent)' }}>
                                 <p style={{ color: 'var(--accent)', fontWeight: 700, marginBottom: 5 }}>Pro Tip:</p>
                                 Mide tu TD con la carta de CALIBRATE: con el valor real el apilado automático reparte la altura como toca y los colores salen justos.
                             </div>
@@ -1403,6 +1409,7 @@
                     const hash = window.location.hash;
                     if (hash === '#litho') setV('litho');
                     else if (hash === '#hue') setV('hue');
+                    else if (hash === '#clicker') setV('clicker');
                     else if (hash === '' || hash === '#home') setV('home');
                 };
                 handleHash();
@@ -1414,7 +1421,7 @@
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [v]);
 
             const setView = (view) => {
-                const hash = view === 'home' ? '#home' : (view === 'litho' ? '#litho' : '#hue');
+                const hash = view === 'home' ? '#home' : (view === 'litho' ? '#litho' : (view === 'clicker' ? '#clicker' : '#hue'));
                 window.location.hash = hash;
                 setV(view);
             };
@@ -1445,6 +1452,7 @@
                                 <ul className="dropdown-menu">
                                     <li><a href="#litho" onClick={() => setView('litho')}>Lithophane Creator</a></li>
                                     <li><a href="#hue" onClick={() => setView('hue')}>HueForge Creator</a></li>
+                                    <li><a href="#clicker" onClick={() => setView('clicker')}>Clicker Factory</a></li>
                                 </ul>
                             </li>
                             <li><a href="../index.html#price">3D Price Calculator</a></li>
@@ -1492,9 +1500,24 @@
                                 </ul>
                                 <button className="tool-cta blue">Open Tool <i data-lucide="chevron-right"></i></button>
                             </div>
+
+                            <div className="tool-entry-card clicker" onClick={() => setView('clicker')}>
+                                <div className="tool-badge teal">MX Clickers</div>
+                                <div className="tool-entry-icon teal">⌨️</div>
+                                <div className="tool-entry-info">
+                                    <h2>Clicker Factory</h2>
+                                    <p>Turn any image or text into a printable 3D clicker with a real mechanical MX switch. Single or multi-clicker plates with collision-aware auto-placement.</p>
+                                </div>
+                                <ul className="tool-feature-list">
+                                    <li>Image or Text Input</li>
+                                    <li>Multi-Clicker Plates</li>
+                                    <li>Keychain Loop Option</li>
+                                </ul>
+                                <button className="tool-cta teal">Open Tool <i data-lucide="chevron-right"></i></button>
+                            </div>
                         </div>
                     </div>
-                ) : v === 'litho' ? <LithophaneTool /> : <HueForgeTool />}</div>
+                ) : v === 'litho' ? <LithophaneTool /> : v === 'clicker' ? (window.ClickerTool ? <window.ClickerTool /> : <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading Clicker Factory…</div>) : <HueForgeTool />}</div>
                 <footer style={{ padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
                     &copy; 2024 3Dwork.io – HueForge logic based on the excellent open-source <a href="https://github.com/vycdev/Kromacut" target="_blank" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Kromacut</a> project.
                 </footer>
