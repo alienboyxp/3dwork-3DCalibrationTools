@@ -1,6 +1,8 @@
 // =====================================================
 // ClickerViewer.jsx
 // Manages the Three.js scene for clicker preview.
+// Uses the shared Canvas3D wrapper (orbit controls, zoom,
+// resize observer) like the lithophane/HueForge tools.
 // Supports single and multi-clicker modes.
 // =====================================================
 
@@ -14,12 +16,14 @@ window.ClickerViewer = function ClickerViewer({
 }) {
     const sceneRef = React.useRef(null);
     const meshRef = React.useRef(null);
+    const apiRef = React.useRef(null);
     const [processing, setProcessing] = React.useState(false);
 
     const gridW = 60, gridH = 60;
 
     React.useEffect(() => {
         if (!sceneRef.current) return;
+        if (!multi && !pixels) return;
 
         setProcessing(true);
         const tid = setTimeout(() => {
@@ -49,7 +53,6 @@ window.ClickerViewer = function ClickerViewer({
                     geo.setAttribute('position', new THREE.BufferAttribute(result.positions, 3));
                     geo.computeVertexNormals();
                 } else {
-                    if (!pixels) { setProcessing(false); return; }
                     const result = window.ClickerGeometry.buildClicker(
                         pixels, imgW, imgH,
                         { size: size || '1u', carveDepth: carveDepth || 1.2, brightness: brightness || 0.5, contrast: contrast || 1.0, invert: invert || false, gridW, gridH, keychain: keychain || false }
@@ -72,12 +75,19 @@ window.ClickerViewer = function ClickerViewer({
                 scene.add(mesh);
                 meshRef.current = mesh;
 
+                // Centrar el modelo en el origen (la cámara orbita alrededor de 0,0,0)
                 geo.computeBoundingBox();
                 const box = geo.boundingBox;
                 const center = new THREE.Vector3();
                 box.getCenter(center);
                 mesh.position.sub(center);
-                mesh.position.y = 0;
+
+                // Auto-encuadre: el radio de cámara sigue el tamaño del modelo
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                if (apiRef.current && apiRef.current.fit) {
+                    apiRef.current.fit(Math.max(size.x, size.y, size.z));
+                }
 
                 setProcessing(false);
                 if (onGeometryReady) onGeometryReady(geo);
@@ -89,61 +99,27 @@ window.ClickerViewer = function ClickerViewer({
         return () => clearTimeout(tid);
     }, [pixels, imgW, imgH, size, carveDepth, brightness, contrast, invert, keychain, multi, clickers, baseW, baseH, baseThick]);
 
-    // Scene setup
-    React.useEffect(() => {
-        const container = sceneRef.current?.parentElement;
-        if (!container) return;
-
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x080E1A);
-        sceneRef.current = scene;
-
-        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(0, 30, 40);
-        camera.lookAt(0, 0, 0);
-
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
-
-        const ambient = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambient);
-        const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-        dir.position.set(10, 20, 10);
-        scene.add(dir);
-
-        const grid = new THREE.GridHelper(200, 40, 0x333333, 0x222222);
-        scene.add(grid);
-
-        const animate = () => {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        };
-        animate();
-
-        const handleResize = () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        };
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            container.removeChild(renderer.domElement);
-            renderer.dispose();
-        };
-    }, []);
+    const info = multi
+        ? `Plate: ${baseW || 80} × ${baseH || 80} mm — ${(clickers || []).length} clicker(s)`
+        : (pixels ? `Key: ${size || '1u'} — carved ${(carveDepth || 1.2).toFixed(1)} mm` : 'Waiting for image or text…');
 
     return (
-        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-            <div ref={sceneRef} style={{ width: '100%', height: '100%' }} />
+        <window.Canvas3D
+            onMount={o => { sceneRef.current = o.scene; apiRef.current = o; }}
+            initialView={{ theta: 30, phi: 65, radius: 90 }}
+            hint="Drag to rotate • Scroll to zoom"
+            info={info}
+        >
             {processing && (
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#fff' }}>
-                    Processing...
+                <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(15,23,42,0.85)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px', fontSize: 10, color: '#94A3B8' }}>
+                    Building…
                 </div>
             )}
-        </div>
+            <div className="view-btns">
+                <button className="v-btn" onClick={() => apiRef.current && apiRef.current.reset()}>Reset</button>
+                <button className="v-btn" onClick={() => apiRef.current && apiRef.current.set(0, 10)}>Top</button>
+                <button className="v-btn" onClick={() => apiRef.current && apiRef.current.set(0, 85)}>Front</button>
+            </div>
+        </window.Canvas3D>
     );
 };

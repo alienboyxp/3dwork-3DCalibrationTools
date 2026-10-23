@@ -4,10 +4,10 @@
 // implemented via vanilla Three.js (no R3F needed for CDN)
 // =====================================================
 
-window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint }) {
+window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint, initialView }) {
     const canvasRef = React.useRef(null);
     const mountRef = React.useRef(null);
-    const stateRef = React.useRef({ renderer: null, scene: null, camera: null, animId: null });
+    const stateRef = React.useRef({ renderer: null, scene: null, camera: null, animId: null, theta: 0, phi: 70, radius: 120, targetTheta: 0, targetPhi: 70 });
 
     React.useEffect(() => {
         const mount = mountRef.current;
@@ -15,6 +15,14 @@ window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint }
 
         const W = mount.clientWidth || 600;
         const H = mount.clientHeight || 400;
+
+        // Vista inicial (opcional)
+        const iv = initialView || {};
+        stateRef.current.theta = iv.theta ?? 0;
+        stateRef.current.phi = iv.phi ?? 70;
+        stateRef.current.radius = iv.radius ?? 120;
+        stateRef.current.targetTheta = stateRef.current.theta;
+        stateRef.current.targetPhi = stateRef.current.phi;
 
         // Renderer
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -52,19 +60,19 @@ window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint }
         scene.add(dirLight);
 
         // --- Orbit Controls (manual implementation) ---
+        // El estado vive en stateRef para que la API expuesta (reset/set)
+        // pueda modificarlo desde fuera.
         let isDragging = false;
         let prevX = 0, prevY = 0;
-        let theta = 0, phi = 70;
-        let radius = 120;
-        let targetTheta = 0, targetPhi = 70;
+        const st = stateRef.current;
 
         const updateCamera = () => {
-            const t = THREE.MathUtils.degToRad(targetTheta);
-            const p = THREE.MathUtils.degToRad(Math.max(5, Math.min(175, targetPhi)));
+            const t = THREE.MathUtils.degToRad(st.theta);
+            const p = THREE.MathUtils.degToRad(Math.max(5, Math.min(175, st.phi)));
             camera.position.set(
-                radius * Math.sin(p) * Math.sin(t),
-                radius * Math.cos(p),
-                radius * Math.sin(p) * Math.cos(t)
+                st.radius * Math.sin(p) * Math.sin(t),
+                st.radius * Math.cos(p),
+                st.radius * Math.sin(p) * Math.cos(t)
             );
             camera.lookAt(0, 0, 0);
         };
@@ -79,14 +87,14 @@ window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint }
         const onMove = (cx, cy) => {
             if (!isDragging) return;
             const dx = cx - prevX, dy = cy - prevY;
-            targetTheta -= dx * 0.5;
-            targetPhi -= dy * 0.5;
+            st.targetTheta -= dx * 0.5;
+            st.targetPhi -= dy * 0.5;
             prevX = cx; prevY = cy;
         };
         el.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
         el.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
         el.addEventListener('wheel', e => {
-            radius = Math.max(30, Math.min(300, radius + e.deltaY * 0.2));
+            st.radius = Math.max(10, Math.min(600, st.radius + e.deltaY * 0.2));
         });
 
         // Axes helper
@@ -103,21 +111,40 @@ window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint }
         });
         ro.observe(mount);
 
-        // Animate
+        // Animate (suavizado: theta/phi persiguen a targetTheta/targetPhi)
         const animate = () => {
-            stateRef.current.animId = requestAnimationFrame(animate);
-            theta += (targetTheta - theta) * 0.08;
-            phi += (targetPhi - phi) * 0.08;
+            st.animId = requestAnimationFrame(animate);
+            st.theta += (st.targetTheta - st.theta) * 0.08;
+            st.phi += (st.targetPhi - st.phi) * 0.08;
             updateCamera();
             renderer.render(scene, camera);
         };
         animate();
 
-        // Store refs
-        stateRef.current = { renderer, scene, camera, animId: stateRef.current.animId, ambientLight, dirLight };
+        // Store refs (merge: conserva el estado de órbita ya inicializado)
+        Object.assign(st, { renderer, scene, camera, ambientLight, dirLight });
 
-        // Expose to parent
-        if (onMount) onMount({ scene, camera, renderer });
+        // API para el componente padre: reset/set de la vista de cámara
+        const api = {
+            scene, camera, renderer,
+            reset: () => {
+                st.targetTheta = iv.theta ?? 0;
+                st.targetPhi = iv.phi ?? 70;
+                st.radius = iv.radius ?? 120;
+                st.theta = st.targetTheta; st.phi = st.targetPhi;
+                updateCamera();
+            },
+            set: (t, p) => {
+                st.targetTheta = t;
+                st.targetPhi = p;
+            },
+            // Ajusta el radio de cámara para encuadrar un modelo de tamaño dado
+            fit: (maxDim) => {
+                st.radius = Math.max(10, Math.min(600, maxDim * 2.2));
+                updateCamera();
+            },
+        };
+        if (onMount) onMount(api);
 
         return () => {
             cancelAnimationFrame(stateRef.current.animId);

@@ -200,7 +200,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #1E293B;
+            background: var(--bg-input);
             border: 1px solid var(--border);
             padding: 6px;
             border-radius: 6px;
@@ -236,6 +236,7 @@
 
     <!-- Clicker Factory (modular components, window globals; no conflicto con el app inline) -->
     <script type="text/babel" src="js/components/Slider.jsx?v=1.0"></script>
+    <script type="text/babel" src="js/components/Canvas3D.jsx?v=1.0"></script>
     <script type="text/babel" src="js/components/ClickerViewer.jsx?v=1.0"></script>
     <script type="text/babel" src="js/components/ClickerTool.jsx?v=1.0"></script>
 
@@ -439,7 +440,7 @@
                         </div>
                         <div style={{ marginTop: 10 }}>
                             <label style={{ fontSize: 10, color: '#94A3B8' }}>SCALING MODE</label>
-                            <select className="dim-input" style={{ marginTop: 4, background: '#1E293B', color: 'white' }} value={mode} onChange={e => setMode(e.target.value)}>
+                            <select className="dim-input" style={{ marginTop: 4, background: 'var(--bg-input)', color: 'white' }} value={mode} onChange={e => setMode(e.target.value)}>
                                 <option value="fit">Stretch to fit</option><option value="fill">Fill (Crop excess)</option>
                             </select>
                         </div>
@@ -482,7 +483,7 @@
                 <div className="canvas-center">
                     <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} initialView={{ theta: 32, phi: 72, radius: 250 }} hint="3D Preview" info={pix ? `Solid Block: ${W}x${H}mm` : "Waiting for image..."}>
                         <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
-                            <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? 'black' : '#94A3B8', padding: '6px 12px', borderRadius: 20 }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>
+                            <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? '#fff' : '#94A3B8', border: back ? '1px solid var(--accent)' : '1px solid var(--border)', padding: '6px 12px', borderRadius: 20, boxShadow: back ? '0 0 16px var(--accent-glow)' : 'none' }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>
                         </div>
                         <div className="view-btns">
                             <button className="v-btn" onClick={() => api.current.reset()}>Reset</button>
@@ -1140,7 +1141,7 @@
                         <div className="thickness-grid">
                             <div className="thickness-item" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                 <label>Nozzle (mm)</label>
-                                <select value={nozzle} onChange={e => setNozzle(parseFloat(e.target.value))} style={{ background: '#1E293B', color: 'white', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 6px', fontSize: 11 }}>
+                                <select value={nozzle} onChange={e => setNozzle(parseFloat(e.target.value))} style={{ background: 'var(--bg-input)', color: 'white', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 6px', fontSize: 11 }}>
                                     <option value="0.2">0.2</option>
                                     <option value="0.4">0.4</option>
                                     <option value="0.6">0.6</option>
@@ -1270,7 +1271,7 @@
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginTop: 16 }}>
                                 <button className="download-btn" style={{ background: 'rgba(59,130,246,0.1)', color: '#93C5FD', margin: 0, fontSize: 10, border: '1px solid rgba(59,130,246,0.3)' }} disabled={!imgUrl} onClick={exportGuide}>GUIDE</button>
                                 <button className="download-btn" style={{ background: 'rgba(168,85,247,0.12)', color: '#C4B5FD', margin: 0, fontSize: 10, border: '1px solid rgba(168,85,247,0.35)' }} disabled={!imgUrl || mode === 'flat'} onClick={exportGcode}>M600 GCODE</button>
-                                <button className="download-btn" style={{ background: 'var(--accent)', color: 'black', margin: 0, fontSize: 10 }} disabled={!imgUrl} onClick={export3MF}>PROJECT 3MF</button>
+                                <button className="download-btn" style={{ background: 'var(--accent)', color: '#fff', margin: 0, fontSize: 10 }} disabled={!imgUrl} onClick={export3MF}>PROJECT 3MF</button>
                             </div>
                             <p style={{ fontSize: 9, color: '#64748B', marginTop: 6, lineHeight: 1.5 }}>
                                 {mode === 'flat'
@@ -1357,7 +1358,7 @@
                                 value={libFilter}
                                 onChange={e => setLibFilter(e.target.value)}
                                 className="dim-input"
-                                style={{ width: '100%', marginBottom: 8, background: '#1E293B', color: 'white', border: '1px solid var(--border)' }}
+                                style={{ width: '100%', marginBottom: 8, background: 'var(--bg-input)', color: 'white', border: '1px solid var(--border)' }}
                             />
                             {library.length === 0 && <p style={{ fontSize: 10, color: '#64748B' }}>No se ha podido cargar la biblioteca.</p>}
                             <div className="filament-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, maxHeight: '58vh', overflowY: 'auto' }}>
