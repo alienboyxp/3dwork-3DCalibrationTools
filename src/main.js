@@ -14,6 +14,7 @@ const TOOL_TITLES = {
         loganalyzer: 'Klipper Log Analyzer | 3Dwork',
         price:       '3D Printing Price Calculator | 3Dwork',
         filaments:   '3D Filament Database | 3Dwork',
+        resins:      '3D Resin Database | 3Dwork',
         comparator:  '3D Printer Comparator | 3Dwork',
     },
     es: {
@@ -28,6 +29,7 @@ const TOOL_TITLES = {
         loganalyzer: 'Analizador Logs Klipper | 3Dwork',
         price:       'Calculadora Precio Impresión 3D | 3Dwork',
         filaments:   'Base de Datos Filamentos 3D | 3Dwork',
+        resins:      'Base de Datos Resinas 3D | 3Dwork',
         comparator:  'Comparador Impresoras 3D | 3Dwork',
     }
 };
@@ -168,6 +170,9 @@ function updateUILabels() {
     const navFilaments = document.getElementById('nav-filaments');
     if (navFilaments) navFilaments.textContent = t.filamentsTitle || (window.currentLang === 'es' ? 'Filamentos' : 'Filaments');
 
+    const navResins = document.getElementById('nav-resins');
+    if (navResins) navResins.textContent = (window.currentLang === 'es' ? 'Resinas' : 'Resins');
+
     const footerText = document.getElementById('footer-contact-text');
     if (footerText) footerText.innerHTML = t.footerContact;
 
@@ -238,6 +243,9 @@ function renderView() {
         // Render filamentComparator directly instead of iframe (fixes position:fixed floating bar)
         content.style.maxWidth = '100%';
         window.renderFilamentComparator(content, t);
+    } else if (currentView === 'resins' && window.renderResinComparator) {
+        content.style.maxWidth = '100%';
+        window.renderResinComparator(content, t);
     } else {
         // Fallback to home
         window.renderHome(content, t);
