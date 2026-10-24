@@ -219,6 +219,77 @@ console.log('\n── Reglas de la revisión CODeRUS/competencia ──');
     check('print_sessions NO dispara sin jobs', !finding(ps0, 'print_sessions'));
 }
 
+console.log('\n── Bed mesh + historial de impresiones + termistor (ideas de Klippylyzer) ──');
+{
+    // parseBedMeshProfiles: formato del config dump del klippy.log (sin #*#)
+    const cfg = [
+        '[bed_mesh]',
+        'speed = 50',
+        '',
+        '[bed_mesh default]',
+        'version = 1',
+        'points = ',
+        '\t0.400, 0.300, 0.200',
+        '\t0.100, 0.000, -0.100',
+        'x_count = 3',
+        'y_count = 2',
+        'algo = lagrange',
+        'min_x = 20.0',
+        'max_x = 200.0',
+        'min_y = 20.0',
+        'max_y = 190.0',
+        ''
+    ].join('\n');
+    const profiles = LD.parseBedMeshProfiles(cfg);
+    check('parseBedMeshProfiles extrae el perfil', profiles.length === 1);
+    check('  nombre del perfil (bed_mesh default)', profiles[0] && profiles[0].name === 'bed_mesh default');
+    check('  matriz 3×2', profiles[0] && profiles[0].points.length === 2 && profiles[0].points[0].length === 3);
+    check('  límites de sondado', profiles[0] && profiles[0].minX === 20 && profiles[0].maxX === 200 && profiles[0].minY === 20 && profiles[0].maxY === 190);
+    const none = LD.parseBedMeshProfiles('[extruder]\nrotation_distance = 40\n');
+    check('sin bed_mesh no devuelve perfiles', none.length === 0);
+    // la sección [bed_mesh] (config, sin puntos) no cuenta como perfil
+    const onlyCfg = LD.parseBedMeshProfiles('[bed_mesh]\nspeed = 50\n');
+    check('[bed_mesh] sin puntos no es perfil', onlyCfg.length === 0);
+
+    // parsePrintJobs: ciclo de vida de virtual_sdcard
+    const logJobs = [
+        'File opened: /home/pi/gcodes/benchy.gcode File size: 12345',
+        'Starting SD card print',
+        'Finished SD card print',
+        'File opened: /home/pi/gcodes/cube.gcode File size: 999',
+        'Starting SD card print',
+        'Exiting SD card',
+        ''
+    ].join('\n');
+    const jobs = LD.parsePrintJobs(logJobs);
+    check('parsePrintJobs extrae 2 jobs', jobs.length === 2, JSON.stringify(jobs));
+    check('  job 1: benchy terminada', jobs[0] && jobs[0].file === 'benchy.gcode' && jobs[0].outcome === 'finished');
+    check('  job 2: cube cancelada', jobs[1] && jobs[1].file === 'cube.gcode' && jobs[1].outcome === 'aborted');
+    const noJobs = LD.parsePrintJobs('Starting Klippy...\nStats 1.0: ok\n');
+    check('sin jobs devuelve vacío', noJobs.length === 0);
+
+    // thermistor_drop: caída súbita con target caliente
+    const statsBad = [
+        'Stats 10.0: extruder: target=210 temp=209.5 pwm=0.400 heater_bed: target=60 temp=59.8 pwm=0.300',
+        'Stats 15.0: extruder: target=210 temp=208.9 pwm=0.400 heater_bed: target=60 temp=59.7 pwm=0.300',
+        'Stats 20.0: extruder: target=210 temp=152.0 pwm=1.000 heater_bed: target=60 temp=59.7 pwm=0.300',
+        ''
+    ].join('\n');
+    const td = LD.analyze({ klippy: statsBad });
+    const f = finding(td, 'thermistor_drop');
+    check('thermistor_drop dispara con caída de 57°C', !!f);
+    check('  evidencia con hotend y valores', f && /hotend/.test(f.evidence) && /208\.9→152/.test(f.evidence), f && f.evidence);
+    // cooldown normal (target baja antes): NO dispara
+    const statsCool = [
+        'Stats 10.0: extruder: target=210 temp=209.5 pwm=0.400',
+        'Stats 15.0: extruder: target=0 temp=209.0 pwm=0.000',
+        'Stats 20.0: extruder: target=0 temp=150.0 pwm=0.000',
+        ''
+    ].join('\n');
+    const tc = LD.analyze({ klippy: statsCool });
+    check('cooldown normal NO dispara', !finding(tc, 'thermistor_drop'));
+}
+
 console.log('\n── klippy_mcu_mismatch (regla preexistente arreglada) ──');
 {
     // versiones iguales a nivel de commit → no dispara (el -dirty es del árbol)

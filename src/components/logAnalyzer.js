@@ -147,6 +147,9 @@ window.renderLogAnalyzer = function (container, t) {
                                 <div id="error-list" style="font-family: monospace; font-size: 0.8rem; line-height: 1.5;"></div>
                                 <!-- DIAGNÓSTICO: veredicto + nota + fixes (3Dwork) -->
                                 <div id="log-diagnosis" style="margin-top: 1rem;"></div>
+                                <!-- BED MESH del log (visualizador) + historial de impresiones -->
+                                <div id="log-bedmesh" style="margin-top: 1rem;"></div>
+                                <div id="log-printhistory" style="margin-top: 1rem;"></div>
                             </div>
                         </div>
 
@@ -406,6 +409,74 @@ window.renderLogAnalyzer = function (container, t) {
         return String(s == null ? '' : s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;')
             .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── BED MESH del log + historial de impresiones (ideas de Klippylyzer/CODeRUS) ──
+    function renderLogExtras() {
+        const LD = window.LogDiagnosis;
+        const bmBox = document.getElementById('log-bedmesh');
+        const phBox = document.getElementById('log-printhistory');
+        if (!LD || !bmBox || !phBox) return;
+
+        // Bed mesh: perfiles guardados en el config del log
+        const cfgText = (document.getElementById('config-view') || {}).textContent || '';
+        const profiles = LD.parseBedMeshProfiles(cfgText);
+        if (profiles.length) {
+            let html = '<div style="font-size:0.78rem; font-weight:700; margin-bottom:0.5rem; color:#38bdf8;">🟦 Bed mesh en el log (' + profiles.length + ' perfil' + (profiles.length > 1 ? 'es' : '') + ')</div>';
+            profiles.slice(0, 4).forEach((p, idx) => {
+                const flat = p.points.flat();
+                if (!flat.length) return;
+                const max = Math.max(...flat), min = Math.min(...flat);
+                const avg = flat.reduce((a, b) => a + b, 0) / flat.length;
+                const range = max - min;
+                const color = range <= 0.05 ? '#22c55e' : (range <= 0.15 ? '#f59e0b' : '#f43f5e');
+                const verdict = range <= 0.05 ? 'OK' : (range <= 0.15 ? 'aceptable' : 'desviada');
+                html += '<div style="margin-bottom:0.9rem;">' +
+                    '<div style="font-family:monospace; font-size:0.7rem; color:var(--text-muted); margin-bottom:0.25rem;">[' + escDiag(p.name) + '] ' + p.xCount + '×' + p.yCount + ' · sondado ' + escDiag(p.minX) + '–' + escDiag(p.maxX) + ' × ' + escDiag(p.minY) + '–' + escDiag(p.maxY) + ' mm</div>' +
+                    '<canvas id="log-mesh-canvas-' + idx + '" width="' + Math.max(160, p.xCount * 34) + '" height="' + Math.max(120, p.yCount * 34) + '" style="border-radius:8px; border:1px solid var(--glass-border); max-width:100%;"></canvas>' +
+                    '<div style="font-size:0.72rem; margin-top:0.3rem; font-family:monospace;">' +
+                    'Δ <b style="color:' + color + ';">' + range.toFixed(3) + ' mm (' + verdict + ')</b> · máx ' + max.toFixed(3) + ' · mín ' + min.toFixed(3) + ' · media ' + avg.toFixed(3) +
+                    '</div></div>';
+            });
+            bmBox.innerHTML = html;
+            // dibujar cada canvas: mapa de calor por teselas (como la herramienta de malla)
+            profiles.slice(0, 4).forEach((p, idx) => {
+                const cv = document.getElementById('log-mesh-canvas-' + idx);
+                if (!cv) return;
+                const ctx = cv.getContext('2d');
+                const flat = p.points.flat();
+                const max = Math.max(...flat), min = Math.min(...flat);
+                const span = (max - min) || 1;
+                const rows = [...p.points].reverse(); // fila 0 abajo en el dibujo
+                const tw = cv.width / p.xCount, th = cv.height / p.yCount;
+                for (let r = 0; r < rows.length; r++) {
+                    for (let c = 0; c < rows[r].length; c++) {
+                        const z = rows[r][c];
+                        const n = (z - min) / span; // 0..1
+                        const hue = 240 - n * 240; // azul (valle) → rojo (pico)
+                        ctx.fillStyle = 'hsl(' + hue + ', 75%, ' + (45 - Math.abs(n - 0.5) * 18) + '%)';
+                        ctx.fillRect(Math.floor(c * tw), Math.floor(r * th), Math.ceil(tw), Math.ceil(th));
+                    }
+                }
+            });
+        } else {
+            bmBox.innerHTML = '';
+        }
+
+        // Historial de impresiones (virtual_sdcard)
+        const jobs = LD.parsePrintJobs(currentLogData.klippy);
+        if (jobs.length) {
+            const icon = { finished: '✅', aborted: '🟠', unknown: '⚪' };
+            const label = { finished: 'terminada', aborted: 'cancelada', unknown: 'sin final en el log' };
+            let html = '<div style="font-size:0.78rem; font-weight:700; margin-bottom:0.4rem; color:#38bdf8;">🖨️ Impresiones en el log (' + jobs.length + ')</div>';
+            jobs.slice(-12).reverse().forEach(j => {
+                html += '<div style="font-size:0.74rem; color:#cbd5e1; font-family:monospace;">' + icon[j.outcome] + ' ' + escDiag(j.file) + ' <span style="color:var(--text-muted);">(' + label[j.outcome] + ')</span></div>';
+            });
+            if (jobs.length > 12) html += '<div style="font-size:0.68rem; color:var(--text-muted);">…y ' + (jobs.length - 12) + ' más</div>';
+            phBox.innerHTML = html;
+        } else {
+            phBox.innerHTML = '';
+        }
     }
 
     function renderLogDiagnosis(diag) {
@@ -709,6 +780,9 @@ window.renderLogAnalyzer = function (container, t) {
 
         // 5. Config Extraction
         extractConfig(currentLogData.klippy);
+
+        // Bed mesh del log + historial de impresiones
+        try { renderLogExtras(); } catch (e) { console.error('extras', e); }
 
         // Diagnóstico determinista (veredicto + nota con rúbrica + fixes)
         try {

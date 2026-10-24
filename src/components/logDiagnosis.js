@@ -181,6 +181,36 @@
       guide: 'klipper'
     },
     {
+      // Cable de termistor roto/intermitente (la feature estrella de Klippylyzer):
+      // con el target caliente, la lectura se cae de golpe entre muestras de
+      // Stats — físicamente imposible con el calefactor encendido.
+      id: 'thermistor_drop', sev: 'warn',
+      detect: (log) => {
+        const s = sampleHeaterTemps(log);
+        const scan = function (arr, hot, drop, label) {
+          for (let i = 1; i < arr.length; i++) {
+            if (arr[i - 1].v >= hot && arr[i].t >= hot && (arr[i - 1].v - arr[i].v) > drop) {
+              return label + ': ' + arr[i - 1].v.toFixed(1) + '→' +
+                arr[i].v.toFixed(1) + ' °C con target ' + arr[i].t.toFixed(0) +
+                ' °C entre dos muestras';
+            }
+          }
+          return null;
+        };
+        return scan(s.extruder, 150, 40, 'hotend') ||
+               scan(s.bed, 40, 20, 'cama') || null;
+      },
+      title: 'El termistor se cae de golpe: posible cable roto',
+      why: 'Con el calefactor encendido, un descenso instantáneo de decenas de ' +
+        'grados no es enfriamiento: es un termistor con el cable pelado o el ' +
+        'conector flojo. Si pasa a mitad de impresión, klipper corta con «Thermal ' +
+        'Runaway» o imprime con temperaturas inventadas.',
+      fix: 'Revisa el cable del termistor en toda su ruta (cadenetas, cabezal, ' +
+        'conector en la placa) y vuelve a fijarlo lejos de los cables de motores. ' +
+        'Si el conector está sucio, limpieza con alcohol y reseat.',
+      guide: 'labs'
+    },
+    {
       // CODeRUS lo detecta como «Unexpected end of block»: si el log tiene
       // bytes NUL antes de un «Starting Klippy», el host murió de golpe
       // (apagón/reset) mientras escribía el log.
@@ -592,6 +622,93 @@
     return out;
   }
 
+  /** Muestras de temperatura de los Stats: {extruder:[{t,v}], bed:[{t,v}]}
+   *  (t=target, v=temp; orden-independiente dentro de la línea de Stats). */
+  function sampleHeaterTemps(log) {
+    const out = { extruder: [], bed: [] };
+    if (!log) return out;
+    const extRe = /(?:^|\s)extruder: target=(-?\d+(?:\.\d+)?) temp=(-?\d+(?:\.\d+)?)/;
+    const bedRe = /(?:^|\s)heater_bed: target=(-?\d+(?:\.\d+)?) temp=(-?\d+(?:\.\d+)?)/;
+    for (const line of log.split('\n')) {
+      if (line.indexOf('Stats ') !== 0) continue;
+      const me = line.match(extRe), mb = line.match(bedRe);
+      if (me) out.extruder.push({ t: parseFloat(me[1]), v: parseFloat(me[2]) });
+      if (mb) out.bed.push({ t: parseFloat(mb[1]), v: parseFloat(mb[2]) });
+    }
+    return out;
+  }
+
+  /** Perfiles de bed_mesh guardados en el config del log (o printer.cfg):
+   *  [{name:'bed_mesh default', points:[[z...]], minX, maxX, minY, maxY}] */
+  function parseBedMeshProfiles(cfgText) {
+    const raw = [];
+    if (!cfgText) return raw;
+    let cur = null, inPoints = false;
+    for (const rawLine of cfgText.split('\n')) {
+      const line = rawLine.trim();
+      const secM = line.match(/^(?:#\*#\s*)?\[(bed_mesh[^\]]*)\]$/i);
+      if (secM) {
+        if (cur && cur.points.length) raw.push(cur);
+        const name = secM[1].trim();
+        cur = /^bed_mesh\s+\S+/i.test(name) ? { name: name, points: [], kv: {} } : null;
+        inPoints = false;
+        continue;
+      }
+      if (!cur) continue;
+      const kv = line.match(/^(\w+)\s*=\s*(.*)$/);
+      if (kv) {
+        inPoints = kv[1] === 'points';
+        cur.kv[kv[1]] = kv[2].trim();
+      } else if (inPoints && /^[-0-9.,\s]+$/.test(line)) {
+        const row = line.split(',').map(function (s) { return parseFloat(s.trim()); })
+          .filter(function (v) { return !isNaN(v); });
+        if (row.length) cur.points.push(row);
+      }
+    }
+    if (cur && cur.points.length) raw.push(cur);
+    return raw.map(function (p) {
+      return {
+        name: p.name,
+        points: p.points,
+        minX: parseFloat(p.kv.min_x), maxX: parseFloat(p.kv.max_x),
+        minY: parseFloat(p.kv.min_y), maxY: parseFloat(p.kv.max_y),
+        xCount: parseInt(p.kv.x_count, 10) || p.points[0].length,
+        yCount: parseInt(p.kv.y_count, 10) || p.points.length
+      };
+    });
+  }
+
+  /** Historial de impresiones del klippy.log:
+   *  [{file, outcome}] — outcome: 'finished' | 'aborted' | 'unknown'.
+   *  Ciclo de vida de virtual_sdcard: File opened / Starting SD card print /
+   *  Finished SD card print / Exiting SD card. */
+  function parsePrintJobs(log) {
+    const jobs = [];
+    if (!log) return jobs;
+    let cur = null;
+    for (const line of log.split('\n')) {
+      let m = line.match(/File opened:\s*(\S+)/);
+      if (m) {
+        if (cur) jobs.push(cur);
+        cur = { file: m[1].split('/').pop(), outcome: 'unknown' };
+        continue;
+      }
+      if (/^Starting SD card print/.test(line)) {
+        if (!cur) cur = { file: '(SD)', outcome: 'unknown' };
+        continue;
+      }
+      if (/^Finished SD card print/.test(line)) {
+        if (cur) { cur.outcome = 'finished'; jobs.push(cur); cur = null; }
+        continue;
+      }
+      if (/^Exiting SD card/.test(line)) {
+        if (cur) { cur.outcome = 'aborted'; jobs.push(cur); cur = null; }
+      }
+    }
+    if (cur) jobs.push(cur);
+    return jobs;
+  }
+
   /** «Untracked files: klippy/extras/a.py, …, (+7 files)» →
    *  [{file:'klippy/extras/ldc1612_ng.py', base:'ldc1612_ng'}, …]
    *  base = nombre de fichero sin extensión (módulo). */
@@ -959,7 +1076,10 @@
 
   function round1(n) { return Math.round(n * 10) / 10; }
 
-  root.LogDiagnosis = { analyze: analyze, parseConfig: parseConfig, GUIDES: GUIDES };
+  root.LogDiagnosis = {
+    analyze: analyze, parseConfig: parseConfig, GUIDES: GUIDES,
+    parseBedMeshProfiles: parseBedMeshProfiles, parsePrintJobs: parsePrintJobs
+  };
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = root.LogDiagnosis;
   }
