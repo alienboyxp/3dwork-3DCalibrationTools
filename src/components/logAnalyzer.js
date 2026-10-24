@@ -392,7 +392,9 @@ window.renderLogAnalyzer = function (container, t) {
             if (content.includes('>>> lsb_release')) {
                 processLogData({ debug: content, klippy: "Log binary or text provided." });
             } else if (file.name.includes('moonraker')) {
-                processLogData({ moonraker: content, klippy: "Upload klippy.log for full analysis." });
+                // solo moonraker: se acumula (el usuario puede subir klippy.log
+                // después y el diagnóstico usa ambos)
+                processLogData({ moonraker: content });
             } else {
                 processLogData({ klippy: content });
             }
@@ -514,10 +516,10 @@ window.renderLogAnalyzer = function (container, t) {
         aiLoading.style.display = 'block';
         aiContent.style.display = 'none';
 
-        currentLogData.klippy = data.klippy || "";
-        currentLogData.moonraker = data.moonraker || "";
-        currentLogData.dmesg = data.rawDmesg || "";
-        currentLogData.debug = data.rawDebug || "";
+        currentLogData.klippy = data.klippy || currentLogData.klippy || "";
+        currentLogData.moonraker = data.moonraker || currentLogData.moonraker || "";
+        currentLogData.dmesg = data.rawDmesg || currentLogData.dmesg || "";
+        currentLogData.debug = data.rawDebug || currentLogData.debug || "";
 
         // 1. Initial Parsing
         const kversion = currentLogData.klippy.match(/v\d+\.\d+\.\d+-\d+-\w+/) || ["Unknown"];
@@ -713,7 +715,7 @@ window.renderLogAnalyzer = function (container, t) {
             if (window.LogDiagnosis) {
                 const cfgText = (document.getElementById('config-view') || {}).textContent || '';
                 renderLogDiagnosis(window.LogDiagnosis.analyze({
-                    klippy: currentLogData.klippy, config: cfgText
+                    klippy: currentLogData.klippy, moonraker: currentLogData.moonraker, config: cfgText
                 }));
             }
         } catch (diagErr) {

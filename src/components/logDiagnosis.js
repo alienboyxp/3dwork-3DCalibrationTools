@@ -41,15 +41,159 @@
     },
     {
       id: 'mcu_protocol', sev: 'warn',
-      detect: (log) => firstMatch(log, [
-        /MCU Protocol error/i,
-        /Protocol error/i,
-        /Unable to extract params/i,
-        /bytes_per_report/i
-      ]),
+      // si hay un «mcu 'x': Unknown command» la regla especializada
+      // unknown_command_mcu da el diagnóstico concreto: evitamos duplicar
+      detect: (log) => {
+        if (/mcu '[^']*': Unknown command/i.test(log)) return null;
+        return firstMatch(log, [
+          /MCU Protocol error/i,
+          /Protocol error/i,
+          /Unable to extract params/i,
+          /bytes_per_report/i
+        ]);
+      },
       title: 'El firmware del MCU no habla el mismo idioma que Klipper',
       why: 'Los parámetros que manda Klipper no coinciden con los que entiende el MCU: la impresión va a fallar o a imprimir con parámetros equivocados.',
       fix: 'Actualiza el firmware del MCU a la misma versión que la de Klipper (el propio log indica el comando).',
+      guide: 'klipper'
+    },
+    {
+      // Caso real Medusa (BIQU/BTT, Eddy-NG, CB2): el host se actualizó con
+      // módulos nuevos (ldc1612_ng) sin re-flashear el MCU del probe (RP2040)
+      // → «Unknown command» → Protocol error → klippy no arranca.
+      id: 'unknown_command_mcu', sev: 'risk', cap: HARD_CAP,
+      detect: (log) => {
+        const uc = parseUnknownCommand(log);
+        if (!uc) return null;
+        if (!/MCU Protocol error/i.test(log)) return null;
+        const host = parseHostVersion(log);
+        const outdated = parseShouldUpdate(log);
+        let ev = "mcu '" + uc.mcu + "' no reconoce el comando «" + uc.cmd + "»";
+        if (host) ev += ' — versión del host: ' + host;
+        if (outdated.length) {
+          ev += ' — MCUs por actualizar: ' +
+            outdated.map(function (u) { return u.mcu + ' (' + u.version + ')'; }).join(', ');
+        }
+        return ev;
+      },
+      title: 'El MCU no reconoce un comando: host y firmware desajustados',
+      why: 'Klipper (host) pide un comando que el firmware del MCU no tiene: ' +
+        'sucede al actualizar el código de Klipper sin re-compilar y re-flashear ' +
+        'el firmware del MCU. La impresora no puede arrancar mientras no coincidan.',
+      fix: 'Re-compila y flashea el firmware del MCU afectado con el código ' +
+        'de Klipper que está corriendo ahora mismo en el host (make flash / ' +
+        'make flash USB, o la herramienta de actualización de MCUs de tu máquina).',
+      guide: 'klipper'
+    },
+    {
+      // Sub-regla del caso «misma cadena de versión»: el host reporta
+      // v0.13.0-813-ga08fc79f-dirty y el MCU v0.13.0-813-ga08fc79f — parece
+      // «la misma versión», pero el comando desconocido viene de un módulo
+      // listado en «Untracked files:». git describe ignora los ficheros
+      // untracked → misma cadena ≠ mismo binario. Diagnóstico afirmativo.
+      id: 'host_dirty_untracked', sev: 'warn',
+      detect: (log) => {
+        const uc = parseUnknownCommand(log);
+        if (!uc) return null;
+        const host = parseHostVersion(log);
+        if (!host || !/-dirty$/.test(host)) return null;
+        const untracked = parseUntracked(log);
+        if (!untracked.length) return null;
+        // ¿El comando pertenece a un módulo untracked? (klippy/extras/<base>.py)
+        const module = untracked.find(u =>
+          uc.cmd === u.base || uc.cmd.indexOf(u.base + '_') === 0);
+        if (!module) return null;
+        return 'host ' + host + ' con «Untracked files» que incluyen ' +
+          module.file + ' → el comando «' + uc.cmd + '» es de ese módulo';
+      },
+      title: 'Misma cadena de versión, distinto binario: host actualizado sin flashear el MCU',
+      why: '«' + 'git describe' + '» ignora los ficheros sin trackear: el host y el MCU ' +
+        'pueden reportar la MISMA cadena de versión y aun así correr binarios ' +
+        'distintos. Aquí el host incorpora un módulo nuevo (untracked) que el ' +
+        'firmware del MCU nunca llegó a recibir porque no se re-flasheó.',
+      fix: 'Diagnóstico confirmado: re-flashea el firmware del MCU con el código ' +
+        'actual del host. La cadena de versión «igual» no te va a avisar: tras ' +
+        'cualquier actualización de Klipper que añada módulos, flashea SIEMPRE ' +
+        'los MCUs antes de arrancar.',
+      guide: 'klipper'
+    },
+    {
+      id: 'restart_loop', sev: 'warn',
+      detect: (log) => {
+        const starts = countMatches(log, /^Start printer at /gm);
+        if (starts < 2) return null;
+        const uc = parseUnknownCommand(log);
+        const errRe = uc
+          ? new RegExp(uc.mcu + "': Unknown command: " + uc.cmd, 'g')
+          : /MCU Protocol error/g;
+        const errs = countMatches(log, errRe);
+        return starts + ' arranques de klippy («Start printer at») y el error ' +
+          'fatal repetido ' + errs + ' veces → klippy está en bucle';
+      },
+      title: 'Klippy arranca y petar en bucle',
+      why: 'El mismo error fatal aparece en cada arranque: reiniciar no arregla ' +
+        'nada (el desajuste host↔MCU sigue ahí) y la impresora queda inutilizada.',
+      fix: 'Arregla el error de fondo (re-flashea el MCU) antes de volver a ' +
+        'arrancar; los reinicios solo repiten el fallo.',
+      guide: 'klipper'
+    },
+    {
+      id: 'cascade_errors', sev: 'info',
+      detect: (log) => {
+        // solo tiene sentido si hay un fallo principal previo
+        if (!/MCU Protocol error|Transition to shutdown state|MCU '.*' shutdown:/i.test(log)) return null;
+        const parts = [];
+        if (/gcode\.CommandError: MCU Protocol error/i.test(log)) parts.push('gcode rechazado en estado de error (CommandError)');
+        if (/pin_watch[^:]*: failed to set/i.test(log)) parts.push('pin_watch no pudo aplicar comandos');
+        if (/toolchanger sync failed/i.test(log)) parts.push('sincronización del toolchanger fallida');
+        if (!parts.length) return null;
+        return parts.join(' · ');
+      },
+      title: 'Errores en cascada: son CONSECUENCIA del fallo principal',
+      why: 'Cuando la impresora entra en estado de error, todos los comandos ' +
+        'gcode y los temporizadores de módulos (toolchanger, pin_watch, macros) ' +
+        'se rechazan y dejan su propio rastro de errores. No son causas ' +
+        'independientes: perseguirlos es perseguir humo.',
+      fix: 'Ignora estos errores secundarios: arregla el fallo principal ' +
+        '(desajuste host↔MCU) y toda la cascada desaparece.',
+      guide: 'klipper'
+    },
+    {
+      // KB: familia de sondas por inducción (eddy) — BTT Eddy NG / Cartographer
+      id: 'eddy_probe_kb', sev: 'info',
+      detect: (log) => {
+        const marks = [];
+        if (/ldc1612/i.test(log)) marks.push('ldc1612');
+        if (/probe_eddy_ng/i.test(log)) marks.push('probe_eddy_ng');
+        if (/PROBE_EDDY_NG_(TAP|STATUS)/i.test(log)) marks.push('PROBE_EDDY_NG_*');
+        if (/cartographer/i.test(log)) marks.push('cartographer');
+        if (!marks.length) return null;
+        return 'Señales de sonda inductiva eddy: ' + marks.join(', ');
+      },
+      title: 'Sonda tipo Eddy (BTT Eddy-NG / Cartographer): firmware del MCU del probe',
+      why: 'Las sondas eddy (BTT Eddy NG, Cartographer) usan un MCU propio ' +
+        '(normalmente RP2040) con el módulo ldc1612/probe_eddy_ng. Cualquier ' +
+        'actualización del host que toque ese módulo exige re-flashear el MCU ' +
+        'de la sonda o aparecerá «Unknown command» (ldc1612_ng_start_stop, ' +
+        'query_ldc1612_status, PROBE_EDDY_NG_STATUS…).',
+      fix: 'Re-flashea el MCU de la sonda eddy con el código actual de Klipper. ' +
+        'En las BIQU/BTT (Medusa, CB2) el flujo habitual es klipper-mcu-updater.',
+      guide: 'klipper'
+    },
+    {
+      // Fix guiado: klipper-mcu-updater presente (moonraker update_manager)
+      id: 'mcu_updater_available', sev: 'info',
+      detect: (log, cfg, ctx) => {
+        const hay = [log, (ctx && ctx.moonraker) || ''].join('\n');
+        if (!/klipper-mcu-updater/i.test(hay)) return null;
+        return 'update_manager con klipper-mcu-updater presente en el sistema';
+      },
+      title: 'Tienes klipper-mcu-updater: re-flashea el MCU con él',
+      why: 'La herramienta de actualización de MCUs ya está instalada: no ' +
+        'necesitas flashear a mano con make flash.',
+      fix: 'Ejecuta MCU_SCAN para localizar los MCUs y re-flashea el afectado ' +
+        'desde el updater (haz MCU_BACKUP antes si quieres copia de seguridad). ' +
+        'Después, RESTART de klippy y el «Unknown command» desaparece.',
       guide: 'klipper'
     },
     {
@@ -156,11 +300,16 @@
     },
     {
       id: 'python_error', sev: 'risk',
-      detect: (log) => firstMatch(log, [
-        /Python exception detected/i,
-        /Traceback \(most recent call last\)/i,
-        /Klippy exited/i
-      ]),
+      // si el traceback viene del «Unknown command» de un MCU, la regla
+      // especializada unknown_command_mcu lo explica mejor: no duplicar
+      detect: (log) => {
+        if (/mcu '[^']*': Unknown command/i.test(log)) return null;
+        return firstMatch(log, [
+          /Python exception detected/i,
+          /Traceback \(most recent call last\)/i,
+          /Klippy exited/i
+        ]);
+      },
       title: 'Klipper Petó con un error de Python',
       why: 'Un módulo mal configurado (macro, sensor, display) tumba Klipper: no imprime nada hasta que lo arregles.',
       fix: 'Mira el traceback del log para saber qué módulo falla; comenta temporalmente la línea problemática del printer.cfg.',
@@ -168,11 +317,16 @@
     },
     {
       id: 'invalid_command', sev: 'warn',
-      detect: (log) => firstMatch(log, [
-        /Invalid command format/i,
-        /Unknown command:? /i,
-        /Bad command format/i
-      ]),
+      // «Unknown command» de un MCU lo cubre unknown_command_mcu (con el
+      // diagnóstico de desajuste host↔firmware); aquí solo comandos de config
+      detect: (log) => {
+        if (/mcu '[^']*': Unknown command/i.test(log)) return null;
+        return firstMatch(log, [
+          /Invalid command format/i,
+          /Unknown command:? /i,
+          /Bad command format/i
+        ]);
+      },
       title: 'Un comando del config no es válido',
       why: 'Suele ser un salto de línea pegado en el config o un typo en el nombre de una opción.',
       fix: 'Revisa las líneas que el log marca como error: casi siempre es un salto de línea de más al copiar y pegar.',
@@ -197,11 +351,16 @@
       detect: (log) => {
         if (!/Last MCU build config/i.test(log)) return null;
         if (/Unable to open serial port|Unable to connect/i.test(log)) return null;
-        const klippyBuild = (log.match(/Klipper (?:version )?([\w.\-]+)/i) || [])[1];
-        const mcuBuild = (log.match(/Last MCU build config: ([^\n]*)/i) || [])[1];
+        // versión real del host («Git version: '…'» / «Your Klipper version is: …»)
+        // y de la última build del MCU («Last MCU build version: …»)
+        const klippyBuild = parseHostVersion(log) || '';
+        const mcuBuild = (log.match(/Last MCU build version: (\S+)/i) || [])[1] || '';
         if (!klippyBuild || !mcuBuild) return null;
-        if (mcuBuild.indexOf(klippyBuild) !== -1) return null;
-        return 'Klipper ' + klippyBuild + ' frente a MCU ' + mcuBuild.trim();
+        // compara a nivel de commit: -dirty solo describe el árbol de trabajo
+        // actual (la build del MCU salió de un checkout limpio)
+        const clean = function (v) { return v.replace(/-dirty$/, ''); };
+        if (clean(klippyBuild) === clean(mcuBuild)) return null;
+        return 'Klipper ' + klippyBuild + ' frente a última build del MCU ' + mcuBuild;
       },
       title: 'Klipper y el MCU no son de la misma compilación',
       why: 'Con versiones distintas, Klipper y el MCU pueden no entender los mismos comandos: aparece el «Protocol error» un rato después de arrancar.',
@@ -229,6 +388,72 @@
     let end = text.indexOf('\n', idx);
     if (end === -1) end = text.length;
     return text.slice(start, end);
+  }
+
+  // ── utilidades del desajuste host↔MCU (caso Medusa/Eddy-NG) ───────────────
+
+  function countMatches(text, re) {
+    const m = text.match(re);
+    return m ? m.length : 0;
+  }
+
+  /** mcu 'eddy': Unknown command: ldc1612_ng_start_stop → {mcu:'eddy', cmd:'…'} */
+  function parseUnknownCommand(log) {
+    const m = log.match(/mcu '([^']+)': Unknown command: ([^\s\n']+)/i);
+    return m ? { mcu: m[1], cmd: m[2] } : null;
+  }
+
+  /** Versión del host: «Git version: 'v0.13.0-813-ga08fc79f-dirty'» o
+   *  «Your Klipper version is: …» (la del bloque de error). */
+  function parseHostVersion(log) {
+    let m = log.match(/Git version: '([^']+)'/i);
+    if (m) return m[1];
+    m = log.match(/Your Klipper version is: (\S+)/i);
+    return m ? m[1] : null;
+  }
+
+  /** Bloque «MCU(s) which should be updated:» → [{mcu:'eddy', version:'v…'}]
+   *  (deduplicado: el bloque se repite en cada intento de arranque). */
+  function parseShouldUpdate(log) {
+    const out = [];
+    const seen = {};
+    const lines = log.split('\n');
+    let inBlock = false;
+    for (const line of lines) {
+      if (/^MCU\(s\) which should be updated:/i.test(line)) { inBlock = true; continue; }
+      if (inBlock) {
+        const m = line.match(/^(\S+): Current version (\S+)/i);
+        if (m) {
+          if (!seen[m[1]]) { seen[m[1]] = true; out.push({ mcu: m[1], version: m[2] }); }
+          continue;
+        }
+        if (/^Up-to-date MCU/i.test(line)) { inBlock = false; continue; }
+      }
+    }
+    return out;
+  }
+
+  /** «Untracked files: klippy/extras/a.py, …, (+7 files)» →
+   *  [{file:'klippy/extras/ldc1612_ng.py', base:'ldc1612_ng'}, …]
+   *  base = nombre de fichero sin extensión (módulo). */
+  function parseUntracked(log) {
+    const m = log.match(/Untracked files: ([^\n]+)/i);
+    if (!m) return [];
+    const out = [];
+    const seen = {};
+    for (const raw of m[1].split(',')) {
+      const file = raw.trim();
+      if (!file || /^\(\+\d+ files?\)/i.test(file)) continue;
+      const slash = file.lastIndexOf('/');
+      const name = slash === -1 ? file : file.slice(slash + 1);
+      const dot = name.lastIndexOf('.');
+      const base = dot === -1 ? name : name.slice(0, dot);
+      if (!base) continue;
+      // solo módulos de código que generan comandos de firmware
+      if (!/\.(py|c)$/i.test(name)) continue;
+      if (!seen[file]) { seen[file] = true; out.push({ file: file, base: base }); }
+    }
+    return out;
   }
 
   /** Config de Klipper por secciones: { 'extruder': {rotation_distance: '40'}, ... }
@@ -476,12 +701,13 @@
   function analyze(input) {
     const log = (input && input.klippy) || '';
     const cfg = parseConfig((input && input.config) || '');
+    const ctx = { moonraker: (input && input.moonraker) || '' };
     const findings = [];
     const undetermined = [];
 
     for (const rule of RULES) {
       let ev = null;
-      try { ev = rule.detect(log, cfg); } catch (e) { ev = null; }
+      try { ev = rule.detect(log, cfg, ctx); } catch (e) { ev = null; }
       if (!ev) continue;
       findings.push({
         id: rule.id, severity: rule.sev, cap: rule.cap || null,
