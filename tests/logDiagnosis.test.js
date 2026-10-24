@@ -160,6 +160,65 @@ console.log('\n── Log limpio ──');
     check('veredicto LISTO', diag.verdict === 'LISTO', diag.verdict);
 }
 
+console.log('\n── Reglas de la revisión CODeRUS/competencia ──');
+{
+    // power_loss: NUL bytes (el host murió escribiendo el log)
+    const pl = LD.analyze({ klippy: 'Starting Klippy...\nStats 1.0: mcu=0\n\u0000Starting Klippy...\n\u0000\n' });
+    const f = finding(pl, 'power_loss');
+    check('power_loss dispara con bytes NUL', !!f);
+    check('  cuenta los bloques NUL', f && /2 bloques/.test(f.evidence), f && f.evidence);
+
+    // unsafe_shutdowns: contador de moonraker
+    const us = LD.analyze({ klippy: 'ok', moonraker: 'moonraker\nUnsafe Shutdown Count: 3\n' });
+    const f2 = finding(us, 'unsafe_shutdowns');
+    check('unsafe_shutdowns dispara con N>0', !!f2);
+    check('  extrae el contador (3)', f2 && /: 3 /.test(f2.evidence), f2 && f2.evidence);
+    const us0 = LD.analyze({ klippy: 'ok', moonraker: 'Unsafe Shutdown Count: 0\n' });
+    check('unsafe_shutdowns NO dispara con 0', !finding(us0, 'unsafe_shutdowns'));
+
+    // usb_instability: errores de USB en dmesg
+    const dmesgBad = 'usb 1-1.3: new high-speed USB device\nusb 1-1.3: device descriptor read error\ncp210x converter now attached\nttyUSB0: I/O error\nusb 1-1.3: disabled by hub\n';
+    const usb = LD.analyze({ klippy: 'ok', dmesg: dmesgBad });
+    const f3 = finding(usb, 'usb_instability');
+    check('usb_instability dispara con dmesg con errores', !!f3);
+    check('  lista las señales (I/O error, disabled by hub)', f3 && /I\/O error/.test(f3.evidence) && /disabled by hub/.test(f3.evidence));
+    const usbOk = LD.analyze({ klippy: 'ok', dmesg: 'usb 1-1.3: new high-speed USB device\n' });
+    check('usb_instability NO dispara con dmesg limpio', !finding(usbOk, 'usb_instability'));
+
+    // link_retransmits: retransmisiones en Stats
+    const stats = 'Stats 10.0: mcu: bytes_write=123 bytes_retransmit=0\nStats 20.0: mcu: bytes_write=456 bytes_retransmit=64\nStats 30.0: mcu: bytes_write=789 bytes_retransmit=12\n';
+    const lr = LD.analyze({ klippy: stats });
+    const f4 = finding(lr, 'link_retransmits');
+    check('link_retransmits dispara con retransmit>0', !!f4);
+    check('  suma acumulado y pico', f4 && /acumulados: 76/.test(f4.evidence) && /pico 64/.test(f4.evidence), f4 && f4.evidence);
+    const lr0 = LD.analyze({ klippy: 'Stats 10.0: mcu: bytes_write=123 bytes_retransmit=0\n' });
+    check('link_retransmits NO dispara con 0', !finding(lr0, 'link_retransmits'));
+
+    // moonraker_errors: FileNotFoundError / ShellCommandError
+    const me = LD.analyze({ klippy: 'ok', moonraker: 'FileNotFoundError: /home/pi/notfound\nShellCommandError: failed\n' });
+    const f5 = finding(me, 'moonraker_errors');
+    check('moonraker_errors dispara', !!f5);
+    check('  cuenta 1 FileNotFoundError y 1 ShellCommandError', f5 && /1 FileNotFoundError/.test(f5.evidence) && /1 ShellCommandError/.test(f5.evidence));
+
+    // mcu_bus_pins: pines i2c de los MCUs (nuevo de CODeRUS feb-2026)
+    const pinsLog = "MCU 'eddy' config: ADC_MAX=4095 BUS_PINS_i2c0a=gpio0,gpio1 CLOCK_FREQ=12000000 MCU=rp2040\n";
+    const bp = LD.analyze({ klippy: pinsLog });
+    const f6 = finding(bp, 'mcu_bus_pins');
+    check('mcu_bus_pins dispara con BUS_PINS_i2c', !!f6);
+    check('  etiqueta SDA/SCL correctamente', f6 && /SDA=gpio0/.test(f6.evidence) && /SCL=gpio1/.test(f6.evidence), f6 && f6.evidence);
+    const bp0 = LD.analyze({ klippy: "MCU 'eddy' config: ADC_MAX=4095\n" });
+    check('mcu_bus_pins NO dispara sin i2c', !finding(bp0, 'mcu_bus_pins'));
+
+    // print_sessions: rotaciones de log e impresiones SD
+    const jobs = 'Log rollover at Thu Oct 22 18:00:00 2026\nStart printing job (some.gcode)\nLog rollover at Thu Oct 22 20:00:00 2026\n';
+    const ps = LD.analyze({ klippy: jobs });
+    const f7 = finding(ps, 'print_sessions');
+    check('print_sessions dispara con rollovers', !!f7);
+    check('  cuenta 2 rotaciones', f7 && /2 rotaciones/.test(f7.evidence), f7 && f7.evidence);
+    const ps0 = LD.analyze({ klippy: 'Starting Klippy...\n' });
+    check('print_sessions NO dispara sin jobs', !finding(ps0, 'print_sessions'));
+}
+
 console.log('\n── klippy_mcu_mismatch (regla preexistente arreglada) ──');
 {
     // versiones iguales a nivel de commit → no dispara (el -dirty es del árbol)
@@ -195,7 +254,9 @@ if (fs.existsSync(path.join(FIXTURE_DIR, 'klippy.log'))) {
     const klippy = fs.readFileSync(path.join(FIXTURE_DIR, 'klippy.log'), 'utf8');
     const moonraker = fs.readFileSync(path.join(FIXTURE_DIR, 'moonraker.log'), 'utf8');
     const cfgText = fs.readFileSync(path.join(FIXTURE_DIR, 'printer.cfg'), 'utf8');
-    const diag = LD.analyze({ klippy, moonraker, config: cfgText });
+    const dmesgPath = path.join(FIXTURE_DIR, 'dmesg.txt');
+    const dmesg = fs.existsSync(dmesgPath) ? fs.readFileSync(dmesgPath, 'utf8') : '';
+    const diag = LD.analyze({ klippy, moonraker, dmesg, config: cfgText });
 
     check('REAL: unknown_command_mcu dispara', !!finding(diag, 'unknown_command_mcu'));
     check('REAL: host_dirty_untracked dispara', !!finding(diag, 'host_dirty_untracked'));

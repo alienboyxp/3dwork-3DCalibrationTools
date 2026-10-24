@@ -181,6 +181,165 @@
       guide: 'klipper'
     },
     {
+      // CODeRUS lo detecta como «Unexpected end of block»: si el log tiene
+      // bytes NUL antes de un «Starting Klippy», el host murió de golpe
+      // (apagón/reset) mientras escribía el log.
+      id: 'power_loss', sev: 'warn',
+      detect: (log) => {
+        const nuls = countMatches(log, /\u0000+/g);
+        if (!nuls) return null;
+        const starts = countMatches(log, /^Starting Klippy/gm);
+        return 'bytes NUL en el log (' + nuls + ' bloques) con ' +
+          starts + ' arranques → el host se apagó de golpe al menos una vez';
+      },
+      title: 'El host se apagó sin orden (apagón o reset)',
+      why: 'El log se corta en seco con bytes vacíos: la Raspberry/SBC perdió ' +
+        'alimentación o se colgó. Un apagón a mitad de impresión deja la pieza ' +
+        'pegada a la cama y puede dañar la SD.',
+      fix: 'Revisa la alimentación (fuente del SBC, cable USB de datos, si el ' +
+        'SD card se corrompe) y añade un filtro/UPS si es habitual.',
+      guide: 'klipper'
+    },
+    {
+      // moonraker.log guarda «Unsafe Shutdown Count: N»: cuántas veces se
+      // cortó la corriente al sistema sin apagado limpio.
+      id: 'unsafe_shutdowns', sev: 'warn',
+      detect: (log, cfg, ctx) => {
+        const mr = (ctx && ctx.moonraker) || '';
+        const m = mr.match(/Unsafe Shutdown Count:?\s*(\d+)/i);
+        if (!m) return null;
+        const n = parseInt(m[1], 10);
+        if (!n) return null;
+        return 'Unsafe Shutdown Count: ' + n + ' (moonraker.log)';
+      },
+      title: 'El sistema lleva varios apagones sucios',
+      why: 'Moonraker cuenta las veces que la máquina perdió corriente sin ' +
+        'apagar bien: cada corte puede corromper la SD y corta impresiones.',
+      fix: 'Revisa la alimentación del SBC (fuente, conector, regulador). Si la ' +
+        'impresora comparte regleta con la calefacción, los picos de arranque ' +
+        'pueden tumbar el host.',
+      guide: 'klipper'
+    },
+    {
+      // dmesg con errores de USB: la causa nº1 de «MCU desconectado» a mitad
+      // de impresión. (Idea de CODeRUS: extrae las líneas rojas del dmesg.)
+      id: 'usb_instability', sev: 'risk',
+      detect: (log, cfg, ctx) => {
+        const dmesg = (ctx && ctx.dmesg) || '';
+        if (!dmesg) return null;
+        const marks = [];
+        if (/I\/O error/i.test(dmesg)) marks.push('I/O error');
+        if (/disabled by hub/i.test(dmesg)) marks.push('disabled by hub');
+        if (/cannot enable\b|cannot reset\b|annot enable/i.test(dmesg)) marks.push('cannot enable/reset');
+        if (/device descriptor (read )?error/i.test(dmesg)) marks.push('device descriptor error');
+        if (/device disconnected/i.test(dmesg)) marks.push('device disconnected');
+        if (!marks.length) return null;
+        return marks.join(' · ') + ' en dmesg';
+      },
+      title: 'El USB da errores: el MCU puede desconectarse solo',
+      why: 'El kernel ve fallos de USB (conexiones que se caen o no se ' +
+        'pueden habilitar): es la causa clásica de que la impresora se pare ' +
+        'a mitad de pieza con «Lost communication with MCU».',
+      fix: 'Cambia el cable USB por uno corto con ferritas y de datos (no de ' +
+        'carga), prueba otro puerto (USB2 directo a la placa, sin hub) y ' +
+        'aleja el cable de los motores y la cama caliente.',
+      guide: 'klipper'
+    },
+    {
+      // Retransmisiones en el bus serie/CAN: el link pierde paquetes.
+      // (sineos las añadió a sus gráficas; aquí van al diagnóstico.)
+      id: 'link_retransmits', sev: 'warn',
+      detect: (log) => {
+        const re = /bytes_retransmit=(\d+)/g;
+        let m, total = 0, max = 0;
+        while ((m = re.exec(log))) {
+          const v = parseInt(m[1], 10);
+          total += v;
+          if (v > max) max = v;
+        }
+        if (!total) return null;
+        return 'bytes_retransmit acumulados: ' + total + ' (pico ' + max + ' en una muestra)';
+      },
+      title: 'El enlace con el MCU retransmite paquetes',
+      why: 'Klipper reenvía datos que no llegaron bien: el cable (USB/CAN) ' +
+        'interfiere o es demasiado largo. En CAN suele ser el cable sin ' +
+        'par trenzado o sin terminador de 120 Ω.',
+      fix: 'Revisa el cableado USB/CAN (par trenzado, terminadores, ferritas, ' +
+        'alejado de motores y calefactores) y la calidad de la fuente.',
+      guide: 'klipper'
+    },
+    {
+      // moonraker con ficheros que faltan o comandos de shell fallidos
+      // (extracción nueva de CODeRUS, feb-2026)
+      id: 'moonraker_errors', sev: 'info',
+      detect: (log, cfg, ctx) => {
+        const mr = (ctx && ctx.moonraker) || '';
+        if (!mr) return null;
+        const nf = countMatches(mr, /FileNotFoundError:/g);
+        const se = countMatches(mr, /ShellCommandError:/g);
+        if (!nf && !se) return null;
+        const parts = [];
+        if (nf) parts.push(nf + ' FileNotFoundError');
+        if (se) parts.push(se + ' ShellCommandError');
+        return parts.join(' · ') + ' en moonraker.log';
+      },
+      title: 'Moonraker reporta ficheros o comandos que fallan',
+      why: 'Moonraker no encuentra ficheros o sus comandos de sistema fallan: ' +
+        'suele ser una instalación a medias (extensiones sin instalar, ' +
+        'rutas movidas) más que un problema de impresión.',
+      fix: 'Revisa las líneas en moonraker.log: reinstala la extensión o ' +
+        'corrige la ruta que falla (no suele afectar a la impresión).',
+      guide: 'klipper'
+    },
+    {
+      // Pines del MCU expuestos en el log (CODeRUS los parsea para ver
+      // dónde conectar sondas i2c/spi). Solo si hay pines i2c (útil).
+      id: 'mcu_bus_pins', sev: 'info',
+      detect: (log) => {
+        const out = [];
+        const re = /MCU '([^']+)'.*?BUS_PINS_(i2c\d+[a-z])=([\w,]+)/gi;
+        let m;
+        const seen = {};
+        while ((m = re.exec(log))) {
+          const key = m[1] + ':' + m[2];
+          if (seen[key]) continue;
+          seen[key] = true;
+          const pins = m[3].split(',');
+          const labels = ['SDA', 'SCL'];
+          out.push(m[1] + ' ' + m[2] + ' (' + pins.map(function (p, i) {
+            return (labels[i] || 'pin' + i) + '=' + p;
+          }).join(', ') + ')');
+        }
+        if (!out.length) return null;
+        return out.slice(0, 4).join(' · ');
+      },
+      title: 'Pines I2C disponibles en tus MCUs',
+      why: 'El log expone los pines de cada MCU: útil para conectar sondas ' +
+        'eddy, Cartographer o cualquier periférico i2c en el bus correcto.',
+      fix: 'No es un error: usa estos pines (SDA/SCL) al conectar tu sonda ' +
+        'o sensor i2c al MCU que quieras.',
+      guide: 'tools'
+    },
+    {
+      // Sesiones de impresión en el log (CODeRUS/Klippylyzer listan jobs):
+      // «Log rollover at» marca cada rotación (una por arranque de impresión).
+      id: 'print_sessions', sev: 'info',
+      detect: (log) => {
+        const rollovers = countMatches(log, /^Log rollover at /gm);
+        const sdPrints = countMatches(log, /^Starting SD card print/gm);
+        if (!rollovers && !sdPrints) return null;
+        const parts = [];
+        if (rollovers) parts.push(rollovers + ' rotaciones de log');
+        if (sdPrints) parts.push(sdPrints + ' impresiones desde SD');
+        return parts.join(' · ');
+      },
+      title: 'Sesiones de impresión en el log',
+      why: 'El log mezcla varias sesiones: al leer gráficas y errores, ' +
+        'recuerda que puede haber varios arranques con impresiones distintas.',
+      fix: 'No es un fallo: es contexto para interpretar el resto del análisis.',
+      guide: 'klipper'
+    },
+    {
       // Fix guiado: klipper-mcu-updater presente (moonraker update_manager)
       id: 'mcu_updater_available', sev: 'info',
       detect: (log, cfg, ctx) => {
@@ -701,7 +860,7 @@
   function analyze(input) {
     const log = (input && input.klippy) || '';
     const cfg = parseConfig((input && input.config) || '');
-    const ctx = { moonraker: (input && input.moonraker) || '' };
+    const ctx = { moonraker: (input && input.moonraker) || '', dmesg: (input && input.dmesg) || '' };
     const findings = [];
     const undetermined = [];
 

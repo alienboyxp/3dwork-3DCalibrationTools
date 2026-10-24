@@ -715,7 +715,10 @@ window.renderLogAnalyzer = function (container, t) {
             if (window.LogDiagnosis) {
                 const cfgText = (document.getElementById('config-view') || {}).textContent || '';
                 renderLogDiagnosis(window.LogDiagnosis.analyze({
-                    klippy: currentLogData.klippy, moonraker: currentLogData.moonraker, config: cfgText
+                    klippy: currentLogData.klippy,
+                    moonraker: currentLogData.moonraker,
+                    dmesg: currentLogData.dmesg || currentLogData.debug || '',
+                    config: cfgText
                 }));
             }
         } catch (diagErr) {
