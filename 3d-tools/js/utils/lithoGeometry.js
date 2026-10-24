@@ -38,18 +38,23 @@ window.LithoGeometry = (function () {
     }
 
     /**
-     * Promedio de luminancia de un rectángulo de la imagen (filtro de caja).
+     * Promedio de un rectángulo de la imagen (filtro de caja).
      * Evita el aliasing de muestrear un solo píxel por celda.
+     * channel: 'luma' (defecto, luminancia — comportamiento original) o
+     * 'r' | 'g' | 'b' para muestrear ese canal del píxel. Lo usa la
+     * descomposición CMYK: cian ∝ 1-R, magenta ∝ 1-G, amarillo ∝ 1-B.
      */
-    function sampleBox(pixels, imgW, imgH, x0, y0, w, h) {
+    function sampleBox(pixels, imgW, imgH, x0, y0, w, h, channel) {
         const ix0 = clamp(Math.floor(x0), 0, imgW - 1);
         const iy0 = clamp(Math.floor(y0), 0, imgH - 1);
         const ix1 = clamp(Math.ceil(x0 + w), 1, imgW);
         const iy1 = clamp(Math.ceil(y0 + h), 1, imgH);
+        const ch = channel === 'r' ? 0 : channel === 'g' ? 1 : channel === 'b' ? 2 : -1;
         let sum = 0, n = 0;
         for (let py = iy0; py < iy1; py++) {
             for (let px = ix0; px < ix1; px++) {
-                sum += luminance(pixels, (py * imgW + px) * 4);
+                const i = (py * imgW + px) * 4;
+                sum += ch < 0 ? luminance(pixels, i) : pixels[i + ch] / 255;
                 n++;
             }
         }
@@ -126,7 +131,7 @@ window.LithoGeometry = (function () {
                 const u = c / o.res, v = (o.resV - r) / o.resV;
                 // Espejo horizontal: invierte el eje X de la muestreo.
                 const sx = oX + (o.mirror ? (1 - u) : u) * sW, sy = oY + v * sH;
-                let g = sampleBox(pixels, imgW, imgH, sx, sy, cellW, cellH);
+                let g = sampleBox(pixels, imgW, imgH, sx, sy, cellW, cellH, o.channel);
                 g = tone(g, o);
                 // CONVENCIÓN DE LITOFANÍA: lo claro de la foto va FINO (deja
                 // pasar la luz) y lo oscuro va GROSSO (la tapa). Mapear al
@@ -198,6 +203,7 @@ window.LithoGeometry = (function () {
             border: 0,
             borderCells: 2,
             scaleMode: 'fill',
+            channel: 'luma',           // 'luma' | 'r' | 'g' | 'b' (CMYK)
             upright: true               // imprimir de pie
         }, o || {});
 
@@ -363,6 +369,106 @@ window.LithoGeometry = (function () {
     }
 
     /**
+     * Litofanía CMYK (AMS): 4 placas apiladas en UNA pieza TUMBADADA en la
+     * cama (imagen en XY, grosor en Z). La placa BLANCA (canal luminancia)
+     * hace de difusor: su grosor modula el brillo. La CIAN bloquea el rojo
+     * (grosor ∝ 1-R), la MAGENTA el verde (∝ 1-G) y la AMARILLA el azul
+     * (∝ 1-B): mezcla sustractiva en transmisión con un LED detrás.
+     *
+     * Cada placa ocupa su tramo de Z (offsets acumulados), así que el
+     * slicer imprime cada tramo con su extrusor: sólo 3 cambios de AMS.
+     * Donde la placa inferior es más fina que la superior quedan valles
+     * que el slicer puentea solo.
+     *
+     * Las placas de color se muestrean MÁS GRUESAS en XY que la blanca
+     * (cmykColorRes; criterio lithophanemaker: la resolución de color es
+     * 2-3× el ancho de línea), porque su detalle llega suavizado por la
+     * difusión de la placa blanca.
+     *
+     * @param {object} o - width/height/bright/contrast/gamma/smoothing/
+     *   mirror/res/layerHeight/scaleMode (tonos comunes a los 4 canales) y
+     *   cmykWhiteBase (0.6) / cmykWhiteMax (3.0) / cmykColorBase (0.4) /
+     *   cmykColorMax (1.6) / cmykColorRes (0 → max(8, res/4)).
+     *   invert se ignora: la descomposición CMYK es fija (claro=fino).
+     * @returns {{plates: Array<{name,hex,extruder,channel,zOffset,positions,levels,stats}>, stats}}
+     */
+    function buildCmyk(pixels, imgW, imgH, o) {
+        const opt = Object.assign({
+            width: 100, height: 100,
+            bright: 1.0, contrast: 1.0, gamma: 1,
+            smoothing: 0, mirror: false,
+            res: 120, layerHeight: 0.12,
+            scaleMode: 'fill',
+            cmykWhiteBase: 0.6, cmykWhiteMax: 3.0,
+            cmykColorBase: 0.4, cmykColorMax: 1.6,
+            cmykColorRes: 0                 // 0 → max(8, res/4)
+        }, o || {});
+        if (!opt.cmykColorRes || opt.cmykColorRes <= 0) {
+            opt.cmykColorRes = Math.max(8, Math.round(opt.res / 4));
+        }
+        // Celdas cuadradas en XY: la misma mm/celda en los dos ejes de la
+        // imagen (la placa está tumbada: no hay razón para ligar el eje Y
+        // a la altura de capa, eso es para imprimir de pie).
+        const resVOf = (r) => Math.max(8, Math.round(r * opt.height / opt.width));
+        // Los offsets se cuantizan a la altura de capa: el pico de una placa
+        // (también cuantizado) nunca atraviesa la cara trasera de la
+        // siguiente. Con lh=0 quedan en los valores teóricos exactos.
+        const lh = opt.layerHeight > 0 ? opt.layerHeight : 0;
+        const qz = (v) => lh > 0 ? Math.round(v / lh) * lh : v;
+
+        // Colores oficiales Bambu y extrusor de cada placa (1=blanco…4=amarillo).
+        const defs = [
+            { name: 'white', hex: '#FFFFFF', extruder: 1, channel: 'luma',
+              baseT: opt.cmykWhiteBase, maxT: opt.cmykWhiteMax, res: opt.res },
+            { name: 'cyan', hex: '#0086D6', extruder: 2, channel: 'r',
+              baseT: opt.cmykColorBase, maxT: opt.cmykColorMax, res: opt.cmykColorRes },
+            { name: 'magenta', hex: '#EC008C', extruder: 3, channel: 'g',
+              baseT: opt.cmykColorBase, maxT: opt.cmykColorMax, res: opt.cmykColorRes },
+            { name: 'yellow', hex: '#F4EE2A', extruder: 4, channel: 'b',
+              baseT: opt.cmykColorBase, maxT: opt.cmykColorMax, res: opt.cmykColorRes }
+        ];
+        // Offsets Z acumulados: blanco en 0, cian en whiteMax, magenta en
+        // whiteMax+colorMax, amarillo en whiteMax+2·colorMax.
+        let zOffset = 0;
+        const plates = defs.map(d => {
+            const m = build(pixels, imgW, imgH, {
+                width: opt.width, height: opt.height,
+                bright: opt.bright, contrast: opt.contrast, gamma: opt.gamma,
+                smoothing: opt.smoothing, mirror: opt.mirror,
+                res: d.res, resV: resVOf(d.res), layerHeight: opt.layerHeight,
+                geom: 'flat', border: 0, upright: false,
+                invert: false, channel: d.channel,
+                baseT: d.baseT, maxT: d.maxT, scaleMode: opt.scaleMode
+            });
+            for (let i = 2; i < m.positions.length; i += 3) m.positions[i] += zOffset;
+            const plate = {
+                name: d.name, hex: d.hex, extruder: d.extruder, channel: d.channel,
+                zOffset: zOffset, positions: m.positions, levels: m.levels,
+                stats: Object.assign({ baseT: d.baseT, maxT: d.maxT }, m.stats)
+            };
+            zOffset = qz(zOffset + d.maxT);
+            return plate;
+        });
+
+        // stats agregadas (zOffset final = altura teórica de la pila)
+        const tris = plates.reduce((s, p) => s + p.stats.triangles, 0);
+        const stlSize = plates.reduce((s, p) => s + 84 + p.stats.triangles * 50, 0);
+        const stats = {
+            plates: plates.length,
+            triangles: tris,
+            vertices: plates.reduce((s, p) => s + p.stats.vertices, 0),
+            fileSize: stlSize,               // 4×STL (el 3MF se comprime)
+            stlSize: stlSize,
+            widthMM: Math.round(opt.width * 100) / 100,
+            heightMM: Math.round(opt.height * 100) / 100,
+            stackMM: Math.round(zOffset * 100) / 100,
+            layerHeight: lh,
+            colorRes: opt.cmykColorRes
+        };
+        return { plates: plates, stats: stats };
+    }
+
+    /**
      * Comprueba que la malla es estanca: cada arista dirigida debe aparecer
      * exactamente una vez (superficie cerrada y orientada de forma uniforme).
      * @param {Float32Array} positions
@@ -401,7 +507,7 @@ window.LithoGeometry = (function () {
         };
     }
 
-    return { build: build, checkWatertight: checkWatertight, sampleBox: sampleBox };
+    return { build: build, buildCmyk: buildCmyk, checkWatertight: checkWatertight, sampleBox: sampleBox };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {
