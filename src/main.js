@@ -138,7 +138,7 @@ function updateUILabels() {
     const navMachinesMenu = document.getElementById('nav-machines-menu');
     if (navMachinesMenu) {
         const icon = navMachinesMenu.querySelector('i');
-        navMachinesMenu.textContent = t.comparatorTitle + ' ';
+        navMachinesMenu.textContent = (window.currentLang === 'es' ? 'Comparadores' : 'Comparators') + ' ';
         if (icon) navMachinesMenu.appendChild(icon);
     }
     if (navEsteps) navEsteps.textContent = t.esteps;
