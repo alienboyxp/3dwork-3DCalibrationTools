@@ -1,0 +1,17 @@
+name: Deploy to hosting
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Trigger hosting deploy webhook
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy webhook
+        run: |
+          curl -fsS -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"${{ github.ref }}","sha":"${{ github.sha }}"}' \
+            && echo "Deploy webhook triggered successfully"
