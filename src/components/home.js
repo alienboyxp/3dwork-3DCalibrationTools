@@ -245,6 +245,21 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
 
+                <a href="#resins" class="tool-card" id="card-resins" style="grid-column: span 2; border-color: rgba(168,85,247,0.3); background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(168,85,247,0.12); color: #C4B5FD;">
+                                <i data-lucide="droplets"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.resinsTitle || 'Resins'}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.resinsSummary || 'Compare resin specs and prices (SLA/MSLA)'}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+
             </div>
         </div>
     `;
