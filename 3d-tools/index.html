@@ -234,13 +234,738 @@
 <body>
     <div id="root"></div>
 
-    <!-- Clicker Factory (modular components, window globals; no conflicto con el app inline) -->
-    <script type="text/babel" src="js/components/Slider.jsx?v=1.0"></script>
-    <script type="text/babel" src="js/components/Canvas3D.jsx?v=1.0"></script>
-    <script type="text/babel" src="js/components/ClickerViewer.jsx?v=1.0"></script>
-    <script type="text/babel" src="js/components/ClickerTool.jsx?v=1.0"></script>
-
+    <!-- Clicker Factory (modular components inlined for reliable loading) -->
     <script type="text/babel">
+        // === Slider.jsx ===
+// =====================================================
+// Shared UI Components (pure React components)
+// =====================================================
+// These must be loaded before the tool components
+
+// ----- ControlSlider -----
+window.ControlSlider = function ControlSlider({ label, value, min, max, step, onChange, unit, accent }) {
+    const isBlue = accent === 'var(--blue)';
+    const pct = ((value - min) / (max - min)) * 100;
+    const fillStyle = {
+        background: `linear-gradient(to right, ${accent || 'var(--accent)'} ${pct}%, rgba(255,255,255,0.1) ${pct}%)`
+    };
+    return (
+        <div className="control-group">
+            <div className="control-label">
+                <span>{label}</span>
+                <span className="control-value" style={isBlue ? { color: '#93C5FD', background: 'rgba(59,130,246,0.1)' } : {}}>
+                    {unit ? `${value}${unit}` : Math.round(value * 100) + '%'}
+                </span>
+            </div>
+            <div className="slider-wrap">
+                <input
+                    type="range"
+                    min={min} max={max} step={step || 0.01}
+                    value={value}
+                    onChange={e => onChange(parseFloat(e.target.value))}
+                    className={isBlue ? 'blue' : ''}
+                    style={fillStyle}
+                />
+            </div>
+        </div>
+    );
+};
+
+// ----- ToggleSwitch -----
+window.ToggleSwitch = function ToggleSwitch({ label, checked, onChange, accent }) {
+    const id = React.useId ? React.useId() : 'toggle_' + Math.random();
+    return (
+        <div className="toggle-row">
+            <span className="toggle-label">{label}</span>
+            <label className={`toggle${accent === 'blue' ? ' blue' : ''}`} htmlFor={id}>
+                <input type="checkbox" id={id} checked={checked} onChange={e => onChange(e.target.checked)} />
+                <span className="toggle-slider"></span>
+            </label>
+        </div>
+    );
+};
+
+// =====================================================
+// Canvas3D.jsx – Three.js canvas wrapper component
+// Provides a shared 3D viewport with orbit controls
+// implemented via vanilla Three.js (no R3F needed for CDN)
+// =====================================================
+
+window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint, initialView }) {
+    const canvasRef = React.useRef(null);
+    const mountRef = React.useRef(null);
+    const stateRef = React.useRef({ renderer: null, scene: null, camera: null, animId: null, theta: 0, phi: 70, radius: 120, targetTheta: 0, targetPhi: 70 });
+
+    React.useEffect(() => {
+        const mount = mountRef.current;
+        if (!mount) return;
+
+        const W = mount.clientWidth || 600;
+        const H = mount.clientHeight || 400;
+
+        // Vista inicial (opcional)
+        const iv = initialView || {};
+        stateRef.current.theta = iv.theta ?? 0;
+        stateRef.current.phi = iv.phi ?? 70;
+        stateRef.current.radius = iv.radius ?? 120;
+        stateRef.current.targetTheta = stateRef.current.theta;
+        stateRef.current.targetPhi = stateRef.current.phi;
+
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(W, H);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        mount.appendChild(renderer.domElement);
+        renderer.domElement.className = 'canvas-3d';
+
+        // Scene & Camera
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x080E1A);
+        scene.fog = new THREE.FogExp2(0x080E1A, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
+        camera.position.set(0, 0, 120);
+        camera.lookAt(0, 0, 0);
+
+        // Grid helper
+        const grid = new THREE.GridHelper(200, 30, 0x1a2840, 0x111d2e);
+        grid.position.y = -45;
+        grid.rotation.y = 0;
+        scene.add(grid);
+
+        // Ambient + directional lights (default)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 80, 60);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // --- Orbit Controls (manual implementation) ---
+        // El estado vive en stateRef para que la API expuesta (reset/set)
+        // pueda modificarlo desde fuera.
+        let isDragging = false;
+        let prevX = 0, prevY = 0;
+        const st = stateRef.current;
+
+        const updateCamera = () => {
+            const t = THREE.MathUtils.degToRad(st.theta);
+            const p = THREE.MathUtils.degToRad(Math.max(5, Math.min(175, st.phi)));
+            camera.position.set(
+                st.radius * Math.sin(p) * Math.sin(t),
+                st.radius * Math.cos(p),
+                st.radius * Math.sin(p) * Math.cos(t)
+            );
+            camera.lookAt(0, 0, 0);
+        };
+        updateCamera();
+
+        const el = renderer.domElement;
+        el.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+        el.addEventListener('touchstart', e => { isDragging = true; prevX = e.touches[0].clientX; prevY = e.touches[0].clientY; });
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('touchend', () => isDragging = false);
+
+        const onMove = (cx, cy) => {
+            if (!isDragging) return;
+            const dx = cx - prevX, dy = cy - prevY;
+            st.targetTheta -= dx * 0.5;
+            st.targetPhi -= dy * 0.5;
+            prevX = cx; prevY = cy;
+        };
+        el.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+        el.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+        el.addEventListener('wheel', e => {
+            st.radius = Math.max(10, Math.min(600, st.radius + e.deltaY * 0.2));
+        });
+
+        // Axes helper
+        const axesHelper = new THREE.AxesHelper(20);
+        axesHelper.position.set(-90, -35, 0);
+        scene.add(axesHelper);
+
+        // Resize observer
+        const ro = new ResizeObserver(() => {
+            const w = mount.clientWidth, h = mount.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
+        ro.observe(mount);
+
+        // Animate (suavizado: theta/phi persiguen a targetTheta/targetPhi)
+        const animate = () => {
+            st.animId = requestAnimationFrame(animate);
+            st.theta += (st.targetTheta - st.theta) * 0.08;
+            st.phi += (st.targetPhi - st.phi) * 0.08;
+            updateCamera();
+            renderer.render(scene, camera);
+        };
+        animate();
+
+        // Store refs (merge: conserva el estado de órbita ya inicializado)
+        Object.assign(st, { renderer, scene, camera, ambientLight, dirLight });
+
+        // API para el componente padre: reset/set de la vista de cámara
+        const api = {
+            scene, camera, renderer,
+            reset: () => {
+                st.targetTheta = iv.theta ?? 0;
+                st.targetPhi = iv.phi ?? 70;
+                st.radius = iv.radius ?? 120;
+                st.theta = st.targetTheta; st.phi = st.targetPhi;
+                updateCamera();
+            },
+            set: (t, p) => {
+                st.targetTheta = t;
+                st.targetPhi = p;
+            },
+            // Ajusta el radio de cámara para encuadrar un modelo de tamaño dado
+            fit: (maxDim) => {
+                st.radius = Math.max(10, Math.min(600, maxDim * 2.2));
+                updateCamera();
+            },
+        };
+        if (onMount) onMount(api);
+
+        return () => {
+            cancelAnimationFrame(stateRef.current.animId);
+            ro.disconnect();
+            renderer.dispose();
+            if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+        };
+    }, []);
+
+    return (
+        <div className={`canvas-center ${className || ''}`} style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
+
+            {/* Info overlay */}
+            {info && (
+                <div className="canvas-overlay" style={{ pointerEvents: 'none' }}>
+                    <div className="canvas-info" dangerouslySetInnerHTML={{ __html: info }} />
+                </div>
+            )}
+
+            {/* Hint bar */}
+            {hint && <div className="canvas-hint">{hint}</div>}
+
+            {children}
+        </div>
+    );
+};
+
+// =====================================================
+// ClickerViewer.jsx
+// Manages the Three.js scene for clicker preview.
+// Uses the shared Canvas3D wrapper (orbit controls, zoom,
+// resize observer) like the lithophane/HueForge tools.
+// Supports single and multi-clicker modes.
+// =====================================================
+
+window.ClickerViewer = function ClickerViewer({
+    // Single mode
+    pixels, imgW, imgH,
+    size, carveDepth, brightness, contrast, invert, keychain,
+    // Multi mode
+    multi, clickers, baseW, baseH, baseThick,
+    onGeometryReady
+}) {
+    const sceneRef = React.useRef(null);
+    const meshRef = React.useRef(null);
+    const apiRef = React.useRef(null);
+    const [processing, setProcessing] = React.useState(false);
+
+    const gridW = 60, gridH = 60;
+
+    React.useEffect(() => {
+        if (!sceneRef.current) return;
+        if (!multi && !pixels) return;
+
+        setProcessing(true);
+        const tid = setTimeout(() => {
+            try {
+                const scene = sceneRef.current;
+                if (meshRef.current) {
+                    scene.remove(meshRef.current);
+                    meshRef.current.geometry.dispose();
+                    meshRef.current.material.dispose();
+                    meshRef.current = null;
+                }
+
+                let geo;
+                if (multi) {
+                    const result = window.ClickerGeometry.buildMultiClicker(
+                        (clickers || []).map(c => ({
+                            ...c,
+                            carveDepth: c.carveDepth || 1.2,
+                            brightness: c.brightness || 0.5,
+                            contrast: c.contrast || 1.0,
+                            invert: c.invert || false,
+                            keychain: c.keychain || false
+                        })),
+                        baseW || 80, baseH || 80, baseThick || 2.5
+                    );
+                    geo = new THREE.BufferGeometry();
+                    geo.setAttribute('position', new THREE.BufferAttribute(result.positions, 3));
+                    geo.computeVertexNormals();
+                } else {
+                    const result = window.ClickerGeometry.buildClicker(
+                        pixels, imgW, imgH,
+                        { size: size || '1u', carveDepth: carveDepth || 1.2, brightness: brightness || 0.5, contrast: contrast || 1.0, invert: invert || false, gridW, gridH, keychain: keychain || false }
+                    );
+                    geo = new THREE.BufferGeometry();
+                    geo.setAttribute('position', new THREE.BufferAttribute(result.positions, 3));
+                    if (result.indices) geo.setIndex(new THREE.BufferAttribute(result.indices, 1));
+                    geo.computeVertexNormals();
+                }
+
+                const mat = new THREE.MeshStandardMaterial({
+                    color: 0xE8E0D5,
+                    roughness: 0.55,
+                    metalness: 0.05,
+                    side: THREE.FrontSide,
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add(mesh);
+                meshRef.current = mesh;
+
+                // Centrar el modelo en el origen (la cámara orbita alrededor de 0,0,0)
+                geo.computeBoundingBox();
+                const box = geo.boundingBox;
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+                mesh.position.sub(center);
+
+                // Auto-encuadre: el radio de cámara sigue el tamaño del modelo
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                if (apiRef.current && apiRef.current.fit) {
+                    apiRef.current.fit(Math.max(size.x, size.y, size.z));
+                }
+
+                setProcessing(false);
+                if (onGeometryReady) onGeometryReady(geo);
+            } catch (err) {
+                console.error('Clicker build error:', err);
+                setProcessing(false);
+            }
+        }, 50);
+        return () => clearTimeout(tid);
+    }, [pixels, imgW, imgH, size, carveDepth, brightness, contrast, invert, keychain, multi, clickers, baseW, baseH, baseThick]);
+
+    const info = multi
+        ? `Plate: ${baseW || 80} × ${baseH || 80} mm — ${(clickers || []).length} clicker(s)`
+        : (pixels ? `Key: ${size || '1u'} — carved ${(carveDepth || 1.2).toFixed(1)} mm` : 'Waiting for image or text…');
+
+    return (
+        <window.Canvas3D
+            onMount={o => { sceneRef.current = o.scene; apiRef.current = o; }}
+            initialView={{ theta: 30, phi: 65, radius: 90 }}
+            hint="Drag to rotate • Scroll to zoom"
+            info={info}
+        >
+            {processing && (
+                <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(15,23,42,0.85)', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 10px', fontSize: 10, color: '#94A3B8' }}>
+                    Building…
+                </div>
+            )}
+            <div className="view-btns">
+                <button className="v-btn" onClick={() => apiRef.current && apiRef.current.reset()}>Reset</button>
+                <button className="v-btn" onClick={() => apiRef.current && apiRef.current.set(0, 10)}>Top</button>
+                <button className="v-btn" onClick={() => apiRef.current && apiRef.current.set(0, 85)}>Front</button>
+            </div>
+        </window.Canvas3D>
+    );
+};
+
+// =====================================================
+// ClickerTool.jsx – Clicker Factory inspired tool
+// Supports single and multi-clicker modes
+// =====================================================
+
+window.ClickerTool = function ClickerTool({ onNavigate }) {
+    const { t } = ReactI18next.useTranslation();
+
+    const [mode, setMode] = React.useState('single');  // 'single' | 'multi'
+
+    // Single mode state
+    const [imageUrl, setImageUrl] = React.useState(null);
+    const [pixels, setPixels] = React.useState(null);
+    const [imgW, setImgW] = React.useState(0);
+    const [imgH, setImgH] = React.useState(0);
+
+    // Text mode state
+    const [inputMode, setInputMode] = React.useState('image'); // 'image' | 'text'
+    const [textContent, setTextContent] = React.useState('');
+    const [fontFamily, setFontFamily] = React.useState('Arial');
+    const [fontSize, setFontSize] = React.useState(120);
+    const [textBold, setTextBold] = React.useState(true);
+    const [textItalic, setTextItalic] = React.useState(false);
+    const [size, setSize] = React.useState('1u');
+    const [carveDepth, setCarveDepth] = React.useState(1.2);
+    const [brightness, setBrightness] = React.useState(0.5);
+    const [contrast, setContrast] = React.useState(1.0);
+    const [invert, setInvert] = React.useState(false);
+    const [keychain, setKeychain] = React.useState(false);
+
+    // Multi mode state
+    const [clickers, setClickers] = React.useState([]);
+    const [baseW, setBaseW] = React.useState(80);
+    const [baseH, setBaseH] = React.useState(80);
+    const [baseThick, setBaseThick] = React.useState(2.5);
+
+    const geoRef = React.useRef(null);
+
+    // Single mode image loading
+    const loadImage = React.useCallback((file) => {
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        setImageUrl(url);
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const data = ctx.getImageData(0, 0, img.width, img.height);
+            setPixels(data.data);
+            setImgW(img.width);
+            setImgH(img.height);
+        };
+        img.src = url;
+    }, []);
+
+    const handleDrop = e => {
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0];
+        if (file && file.type.startsWith('image/')) loadImage(file);
+    };
+
+    const handleFileChange = e => {
+        const file = e.target.files?.[0];
+        if (file) loadImage(file);
+    };
+
+    // Render text to image
+    const renderText = React.useCallback(() => {
+        if (!textContent.trim()) return;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const size = 512;
+        canvas.width = size;
+        canvas.height = size;
+        // Background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+        // Text
+        const style = (textItalic ? 'italic ' : '') + (textBold ? 'bold ' : '') + fontSize + 'px ' + fontFamily;
+        ctx.font = style;
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Wrap text
+        const words = textContent.split(' ');
+        const lines = [];
+        let currentLine = '';
+        for (const word of words) {
+            const testLine = currentLine ? currentLine + ' ' + word : word;
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > size * 0.9 && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+        const lineHeight = fontSize * 1.2;
+        const totalHeight = lines.length * lineHeight;
+        const startY = (size - totalHeight) / 2 + lineHeight / 2;
+        lines.forEach((line, i) => {
+            ctx.fillText(line, size / 2, startY + i * lineHeight);
+        });
+        const url = canvas.toDataURL('image/png');
+        setImageUrl(url);
+        const data = ctx.getImageData(0, 0, size, size);
+        setPixels(data.data);
+        setImgW(size);
+        setImgH(size);
+    }, [textContent, fontFamily, fontSize, textBold, textItalic]);
+
+    React.useEffect(() => {
+        if (inputMode === 'text' && textContent.trim()) {
+            renderText();
+        }
+    }, [inputMode, textContent, fontFamily, fontSize, textBold, textItalic]);
+
+    // Multi mode: add a clicker
+    const addClicker = () => {
+        const newClicker = window.ClickerLayout.createClicker({ size: '1u' });
+        const placed = window.ClickerLayout.autoPlace(newClicker, clickers, baseW, baseH);
+        if (!placed) {
+            // Try expanding base
+            const [nw, nh] = window.ClickerLayout.suggestBaseSize([...clickers, newClicker]);
+            setBaseW(nw);
+            setBaseH(nh);
+            window.ClickerLayout.autoPlace(newClicker, clickers, nw, nh);
+        }
+        setClickers(prev => [...prev, newClicker]);
+    };
+
+    // Multi mode: remove a clicker
+    const removeClicker = (id) => {
+        setClickers(prev => prev.filter(c => c.id !== id));
+    };
+
+    // Multi mode: load image for a specific clicker
+    const loadClickerImage = (id, file) => {
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const data = ctx.getImageData(0, 0, img.width, img.height);
+            setClickers(prev => prev.map(c => {
+                if (c.id !== id) return c;
+                return { ...c, pixels: data.data, imgW: img.width, imgH: img.height, imageUrl: url };
+            }));
+        };
+        img.src = url;
+    };
+
+    const handleDownloadSTL = () => {
+        if (!geoRef.current) return;
+        try {
+            const buffer = window.STLExporterUtil.exportToBinarySTL(geoRef.current);
+            window.STLExporterUtil.download(buffer, mode === 'multi' ? '3dwork_clickers.stl' : '3dwork_clicker.stl');
+        } catch (err) {
+            alert('STL export error: ' + err.message);
+        }
+    };
+
+    // Validation for multi mode
+    const validation = mode === 'multi' ? window.ClickerLayout.validateLayout(clickers, baseW, baseH) : { valid: true, issues: [] };
+
+    return (
+        <div className="tool-page">
+            <div className="tool-layout" style={{ height: '100%' }}>
+
+                {/* LEFT PANEL – Controls */}
+                <div className="panel-left">
+                    <div className="panel-header">
+                        <span className="panel-title">Clicker Factory</span>
+                    </div>
+
+                    <div className="panel-body">
+                        {/* Mode toggle */}
+                        <div className="section-label">Mode</div>
+                        <div className="geo-btn-group">
+                            <button className={`geo-btn${mode === 'single' ? ' active' : ''}`} onClick={() => setMode('single')}>Single</button>
+                            <button className={`geo-btn${mode === 'multi' ? ' active' : ''}`} onClick={() => setMode('multi')}>Multi</button>
+                        </div>
+
+                        {mode === 'single' ? (
+                            <>
+                                {/* Input mode toggle */}
+                                <div className="section-label">Input</div>
+                                <div className="geo-btn-group">
+                                    <button className={`geo-btn${inputMode === 'image' ? ' active' : ''}`} onClick={() => setInputMode('image')}>Image</button>
+                                    <button className={`geo-btn${inputMode === 'text' ? ' active' : ''}`} onClick={() => setInputMode('text')}>Text</button>
+                                </div>
+
+                                {inputMode === 'image' ? (
+                                    <label className={`upload-zone${imageUrl ? ' has-image' : ''}`} onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
+                                        {imageUrl && <img src={imageUrl} alt="Source" />}
+                                        {!imageUrl && (
+                                            <>
+                                                <span className="upload-icon">📷</span>
+                                                <span className="upload-zone-text">Upload image</span>
+                                            </>
+                                        )}
+                                        <input type="file" accept="image/*" onChange={handleFileChange} />
+                                    </label>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <textarea
+                                            value={textContent}
+                                            onChange={e => setTextContent(e.target.value)}
+                                            placeholder="Type your text..."
+                                            style={{ width: '100%', minHeight: '60px', padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)', fontSize: '0.85rem', resize: 'vertical' }}
+                                        />
+                                        <div style={{ display: 'flex', gap: '0.3rem' }}>
+                                            <select value={fontFamily} onChange={e => setFontFamily(e.target.value)} title="Font" style={{ flex: 1, fontSize: '0.75rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }}>
+                                                <option value="Arial">Arial</option>
+                                                <option value="Helvetica">Helvetica</option>
+                                                <option value="Georgia">Georgia</option>
+                                                <option value="Times New Roman">Times New Roman</option>
+                                                <option value="Courier New">Courier New</option>
+                                                <option value="Verdana">Verdana</option>
+                                            </select>
+                                            <input type="number" value={fontSize} onChange={e => setFontSize(parseInt(e.target.value) || 120)} min={40} max={200} title="Font size" style={{ width: '60px', fontSize: '0.75rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.3rem' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                <input type="checkbox" checked={textBold} onChange={e => setTextBold(e.target.checked)} /> Bold
+                                            </label>
+                                            <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                <input type="checkbox" checked={textItalic} onChange={e => setTextItalic(e.target.checked)} /> Italic
+                                            </label>
+                                        </div>
+                                        {imageUrl && <img src={imageUrl} alt="Text preview" style={{ width: '100%', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />}
+                                    </div>
+                                )}
+
+                                {/* Size */}
+                                <div className="section-label">Key Size</div>
+                                <div className="geo-btn-group">
+                                    {['1u', '2u', 'space'].map(s => (
+                                        <button key={s} className={`geo-btn${size === s ? ' active' : ''}`} onClick={() => setSize(s)}>{s}</button>
+                                    ))}
+                                </div>
+
+                                <window.ControlSlider label="Carve Depth" value={carveDepth} min={0.5} max={2.0} step={0.1} onChange={setCarveDepth} unit="mm" />
+                                <window.ControlSlider label="Brightness" value={brightness} min={0} max={1} step={0.01} onChange={setBrightness} />
+                                <window.ControlSlider label="Contrast" value={contrast} min={0.5} max={2.0} step={0.01} onChange={setContrast} />
+
+                                <window.ToggleSwitch label="Invert" checked={invert} onChange={setInvert} />
+                                <window.ToggleSwitch label="Keychain Loop" checked={keychain} onChange={setKeychain} />
+                            </>
+                        ) : (
+                            <>
+                                {/* Multi mode controls */}
+                                <div className="section-label">Base Plate</div>
+                                <window.ControlSlider label="Width" value={baseW} min={40} max={300} step={10} onChange={setBaseW} unit="mm" />
+                                <window.ControlSlider label="Height" value={baseH} min={40} max={300} step={10} onChange={setBaseH} unit="mm" />
+                                <window.ControlSlider label="Thickness" value={baseThick} min={2} max={5} step={0.5} onChange={setBaseThick} unit="mm" />
+
+                                <button className="download-btn" onClick={addClicker} style={{ marginBottom: '0.5rem' }}>
+                                    + Add Clicker
+                                </button>
+
+                                {!validation.valid && (
+                                    <div style={{ color: '#ff6b6b', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                                        ⚠ {validation.issues.length} issue(s): {validation.issues.map(i => i.type).join(', ')}
+                                    </div>
+                                )}
+
+                                <div className="section-label">Clickers ({clickers.length})</div>
+                                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                    {clickers.map((c, idx) => (
+                                        <div key={c.id} style={{ background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', padding: '0.5rem', marginBottom: '0.5rem' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>#{idx + 1} {c.size}</span>
+                                                <button onClick={() => removeClicker(c.id)} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '0.8rem' }}>✕</button>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.3rem' }}>
+                                                <select value={c.size} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, size: e.target.value } : x))} title="Key size" style={{ flex: 1, fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }}>
+                                                    <option value="1u">1u</option>
+                                                    <option value="2u">2u</option>
+                                                    <option value="space">space</option>
+                                                </select>
+                                                <input type="number" value={c.x} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, x: parseFloat(e.target.value) || 0 } : x))} title="Position X (mm)" placeholder="X" style={{ width: '52px', fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }} />
+                                                <input type="number" value={c.y} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, y: parseFloat(e.target.value) || 0 } : x))} title="Position Y (mm)" placeholder="Y" style={{ width: '52px', fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }} />
+                                                <select value={c.rotation} onChange={e => setClickers(prev => prev.map(x => x.id === c.id ? { ...x, rotation: parseInt(e.target.value) } : x))} title="Rotation" style={{ fontSize: '0.7rem', background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem' }}>
+                                                    <option value={0}>0°</option>
+                                                    <option value={90}>90°</option>
+                                                    <option value={180}>180°</option>
+                                                    <option value={270}>270°</option>
+                                                </select>
+                                            </div>
+                                            <label style={{ fontSize: '0.7rem', cursor: 'pointer' }}>
+                                                📷 Image
+                                                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) loadClickerImage(c.id, f); }} />
+                                            </label>
+                                            {c.imageUrl && <img src={c.imageUrl} alt="" style={{ width: '30px', height: '30px', marginLeft: '0.3rem', verticalAlign: 'middle' }} />}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {/* Download */}
+                        <button className="download-btn" onClick={handleDownloadSTL} disabled={mode === 'single' ? !pixels : clickers.filter(c => c.pixels).length === 0}>
+                            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Download STL
+                        </button>
+                    </div>
+                </div>
+
+                {/* CENTER – 3D Preview */}
+                <div style={{ position: 'relative', background: '#080E1A' }}>
+                    {mode === 'single' ? (
+                        <window.ClickerViewer
+                            pixels={pixels} imgW={imgW} imgH={imgH}
+                            size={size} carveDepth={carveDepth}
+                            brightness={brightness} contrast={contrast} invert={invert}
+                            keychain={keychain}
+                            onGeometryReady={geo => { geoRef.current = geo; }}
+                        />
+                    ) : (
+                        <window.ClickerViewer
+                            multi={true}
+                            clickers={clickers}
+                            baseW={baseW} baseH={baseH} baseThick={baseThick}
+                            onGeometryReady={geo => { geoRef.current = geo; }}
+                        />
+                    )}
+                </div>
+
+                {/* RIGHT PANEL – Info */}
+                <div className="panel-right">
+                    <div className="panel-header">
+                        <span className="panel-title">Info</span>
+                    </div>
+                    <div className="panel-body">
+                        <div className="section-label">Print Tips</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                            <p>• Use MX-compatible switches (Cherry MX or clones).</p>
+                            <p>• Print with 0.2mm layer height.</p>
+                            <p>• Use 3-4 walls, 20% infill.</p>
+                            <p>• PLA or PETG recommended.</p>
+                            <p>• Multi: auto-place avoids collisions.</p>
+                            <p>• Perimeter awareness prevents overlaps.</p>
+                        </div>
+
+                        <div style={{ marginTop: 'auto' }}>
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(158,119,237,0.08), transparent)',
+                                border: '1px solid rgba(158,119,237,0.2)',
+                                borderRadius: 'var(--radius)',
+                                padding: '0.75rem',
+                                fontSize: '0.73rem',
+                                color: 'var(--text-muted)',
+                                lineHeight: 1.6,
+                            }}>
+                                <div style={{ fontWeight: 800, color: 'var(--accent-light)', marginBottom: '0.35rem' }}>🌐 3Dwork.io</div>
+                                {mode === 'multi' ? `Multi-clicker: ${clickers.length} clicker(s) on ${baseW}×${baseH}mm base.` : 'Single clicker mode.'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    );
+};
+
+
         const { useState, useEffect, useRef, useMemo, useId, useCallback } = React;
 
         /**
@@ -1739,7 +2464,7 @@
                             </div>
                         </div>
                     </div>
-                ) : v === 'litho' ? <LithophaneTool /> : v === 'clicker' ? (window.ClickerTool ? <window.ClickerTool /> : <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading Clicker Factory…</div>) : <HueForgeTool />}</div>
+                ) : v === 'litho' ? <LithophaneTool /> : v === 'clicker' ? (window.ClickerTool ? <window.ClickerTool /> : <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading Clicker Factory…<br/><small>Click any other tab and back, or refresh (Ctrl+Shift+R)</small></div>) : <HueForgeTool />}</div>
                 <footer style={{ padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
                     &copy; 2026 3Dwork.io – HueForge logic based on the excellent open-source <a href="https://github.com/vycdev/Kromacut" target="_blank" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Kromacut</a> project.
                 </footer>

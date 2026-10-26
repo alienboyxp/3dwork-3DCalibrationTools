@@ -3,6 +3,7 @@
 // Supports single and multi-clicker modes
 // =====================================================
 
+console.log('ClickerTool.jsx loaded');
 window.ClickerTool = function ClickerTool({ onNavigate }) {
     const { t } = ReactI18next.useTranslation();
 
