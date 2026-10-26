@@ -31,9 +31,10 @@
       "best_for": "Miniaturas y piezas de detalle",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.0,
-      "layer_normal_s": 2.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "elegoo-8k-water-washable-v2",
@@ -62,9 +63,10 @@
       "best_for": "Detalle 8K sin IPA",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 2.5,
-      "layer_normal_s": 2.2,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "elegoo-abs-like-v3",
@@ -93,9 +95,10 @@
       "best_for": "Piezas resistentes tipo ABS",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.5,
-      "layer_normal_s": 2.5,
-      "working_temp": "20-25°C"
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.8,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "elegoo-water-wash-abs-like",
@@ -120,9 +123,10 @@
       "best_for": "Resistencia + limpieza con agua",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.0,
-      "layer_normal_s": 2.5,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.8,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "elegoo-tough",
@@ -147,9 +151,10 @@
       "best_for": "Piezas funcionales e impactos",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 4.0,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "elegoo-plant-based",
@@ -174,9 +179,10 @@
       "best_for": "Bajo olor, uso doméstico",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.0,
-      "layer_normal_s": 2.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-standard",
@@ -209,9 +215,10 @@
       "best_for": "Uso general, gran relación calidad/precio",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.0,
-      "layer_normal_s": 1.7,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.5,
+      "layer_normal_s": 2.0,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-water-wash-2",
@@ -240,9 +247,10 @@
       "best_for": "Limpieza con agua, sin IPA",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.5,
+      "layer_base_s": 2.8,
       "layer_normal_s": 2.0,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-plant-based-2",
@@ -271,9 +279,10 @@
       "best_for": "Bajo olor, base vegetal (soja)",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.0,
-      "layer_normal_s": 1.8,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.0,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-high-speed-2",
@@ -300,7 +309,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 1.5,
       "layer_normal_s": 1.5,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-tough-2",
@@ -325,9 +335,10 @@
       "best_for": "Piezas funcionales resistentes",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 4.0,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.0,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-high-clear",
@@ -348,9 +359,10 @@
       "best_for": "Piezas translúcidas y lentes",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 6.0,
-      "layer_normal_s": 3.5,
-      "working_temp": "20-25°C"
+      "layer_base_s": 4.5,
+      "layer_normal_s": 4.0,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "anycubic-abs-like",
@@ -375,9 +387,10 @@
       "best_for": "Piezas tipo ABS, menos frágil que standard",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 3.5,
+      "layer_base_s": 2.8,
       "layer_normal_s": 2.5,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "creality-piocreat-ww-2",
@@ -402,9 +415,10 @@
       "best_for": "Limpieza con agua al mejor precio",
       "source": "store.creality.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-30°C"
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "creality-water-wash-plus",
@@ -429,9 +443,10 @@
       "best_for": "Estable en agua, bajo olor",
       "source": "store.creality.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-30°C"
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "uniformation-standard",
@@ -464,9 +479,10 @@
       "best_for": "Detalle con baja viscosidad (GK3)",
       "source": "uniformation3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 35,
-      "layer_normal_s": 2.5,
-      "working_temp": "20-25°C"
+      "layer_base_s": 2.5,
+      "layer_normal_s": 2.0,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "uniformation-abs-like",
@@ -491,9 +507,10 @@
       "best_for": "Piezas resistentes tipo ABS",
       "source": "uniformation3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "uniformation-water-washable",
@@ -518,9 +535,10 @@
       "best_for": "Limpieza con agua para GK3",
       "source": "uniformation3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-30°C"
+      "layer_base_s": 2.8,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "uniformation-transparent",
@@ -541,9 +559,10 @@
       "best_for": "Translúcido de alta claridad",
       "source": "uniformation3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 4.0,
+      "layer_normal_s": 3.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "phrozen-aqua-8k",
@@ -578,7 +597,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 3.0,
       "layer_normal_s": 2.0,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "phrozen-ww-tough",
@@ -599,9 +619,10 @@
       "best_for": "Tenaz y lavable con agua",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 4.0,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 3.5,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "phrozen-ww-model-gray",
@@ -626,9 +647,10 @@
       "best_for": "Modelismo lavable con agua",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 4.0,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "layer_base_s": 3.5,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "phrozen-tr300",
@@ -651,7 +673,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 8.0,
       "layer_normal_s": 5.0,
-      "working_temp": "20-30°C"
+      "working_temp": "20-30°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "phrozen-clear-plus",
@@ -674,7 +697,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 4.0,
       "layer_normal_s": 3.0,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "phrozen-rapid-black",
@@ -701,7 +725,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 2.5,
       "layer_normal_s": 1.8,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "monocure-3drm",
@@ -736,7 +761,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 3.0,
       "layer_normal_s": 2.0,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "monocure-flex100",
@@ -759,7 +785,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 5.0,
       "layer_normal_s": 3.5,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "monocure-cm50",
@@ -782,7 +809,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 5.0,
       "layer_normal_s": 4.0,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     },
     {
       "id": "monocure-abs3d",
@@ -809,7 +837,8 @@
       "updated": "2026-10-24",
       "layer_base_s": 3.5,
       "layer_normal_s": 2.5,
-      "working_temp": "20-25°C"
+      "working_temp": "20-25°C",
+      "layer_source": "Guía del fabricante (mrresin.es / tienda oficial)"
     }
   ],
   "lastFullUpdate": "2026-10-24 — gamas oficiales de Anycubic, Elegoo, Creality/PioCreat, Uniformation, Phrozen y Monocure3D"
