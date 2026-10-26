@@ -470,8 +470,10 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
     // La app del clicker puede recibir ?noheader=1 para ocultar su propio
     // cabecera (integración en WordPress u otros sitios).
     React.useEffect(() => {
-        const href = window.location.origin + '/apps/clicker/index.html';
-        window.location.href = href;
+        const t = setTimeout(() => {
+            window.location.replace(window.location.origin + '/apps/clicker/index.html');
+        }, 100);
+        return () => clearTimeout(t);
     }, []);
     return null;
 };
@@ -1902,7 +1904,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                                 <ul className="dropdown-menu">
                                     <li><a href="#litho" onClick={() => setView('litho')}>Lithophane Creator</a></li>
                                     <li><a href="#hue" onClick={() => setView('hue')}>HueForge Creator</a></li>
-                                    <li><a href="#clicker" onClick={() => setView('clicker')}>Clicker Factory</a></li>
+                                    <li><a href="apps/clicker/index.html">Clicker Factory</a></li>
                                 </ul>
                             </li>
                             <li><a href="../index.html#price">3D Print Price Calculator</a></li>
@@ -1959,7 +1961,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                                 <button className="tool-cta blue">Open Tool <i data-lucide="chevron-right"></i></button>
                             </div>
 
-                            <div className="tool-entry-card clicker" onClick={() => setView('clicker')}>
+                            <div className="tool-entry-card clicker" onClick={() => { window.location.href = window.location.origin + '/apps/clicker/index.html'; }}>
                                 <div className="tool-badge teal">MX Clickers</div>
                                 <div className="tool-entry-icon teal">⌨️</div>
                                 <div className="tool-entry-info">
