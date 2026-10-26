@@ -54,8 +54,8 @@ function handleRouting() {
     const hash = window.location.hash.replace('#', '');
     currentView = hash || 'home';
 
-    if (currentView === 'lithophane' || currentView === 'hueforge') {
-        const toolHash = currentView === 'lithophane' ? '#litho' : '#hue';
+    if (currentView === 'lithophane' || currentView === 'hueforge' || currentView === 'clicker') {
+        const toolHash = currentView === 'lithophane' ? '#litho' : (currentView === 'clicker' ? '#clicker' : '#hue');
         // El parámetro de versión evita que el navegador (o el CDN) sirva el
         // HTML cacheado: sin él se puede quedar con una versión antigua de la
         // herramienta, que exportaba la litofanía tumbada.

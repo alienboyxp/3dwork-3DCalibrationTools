@@ -10,40 +10,50 @@ window.renderHome = function (container, t) {
             </div>
 
             <div class="tool-grid">
-                <a href="3d-tools/index.html#litho" class="tool-card" id="card-lithophane" style="grid-column: span 2; border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
-                    <div class="badge-container">
-                        <span class="badge" style="background:rgba(255,120,0,0.15);color:#FF9A3C;border:1px solid rgba(255,120,0,0.3);">NEW</span>
-                    </div>
-                    <div class="tool-info">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <div class="tool-icon" style="background: rgba(255,120,0,0.12); color: #FF9A3C;">
-                                <i data-lucide="image"></i>
+                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <a href="3d-tools/index.html#litho" class="tool-card" id="card-lithophane" style="border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
+                        <div class="tool-info">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                <div class="tool-icon" style="background: rgba(255,120,0,0.12); color: #FF9A3C;">
+                                    <i data-lucide="image"></i>
+                                </div>
+                                <h3 style="margin: 0;">${t.lithophaneTitle}</h3>
                             </div>
-                            <h3 style="margin: 0;">${t.lithophaneTitle}</h3>
+                            <p style="margin: 0;">${t.lithophaneSummary}</p>
                         </div>
-                        <p style="margin: 0;">${t.lithophaneSummary}</p>
-                    </div>
-                    <div class="tool-action">
-                        <i data-lucide="arrow-right"></i>
-                    </div>
-                </a>
-                <a href="3d-tools/index.html#hue" class="tool-card" id="card-hueforge" style="grid-column: span 2; border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--bg-card) 100%);">
-                    <div class="badge-container">
-                        <span class="badge" style="background:rgba(59,130,246,0.15);color:#93C5FD;border:1px solid rgba(59,130,246,0.3);">LABS</span>
-                    </div>
-                    <div class="tool-info">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <div class="tool-icon" style="background: rgba(59,130,246,0.12); color: #93C5FD;">
-                                <i data-lucide="palette"></i>
+                        <div class="tool-action">
+                            <i data-lucide="arrow-right"></i>
+                        </div>
+                    </a>
+                    <a href="3d-tools/index.html#hue" class="tool-card" id="card-hueforge" style="border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--bg-card) 100%);">
+                        <div class="tool-info">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                <div class="tool-icon" style="background: rgba(59,130,246,0.12); color: #93C5FD;">
+                                    <i data-lucide="palette"></i>
+                                </div>
+                                <h3 style="margin: 0;">${t.hueforgeTitle}</h3>
                             </div>
-                            <h3 style="margin: 0;">${t.hueforgeTitle}</h3>
+                            <p style="margin: 0;">${t.hueforgeSummary}</p>
                         </div>
-                        <p style="margin: 0;">${t.hueforgeSummary}</p>
-                    </div>
-                    <div class="tool-action">
-                        <i data-lucide="arrow-right"></i>
-                    </div>
-                </a>
+                        <div class="tool-action">
+                            <i data-lucide="arrow-right"></i>
+                        </div>
+                    </a>
+                    <a href="3d-tools/index.html#clicker" class="tool-card" id="card-clicker" style="border-color: rgba(20,184,166,0.3); background: linear-gradient(135deg, rgba(20,184,166,0.08) 0%, var(--bg-card) 100%);">
+                        <div class="tool-info">
+                            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                <div class="tool-icon" style="background: rgba(20,184,166,0.12); color: #5EEAD4;">
+                                    <i data-lucide="keyboard"></i>
+                                </div>
+                                <h3 style="margin: 0;">Clicker Factory</h3>
+                            </div>
+                            <p style="margin: 0;">Turn any image or text into a printable 3D clicker with a real mechanical MX switch.</p>
+                        </div>
+                        <div class="tool-action">
+                            <i data-lucide="arrow-right"></i>
+                        </div>
+                    </a>
+                </div>
                 <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                     <a href="#comparator" class="tool-card" id="card-comparator" style="border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
                     <div class="badge-container">
