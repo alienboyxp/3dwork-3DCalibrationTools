@@ -199,11 +199,7 @@ export function createUi(
     <div class="app-header">
       <h1>Clicker Factory</h1>
       <p class="app-subtitle">Generate printable 3D model of a multicolor clicker from an image</p>
-      <p class="app-credit">3Dwork · Inspired by
-        <a class="app-credit-link" href="https://github.com/vostoklabs/Clicker-Generator-OLD" target="_blank" rel="noopener noreferrer">
-          Vostok Labs Clicker Generator (reference)
-        </a>
-      </p>
+      <p class="app-credit">3Dwork</p>
     </div>
 
     <div class="section" id="previewViewSection">
