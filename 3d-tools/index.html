@@ -466,12 +466,33 @@ window.Canvas3D = function Canvas3D({ onMount, className, children, info, hint, 
 window.ClickerTool = function ClickerTool({ onNavigate }) {
     const iframeRef = React.useRef(null);
     const [loaded, setLoaded] = React.useState(false);
+    const [error, setError] = React.useState(null);
     React.useEffect(() => {
         const iframe = iframeRef.current;
         if (!iframe) return;
-        iframe.src = 'apps/clicker/index.html';
+        // Ruta absoluta desde la raíz del sitio
+        iframe.src = window.location.origin + '/apps/clicker/index.html';
         iframe.onload = () => setLoaded(true);
+        iframe.onerror = () => setError('No se pudo cargar el Clicker Factory');
     }, []);
+    if (error) {
+        return (
+            <div className="tool-page" style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--panel)' }}>
+                <div style={{ maxWidth: 500, margin: '0 auto', background: 'var(--panel-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '40px' }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>⌨️</div>
+                    <h2 style={{ color: 'var(--text)', marginBottom: 8 }}>Clicker Factory</h2>
+                    <p style={{ marginBottom: 16, color: 'var(--error-text, #ef4444)' }}>{error}</p>
+                    <a href="apps/clicker/index.html" target="_blank" rel="noopener noreferrer" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 8,
+                        background: 'var(--accent)', color: '#fff', padding: '12px 24px',
+                        borderRadius: 'var(--radius)', textDecoration: 'none', fontWeight: 600,
+                    }}>
+                        Abrir en nueva pestaña <i data-lucide="external-link"></i>
+                    </a>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="tool-page" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--panel)' }}>
             <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
@@ -482,10 +503,10 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                     allowFullScreen
                 />
             </div>
-            {!loaded && (
+            {!loaded && !error && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--panel)', zIndex: 10 }}>
                     <div style={{ fontSize: 48, marginBottom: 12 }}>⌨️</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 0.9rem }}>Loading Clicker Factory…</div>
+                    <div style={{ color: 'var(--muted)', fontSize: 0.9rem }}>Cargando Clicker Factory…</div>
                 </div>
             )}
         </div>
