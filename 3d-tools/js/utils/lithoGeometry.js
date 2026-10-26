@@ -331,9 +331,13 @@ window.LithoGeometry = (function () {
         // Sirve para pintar el preview por simulación de luz.
         function levelAt(x, y, z) {
             if (!arc) return opt.upright ? (-y) / opt.maxT : z / opt.maxT;
+            // En modo arco el grosor es radial: la distancia al eje del
+            // cilindro es R+w (no la distancia euclidiana al origen, que
+            // depende del ángulo y daba el grosor equivocado para la
+            // retroiluminación en geometrías curvas).
             const r = opt.upright
-                ? Math.sqrt(x * x + y * y)
-                : Math.sqrt(x * x + z * z);
+                ? Math.sqrt(x * x + (y + R) * (y + R))
+                : Math.sqrt(x * x + (z + R) * (z + R));
             return (r - R) / opt.maxT;
         }
         for (let i = 0, v = 0; i < positions.length; i += 3, v++) {
