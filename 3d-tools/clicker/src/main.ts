@@ -26,12 +26,20 @@ import { FILAMENTS, PLATE_SIZES, DEFAULT_PLATE_SIZE } from './types';
 
 // Start fetching switch assets immediately at startup to run in parallel with worker setup
 const base = import.meta.env.BASE_URL;
-const assetsPromise = Promise.all([
-  fetch(base + 'assets/switch/mx/mx-socket.3mf').then((r) => r.arrayBuffer()),
-  fetch(base + 'assets/switch/mx/mx-stem.3mf').then((r) => r.arrayBuffer()),
-  fetch(base + 'assets/switch/mx/mx-switch.3mf').then((r) => r.arrayBuffer()),
+const timeout = (ms: number) => new Promise<ArrayBuffer[]>((_, reject) =>
+  setTimeout(() => reject(new Error('Timeout loading switch assets after ' + ms + 'ms')), ms));
+
+const assetsPromise = Promise.race<ArrayBuffer[]>([
+  Promise.all([
+    fetch(base + 'assets/switch/mx/mx-socket.3mf').then((r) => r.arrayBuffer()),
+    fetch(base + 'assets/switch/mx/mx-stem.3mf').then((r) => r.arrayBuffer()),
+    fetch(base + 'assets/switch/mx/mx-switch.3mf').then((r) => r.arrayBuffer()),
+  ]),
+  timeout(15000),
 ]).catch((err) => {
   console.error('[assets] Pre-fetch failed:', err);
+  // No throw: leave status visible so the user sees what happened.
+  store.set({ status: 'Error loading switch assets: ' + err.message, building: false });
   throw err;
 });
 
@@ -93,6 +101,20 @@ const store = createStore<UiState>({
   canRedo: false,
   canRefresh: false,
 });
+
+// Global error handler: surface any uncaught error in the status div so the user
+// sees what went wrong instead of a stuck "Booting…" screen.
+window.onerror = (message, _source, _lineno, _colno, error) => {
+  const msg = error?.stack ?? String(message);
+  store.set({ status: 'Clicker error: ' + msg, building: false });
+  console.error('[clicker] Uncaught error:', msg);
+  return true;
+};
+
+window.onunhandledrejection = (event) => {
+  store.set({ status: 'Clicker error: ' + String(event.reason), building: false });
+  console.error('[clicker] Unhandled rejection:', event.reason);
+};
 
 // ---- Heavy data kept out of the reactive store ----
 let originalImage: RgbaImage | null = null; // pristine decode (never mutated)
