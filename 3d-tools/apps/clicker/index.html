@@ -14,6 +14,14 @@
         const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const theme = saved || (systemDark ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', theme);
+        // Soporte para integración externa (WordPress, etc.):
+        //   ?noheader=1  -> oculta las barras laterales, deja solo el visor 3D
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('noheader') === '1') {
+          const style = document.createElement('style');
+          style.textContent = '#sidebar-left, #sidebar-right { display: none !important; } #viewport { grid-column: 1 / -1; }';
+          document.head.appendChild(style);
+        }
       })();
     </script>
     <script type="module" crossorigin src="./assets/index-JdalJGVh.js"></script>
