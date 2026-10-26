@@ -95,7 +95,7 @@
             <i data-lucide="info" style="width: 16px; height: 16px;"></i>
             <span id="footer-contact-text"></span>
         </p>
-        <p>&copy; 2026 3Dwork.io - All Rights Reserved</p>
+        <p>&copy; 2026 3Dwork.io - All Rights Reserved - <span id="footer-version">v. loading...</span></p>
     </footer>
 
     <!-- Scripts included in order to avoid module issues over file:// -->
@@ -129,6 +129,32 @@
     <script src="src/components/filamentComparator.js?v=1.8"></script>
     <script src="src/components/resinComparator.js?v=1.0"></script>
     <script src="src/main.js?v=1.3"></script>
+    <script>
+        // Footer version: fetch latest commit from GitHub (cached per session)
+        (function() {
+            const el = document.getElementById('footer-version');
+            if (!el) return;
+            try {
+                const cached = sessionStorage.getItem('gh-commit-info');
+                if (cached) {
+                    const d = JSON.parse(cached);
+                    el.textContent = 'v. ' + d.sha.slice(0, 7) + ' · ' + d.date;
+                    return;
+                }
+            } catch(e) {}
+            fetch('https://api.github.com/repos/alienboyxp/3dwork-3DCalibrationTools/commits/main')
+                .then(r => r.json())
+                .then(d => {
+                    const sha = d.sha || '';
+                    const date = (d.commit && d.commit.committer && d.commit.committer.date) || '';
+                    const shortDate = date ? new Date(date).toISOString().slice(0, 10) : '';
+                    const text = 'v. ' + sha.slice(0, 7) + ' · ' + shortDate;
+                    el.textContent = text;
+                    try { sessionStorage.setItem('gh-commit-info', JSON.stringify({sha, date: shortDate})); } catch(e) {}
+                })
+                .catch(() => { el.textContent = 'v. ' + (document.querySelector('meta[name="build"]') || {}).content || 'latest'; });
+        })();
+    </script>
 </body>
 
 </html>
