@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lithophane Creator – 3Dwork</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/i18next@23.8.2/dist/umd/i18next.min.js"></script>
+    <script src="https://unpkg.com/react-i18next@14.0.5/dist/umd/react-i18next.min.js"></script>
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Motores propios -->
+    <script src="js/utils/lithoGeometry.js?v=1.1"></script>
+    <script src="js/utils/stlExporter.js?v=1.0"></script>
+
+    <!-- Compartidos (header + canvas + export) -->
+    <script type="text/babel" src="js/shared/header.js?v=1.0"></script>
+    <script type="text/babel" src="js/shared/canvas3d.js?v=1.0"></script>
+    <script src="js/shared/stl-export.js?v=1.0"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/header.css" />
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo, useId, useCallback } = React;
+
+        // Canvas3D: componente compartido de js/shared/canvas3d.js
+        const Canvas3D = window.Canvas3DLocal;
+
+        // STLExporter y exportCmyk* vienen de js/shared/stl-export.js (window.STLExporter etc.)
+        const STLExporter = window.STLExporter;
+        const exportCmyk3MF = window.exportCmyk3MF;
+        const exportCmykStlZip = window.exportCmykStlZip;
+
+        // =====================================================
+        // LITHOPHANE TOOL
+        // =====================================================
+        const LithophaneTool = () => {
+            useEffect(() => { document.title = 'Lithophane Creator – 3Dwork'; }, []);
+            const [imgUrl, setImgUrl] = useState(null), [pix, setPix] = useState(null), [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
+            const [W, setW] = useState(100), [H, setH] = useState(100), [lock, setLock] = useState(true), [mode, setMode] = useState('fit');
+            const [bright, setBr] = useState(0.8), [contrast, setCt] = useState(1.0), [gamma, setGm] = useState(1.0), [smooth, setSm] = useState(0);
+            const [inv, setInv] = useState(false), [mirror, setMir] = useState(false);
+            const [baseT, setBt] = useState(0.8), [maxT, setMt] = useState(3.0), [lh, setLh] = useState(0.12), [border, setBd] = useState(0);
+            const [res, setRes] = useState(120), [geom, setGeom] = useState('flat'), [angle, setAng] = useState(180);
+            const [upright, setUp] = useState(true);
+            const [back, setBack] = useState(false);
+            const [cmyk, setCmyk] = useState(false);        // MONO | CMYK (AMS)
+            const [cwMax, setCwMax] = useState(3.0);        // CMYK: grosor máx placa blanca
+            const [ccMax, setCcMax] = useState(1.6);        // CMYK: grosor máx placas C/M/Y
+            const [cRes, setCRes] = useState(30);           // CMYK: resolución XY de color
+            const [stats, setStats] = useState(null);
+            const sRef = useRef(null), mRef = useRef(null), gRef = useRef(null), api = useRef(null), lRef = useRef(null), cmykRef = useRef(null);
+
+            const handleImg = (file) => {
+                if (!file) return; const i = new Image(); i.onload = () => {
+                    setImgW(i.width); setImgH(i.height); const r = i.width / i.height; setImgR(r);
+                    if (lock) setH(Math.round(W / r));
+                    const c = document.createElement('canvas'); c.width = i.width; c.height = i.height;
+                    const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0);
+                    setPix(ctx.getImageData(0, 0, i.width, i.height).data); setImgUrl(URL.createObjectURL(file));
+                }; i.src = URL.createObjectURL(file);
+            };
+
+            const upW = (v) => { setW(v); if (lock) setH(Math.round(v / imgR)); };
+            const upH = (v) => { setH(v); if (lock) setW(Math.round(v * imgR)); };
+
+            useEffect(() => {
+                if (!pix || !sRef.current) return;
+                const s = sRef.current; if (mRef.current) s.remove(mRef.current);
+                // CMYK (AMS): 4 placas apiladas con su offset Z y su color
+                // oficial. La pieza ya está tumbada en la cama (imagen en
+                // XY, grosor en Z): no hay que girar nada en el preview.
+                if (cmyk) {
+                    const built = window.LithoGeometry.buildCmyk(pix, imgW, imgH, {
+                        width: W, height: H, bright, contrast, gamma,
+                        smoothing: smooth, mirror, res, layerHeight: lh,
+                        scaleMode: mode,
+                        cmykWhiteMax: cwMax, cmykColorMax: ccMax, cmykColorRes: cRes
+                    });
+                    const group = new THREE.Group();
+                    if (back) {
+                        // Backlight: una sola superficie con el color combinado
+                        // (transmisión CMYK) — así se ve la imagen final.
+                        const white = built.plates[0];
+                        const pg = new THREE.BufferGeometry();
+                        pg.setAttribute('position', new THREE.BufferAttribute(white.positions, 3));
+                        pg.setAttribute('color', new THREE.BufferAttribute(built.combinedColors, 3));
+                        pg.computeVertexNormals();
+                        const mat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
+                        group.add(new THREE.Mesh(pg, mat));
+                    } else {
+                        // Sin backlight: las 4 placas apiladas con su color de
+                        // filamento (semi-transparentes para ver el stack).
+                        built.plates.forEach(p => {
+                            const pg = new THREE.BufferGeometry();
+                            pg.setAttribute('position', new THREE.BufferAttribute(p.positions, 3));
+                            pg.computeVertexNormals();
+                            const mat = new THREE.MeshStandardMaterial({
+                                color: new THREE.Color(p.hex), roughness: 0.62, metalness: 0.02,
+                                side: THREE.FrontSide, transparent: true, opacity: 0.7
+                            });
+                            group.add(new THREE.Mesh(pg, mat));
+                        });
+                    }
+                    const b = new THREE.Box3().setFromObject(group); const c = new THREE.Vector3(); b.getCenter(c); group.position.sub(c);
+                    s.add(group); mRef.current = group; cmykRef.current = built;
+                    setStats(built.stats);
+                    return;
+                }
+                const g = STLExporter.buildLitho(pix, imgW, imgH, {
+                    width: W, height: H, baseT, maxT, bright, contrast, invert: inv,
+                    gamma, smoothing: smooth, mirror, res, layerHeight: lh, geom,
+                    curveAngle: angle, border, scaleMode: mode, upright
+                });
+                // Retroiluminación: lo fino deja pasar la luz, lo grueso la tapa.
+                // El color de cada vértice pasa a ser "luz transmitida".
+                if (back) {
+                    const cols = g.getAttribute('color');
+                    const lv = (g.userData && g.userData.levels) || [];
+                    for (let i = 0, v = 0; i < cols.count; i++, v++) {
+                        const thru = 1 - (lv[v] || 0);
+                        const warm = 0.22 + thru * 0.78;
+                        cols.setXYZ(i, warm, warm * 0.90, warm * 0.68);
+                    }
+                    cols.needsUpdate = true;
+                }
+                // En retroiluminación el material no se ilumina: el color de
+                // cada vértice ES la luz que atraviesa el panel (lo fino
+                // brilla, lo grueso tapa). Con un emisivo uniforme el detalle
+                // se perdía.
+                const m = back
+                    ? new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }))
+                    : new THREE.Mesh(g, new THREE.MeshStandardMaterial({
+                        color: 0xffffff, vertexColors: true,
+                        roughness: 0.72, metalness: 0.05
+                    }));
+                // El modelo de pie tiene la altura en Z (eje de la cama). Para
+                // verlo como se va a imprimir (de pie, con el alto hacia
+                // arriba) se gira la malla en el preview: la imagen queda
+                // vertical en pantalla y el grosor mira hacia el espectador.
+                if (upright) m.rotation.x = -Math.PI / 2;
+                const b = new THREE.Box3().setFromObject(m); const c = new THREE.Vector3(); b.getCenter(c); m.position.sub(c);
+                s.add(m); mRef.current = m; gRef.current = g;
+                setStats(g.userData && g.userData.stats ? g.userData.stats : null);
+            }, [pix, W, H, mode, baseT, maxT, res, geom, bright, contrast, inv, back, gamma, smooth, mirror, lh, angle, border, upright, cmyk, cwMax, ccMax, cRes]);
+
+            useEffect(() => {
+                if (!sRef.current) return;
+                if (lRef.current) { sRef.current.remove(lRef.current); lRef.current = null; }
+                if (back && !cmyk) {
+                    // La luz va DETRÁS del panel: de pie el panel está en el
+                    // plano XZ (la luz viene de -Y); tumbado, en XY (de -Z).
+                    // decay 0 para que la luz no se apague con la distancia.
+                    const pl = new THREE.PointLight(0xFFF0D0, 1.6, 0, 0);
+                    pl.position.set(0, upright ? -70 : 0, upright ? 0 : -70);
+                    sRef.current.add(pl); lRef.current = pl;
+                }
+            }, [back, upright, cmyk]);
+
+            return <div className="tool-page"><div className="tool-layout">
+                <div className="panel-left">
+                    <div className="panel-header"><span className="panel-title">LITHOPHANE SETUP</span></div>
+                    <div className="panel-body">
+                        <label className={`upload-zone ${imgUrl ? 'has-image' : ''}`}>{imgUrl ? <img src={imgUrl} /> : <><span>📷</span> Upload Image</>}<input type="file" accept="image/*" onChange={e => handleImg(e.target.files[0])} style={{ display: 'none' }} /></label>
+                        <div className="section-label">PRINT MODE</div>
+                        <div className="geo-btn-group" style={{ display: 'flex', gap: '6px' }}>
+                            <button className={`geo-btn ${!cmyk ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setCmyk(false)}>MONO</button>
+                            <button className={`geo-btn ${cmyk ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setCmyk(true)}>CMYK (AMS)</button>
+                        </div>
+                        {cmyk && (
+                            <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '6px', lineHeight: 1.4 }}>
+                                4 stacked plates in one piece: white diffuser + cyan/magenta/yellow. AMS order: 1 white · 2 cyan · 3 magenta · 4 yellow.
+                            </p>
+                        )}
+                        <div className="section-label">DIMENSIONS (mm)</div>
+                        <div className="dimension-inputs">
+                            <div><label>Width</label><input type="number" className="dim-input" value={W} onChange={e => upW(parseFloat(e.target.value))} /></div>
+                            <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)}>🔗</div>
+                            <div style={{ textAlign: 'right' }}><label>Height</label><input type="number" className="dim-input" value={H} onChange={e => upH(parseFloat(e.target.value))} /></div>
+                        </div>
+                        <div style={{ marginTop: 10 }}>
+                            <label style={{ fontSize: 10, color: '#94A3B8' }}>SCALING MODE</label>
+                            <select className="dim-input" style={{ marginTop: 4, background: 'var(--bg-input)', color: 'white' }} value={mode} onChange={e => setMode(e.target.value)}>
+                                <option value="fit">Stretch to fit</option><option value="fill">Fill (Crop excess)</option>
+                            </select>
+                        </div>
+                        {!cmyk && (<>
+                            <div className="section-label">THICKNESS</div>
+                            <div className="thickness-grid">
+                                <div className="thickness-item"><label>Base (mm)</label><input type="number" step="0.1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={baseT} onChange={e => setBt(parseFloat(e.target.value))} /></div>
+                                <div className="thickness-item"><label>Max (mm)</label><input type="number" step="0.1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={maxT} onChange={e => setMt(parseFloat(e.target.value))} /></div>
+                            </div>
+                        </>)}
+                        {cmyk && (<>
+                            <div className="section-label">CMYK PLATES (AMS)</div>
+                            <div className="control-group"><div className="control-label"><span>White max (mm)</span><span>{cwMax.toFixed(1)}</span></div><input type="range" min="1.5" max="4" step="0.1" value={cwMax} onChange={e => setCwMax(parseFloat(e.target.value))} /></div>
+                            <div className="control-group"><div className="control-label"><span>Color max (mm)</span><span>{ccMax.toFixed(1)}</span></div><input type="range" min="0.8" max="2.4" step="0.1" value={ccMax} onChange={e => setCcMax(parseFloat(e.target.value))} /></div>
+                            <div className="control-group"><div className="control-label"><span>Color detail (px)</span><span>{cRes}</span></div><input type="range" min="8" max="80" step="2" value={cRes} onChange={e => setCRes(parseInt(e.target.value))} /></div>
+                            <div className="control-group"><div className="control-label"><span>Layer (mm)</span><span>{lh.toFixed(2)}</span></div><input type="range" min="0.06" max="0.16" step="0.01" value={lh} onChange={e => setLh(parseFloat(e.target.value))} /></div>
+                            <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px', lineHeight: 1.4 }}>
+                                The color plates are sampled coarser than the white one on purpose (their detail arrives softened by the diffusion). 0.08–0.12 mm layers, 0.2 mm nozzle recommended.
+                            </p>
+                        </>)}
+                        {!cmyk && (<>
+                        <div className="section-label">PRINT SETTINGS</div>
+                        <div className="control-group">
+                            <div className="control-label"><span>Orientation</span><span>{upright ? 'Upright' : 'Flat on bed'}</span></div>
+                            <div className="geo-btn-group" style={{ display: 'flex', gap: '6px' }}>
+                                <button className={`geo-btn ${upright ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setUp(true)}>Upright</button>
+                                <button className={`geo-btn ${!upright ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setUp(false)}>Flat</button>
+                            </div>
+                            <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px', lineHeight: 1.4 }}>
+                                Upright puts the image in the vertical plane: each layer captures a horizontal line of the photo. Flat prints as a relief on the bed and blurs the detail.
+                            </p>
+                        </div>
+                        <div className="thickness-grid">
+                            <div className="thickness-item"><label>Layer Height (mm)</label><input type="number" step="0.01" min="0.04" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={lh} onChange={e => setLh(parseFloat(e.target.value))} /></div>
+                            <div className="thickness-item"><label>Border (mm)</label><input type="number" step="0.5" min="0" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={border} onChange={e => setBd(Math.max(0, parseFloat(e.target.value) || 0))} /></div>
+                        </div>
+                        </>)}
+                        {!cmyk && (<>
+                        <div className="section-label">GEOMETRY</div>
+                        <div className="geo-btn-group">{['flat', 'cylindrical', 'curved'].map(v => <button key={v} className={`geo-btn ${geom === v ? 'active' : ''}`} onClick={() => { setGeom(v); setAng(v === 'curved' ? 90 : 180); }}>{v}</button>)}</div>
+                        {geom !== 'flat' && (
+                            <div className="control-group" style={{ marginTop: '8px' }}>
+                                <div className="control-label"><span>Curve Angle</span><span>{angle}°</span></div>
+                                <input type="range" min="60" max="360" step="15" value={angle} onChange={e => setAng(parseInt(e.target.value))} />
+                            </div>
+                        )}
+                        </>)}
+                        <div className="section-label">MESH DETAIL</div>
+                        <input type="range" min="60" max="250" step="10" value={res} onChange={e => setRes(parseInt(e.target.value))} />
+                        <p style={{ fontSize: 9, color: '#94A3B8', marginTop: '4px' }}>
+                            {cmyk
+                                ? `White plate detail: ${res} px · color plates: ${cRes} px.`
+                                : <>Horizontal detail: {res} px. Vertical detail follows the layer height: {stats ? stats.resY : '…'} rows.</>}
+                        </p>
+                        {cmyk ? (<>
+                            <button className="download-btn" disabled={!pix} style={{ marginTop: 20 }} onClick={() => exportCmyk3MF(cmykRef.current ? cmykRef.current.plates : null)}>EXPORT CMYK 3MF</button>
+                            <button className="download-btn" disabled={!pix} style={{ marginTop: 8, background: 'rgba(255,255,255,0.05)', color: 'var(--accent)', boxShadow: 'none', border: '1px solid var(--border-accent)' }} onClick={() => exportCmykStlZip(cmykRef.current ? cmykRef.current.plates : null)}>4×STL (ZIP)</button>
+                        </>) : (
+                            <button className="download-btn" disabled={!pix} style={{ marginTop: 20 }} onClick={() => STLExporter.download(STLExporter.exportBinary(gRef.current), '3dwork_lithophane.stl')}>EXPORT SOLID STL</button>
+                        )}
+                    </div>
+                </div>
+                <div className="canvas-center">
+                    <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} initialView={{ theta: 32, phi: 72, radius: 250 }} hint="3D Preview" info={pix ? (cmyk ? `CMYK Stack: ${W}×${H}mm` : `Solid Block: ${W}x${H}mm`) : "Waiting for image..."}>
+                        <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
+                            <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? '#fff' : '#94A3B8', border: back ? '1px solid var(--accent)' : '1px solid var(--border)', padding: '6px 12px', borderRadius: 20, boxShadow: back ? '0 0 16px var(--accent-glow)' : 'none' }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>
+                        </div>
+                        <div className="view-btns">
+                            <button className="v-btn" onClick={() => api.current.reset()}>Reset</button>
+                            <button className="v-btn" onClick={() => api.current.set(0, 10)}>Top</button>
+                            <button className="v-btn" onClick={() => api.current.set(0, 85)}>Front</button>
+                        </div>
+                    </Canvas3D>
+                </div>
+                <div className="panel-right">
+                    <div className="panel-header"><span className="panel-title">ADJUSTMENTS</span></div>
+                    <div className="panel-body">
+                        <div className="section-label">IMAGE FILTER</div>
+                        <div className="control-group"><div className="control-label"><span>Brightness</span><span>{bright.toFixed(2)}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast.toFixed(2)}</span></div><input type="range" min="0" max="3" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Gamma</span><span>{gamma.toFixed(2)}</span></div><input type="range" min="0.2" max="3" step="0.05" value={gamma} onChange={e => setGm(parseFloat(e.target.value))} /></div>
+                        <div className="control-group"><div className="control-label"><span>Smoothing</span><span>{smooth}</span></div><input type="range" min="0" max="4" step="1" value={smooth} onChange={e => setSm(parseInt(e.target.value))} /></div>
+                        {!cmyk && <div className="toggle-row"><span className="toggle-label">Invert Heights</span><label className="toggle"><input type="checkbox" checked={inv} onChange={e => setInv(e.target.checked)} /><span className="toggle-slider"></span></label></div>}
+                        <div className="toggle-row"><span className="toggle-label">Mirror horizontally</span><label className="toggle"><input type="checkbox" checked={mirror} onChange={e => setMir(e.target.checked)} /><span className="toggle-slider"></span></label></div>
+
+                        <div className="section-label" style={{ marginTop: 20 }}>MODEL</div>
+                        <div className="thickness-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                            {(cmyk ? [
+                                { k: 'Size', v: stats ? `${stats.widthMM} × ${stats.heightMM} mm` : '—' },
+                                { k: 'Stack height', v: stats ? `${stats.stackMM} mm · ${stats.plates} plates` : '—' },
+                                ...(cmykRef.current ? cmykRef.current.plates.map(p => ({
+                                    k: p.name,
+                                    v: `${p.stats.effectiveBase.toFixed(2)}–${p.stats.maxT.toFixed(1)} mm @ z${p.zOffset.toFixed(2)}`
+                                })) : []),
+                                { k: 'Triangles', v: stats ? stats.triangles.toLocaleString('en-US') : '—' },
+                                { k: '4×STL size', v: stats ? `${(stats.stlSize / 1048576).toFixed(1)} MB` : '—' }
+                            ] : [
+                                { k: 'Size', v: stats ? `${stats.widthMM} × ${stats.heightMM} mm` : '—' },
+                                { k: 'Thickness', v: stats ? `${stats.effectiveBase} – ${maxT} mm` : '—' },
+                                { k: 'Resolution', v: stats ? `${stats.resX} × ${stats.resY}` : '—' },
+                                { k: 'Thickness steps', v: stats && stats.steps ? `${stats.steps}` : '—' },
+                                { k: 'Triangles', v: stats ? stats.triangles.toLocaleString('en-US') : '—' },
+                                { k: 'STL size', v: stats ? `${(stats.fileSize / 1048576).toFixed(1)} MB` : '—' }
+                            ]).map(r => (
+                                <div key={r.k} className="thickness-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '6px' }}>
+                                    <label style={{ fontSize: 9 }}>{r.k}</label>
+                                    <span style={{ fontSize: 9, color: 'var(--accent)', fontWeight: 700 }}>{r.v}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {cmyk ? (
+                            <div className="palette-grid" style={{ marginTop: '8px' }}>
+                                {[['white', '#FFFFFF'], ['cyan', '#0086D6'], ['magenta', '#EC008C'], ['yellow', '#F4EE2A']].map(([n, h], i) => (
+                                    <div key={n} className="palette-swatch" title={`AMS ${i + 1} · ${n}`} style={{ background: h, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)' }} />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="palette-grid" style={{ marginTop: '8px' }}>
+                                {[...Array(Math.min(stats && stats.steps ? stats.steps : 12, 40))].map((_, i, arr) => (
+                                    <div key={i} className="palette-swatch" style={{ background: `hsl(0,0%,${100 - (i / Math.max(1, arr.length - 1)) * 90}%)` }} />
+                                ))}
+                            </div>
+                        )}
+                        {stats && stats.fileSize > 8 * 1048576 && (
+                            <p style={{ fontSize: 9, color: '#f59e0b', marginTop: '6px', lineHeight: 1.4 }}>
+                                Heavy STL ({Math.round(stats.fileSize / 1048576)} MB): raise the layer height to 0.16 or lower the horizontal detail if the download feels slow.
+                            </p>
+                        )}
+
+                        <div className="section-label" style={{ marginTop: 20 }}>PRINT TIPS</div>
+                        {cmyk ? (
+                            <div style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.6 }}>
+                                • AMS / multicolor: 1 white · 2 cyan · 3 magenta · 4 yellow (Bambu colors).<br />
+                                • 0.2 mm nozzle recommended, 0.08–0.12 mm layers, 100% infill.<br />
+                                • Print flat on the bed: the 4 plates stack in one piece with only 3 AMS changes.<br />
+                                • No supports: the slicer bridges the valleys between plates.<br />
+                                • Backlight with a white LED panel behind.
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.6 }}>
+                                • White or translucent filament (PLA / PETG).<br />
+                                • 100% infill (rectilinear) — the panel must be solid.<br />
+                                • Layer height 0.08–0.16 mm for the detail.<br />
+                                • Base 0.6–1.0 mm, max 2.5–3.5 mm for contrast.<br />
+                                • Print upright: each layer then holds a line of the image.<br />
+                                • Backlight with an LED panel or a lamp from behind.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div></div>;
+        };
+
+        // =====================================================
+        // APP
+        // =====================================================
+        const App = () => {
+            return <main>
+                <SharedHeader.Header active="litho" />
+                <LithophaneTool />
+            </main>;
+        };
+
+        function boot() {
+            // Esperar a que los scripts babel compartidos (header, canvas3d) estén listos
+            if (!window.SharedHeader || !window.Canvas3DLocal || !window.STLExporter) {
+                setTimeout(boot, 50); return;
+            }
+            const i18n = window.i18next, ri = window.ReactI18next;
+            if (!i18n || !ri) { setTimeout(boot, 100); return; }
+            i18n.use(ri.initReactI18next).init({
+                lng: window.SharedHeader.getLang(),
+                resources: { en: { translation: {} }, es: { translation: {} } }
+            }, () => {
+                ReactDOM.createRoot(document.getElementById('root')).render(
+                    <ri.I18nextProvider i18n={i18n}><App /></ri.I18nextProvider>
+                );
+            });
+        } boot();
+    </script>
+</body>
+</html>
