@@ -86,7 +86,7 @@ window.translations = {
         step4Title: "Step 4: Calculate Results",
         step4Desc: "The new values are calculated automatically below.",
         calibrationMenu: "3D Calibration",
-        priceCalculator: "3D Price Calculator",
+        priceCalculator: "3D Print Price Calculator",
         homeTitle: "Welcome to 3Dwork Tools",
         homeDesc: "Select a tool below to start calibrating your printer or calculating your costs.",
         estepsSummary: "Calibrate your extruder steps/mm for Marlin or rotation distance for Klipper systematically.",

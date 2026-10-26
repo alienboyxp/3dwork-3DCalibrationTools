@@ -1,4 +1,5 @@
 let currentLang = 'en';
+window.currentLang = currentLang;
 let currentView = 'home';
 
 const TOOL_TITLES = {
@@ -94,6 +95,7 @@ function setupLangButtons() {
 
 function switchLang(lang) {
     currentLang = lang;
+    window.currentLang = lang;
     document.documentElement.lang = lang;
     const btnEn = document.getElementById('btn-en');
     const btnEs = document.getElementById('btn-es');

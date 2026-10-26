@@ -59,6 +59,9 @@ window.renderResinComparator = function (container, t, opts) {
                     <div class="spec-box"><span class="spec-label">${lang === 'es' ? 'Densidad' : 'Density'}</span><span class="spec-value">${r.density ? r.density + ' g/cm³' : '—'}</span></div>
                     <div class="spec-box"><span class="spec-label">${lang === 'es' ? 'Peso envase' : 'Package'}</span><span class="spec-value">${r.weight_g ? r.weight_g + ' g' : '—'}</span></div>
                     <div class="spec-box"><span class="spec-label">${lang === 'es' ? 'Uso principal' : 'Best for'}</span><span class="spec-value">${r.best_for || '—'}</span></div>
+                    <div class="spec-box"><span class="spec-label">${lang === 'es' ? 'Capa base' : 'Base layer'}</span><span class="spec-value">${r.layer_base_s ? r.layer_base_s + ' s' : '—'}</span></div>
+                    <div class="spec-box"><span class="spec-label">${lang === 'es' ? 'Capa normal' : 'Normal layer'}</span><span class="spec-value">${r.layer_normal_s ? r.layer_normal_s + ' s' : '—'}</span></div>
+                    <div class="spec-box"><span class="spec-label">${lang === 'es' ? 'Temp. trabajo' : 'Working temp'}</span><span class="spec-value">${r.working_temp || '—'}</span></div>
                 </div>
             </div>
             <div class="detail-section">
@@ -71,6 +74,7 @@ window.renderResinComparator = function (container, t, opts) {
     }
 
     function render() {
+        const lang = window.currentLang || 'es';
         const filtered = allResins.filter(r => {
             if (activeType !== 'all' && r.type !== activeType) return false;
             if (activeBrand !== 'all' && r.brand !== activeBrand) return false;

@@ -1,207 +1,815 @@
 {
   "resins": [
     {
-      "id": "elegoo-standard-v2", "brand": "Elegoo", "name": "Standard Resin V2.0",
-      "type": "Standard", "weight_g": 1000, "price_eur": 23,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"Black","hex":"#1A1A1A"},{"name":"White","hex":"#F5F5F5"},{"name":"Beige","hex":"#D9CBB8"}],
-      "wash": "ipa", "viscosity_mpas": "600-800", "density": 1.09,
-      "best_for": "Miniaturas y piezas de detalle", "source": "elegoo.com", "updated": "2026-10-24"
+      "id": "elegoo-standard-v2",
+      "brand": "Elegoo",
+      "name": "Standard Resin V2.0",
+      "type": "Standard",
+      "weight_g": 1000,
+      "price_eur": 23,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        },
+        {
+          "name": "Beige",
+          "hex": "#D9CBB8"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": "600-800",
+      "density": 1.09,
+      "best_for": "Miniaturas y piezas de detalle",
+      "source": "elegoo.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 35,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "elegoo-8k-water-washable-v2", "brand": "Elegoo", "name": "8K Water-Washable Resin V2.0",
-      "type": "Water-Wash", "weight_g": 1000, "price_eur": 25,
-      "colors": [{"name":"Space Grey","hex":"#8D8D8D"},{"name":"Black","hex":"#1A1A1A"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Detalle 8K sin IPA", "source": "elegoo.com", "updated": "2026-10-24"
+      "id": "elegoo-8k-water-washable-v2",
+      "brand": "Elegoo",
+      "name": "8K Water-Washable Resin V2.0",
+      "type": "Water-Wash",
+      "weight_g": 1000,
+      "price_eur": 25,
+      "colors": [
+        {
+          "name": "Space Grey",
+          "hex": "#8D8D8D"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Detalle 8K sin IPA",
+      "source": "elegoo.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "elegoo-abs-like-v3", "brand": "Elegoo", "name": "ABS-Like Resin V3.0",
-      "type": "ABS-Like", "weight_g": 1000, "price_eur": 28,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"Black","hex":"#1A1A1A"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas resistentes tipo ABS", "source": "elegoo.com", "updated": "2026-10-24"
+      "id": "elegoo-abs-like-v3",
+      "brand": "Elegoo",
+      "name": "ABS-Like Resin V3.0",
+      "type": "ABS-Like",
+      "weight_g": 1000,
+      "price_eur": 28,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas resistentes tipo ABS",
+      "source": "elegoo.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "elegoo-water-wash-abs-like", "brand": "Elegoo", "name": "Water-Washable ABS-Like",
-      "type": "ABS-Like", "weight_g": 1000, "price_eur": 27,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Resistencia + limpieza con agua", "source": "elegoo.com", "updated": "2026-10-24"
+      "id": "elegoo-water-wash-abs-like",
+      "brand": "Elegoo",
+      "name": "Water-Washable ABS-Like",
+      "type": "ABS-Like",
+      "weight_g": 1000,
+      "price_eur": 27,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Resistencia + limpieza con agua",
+      "source": "elegoo.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "elegoo-tough", "brand": "Elegoo", "name": "Tough Resin",
-      "type": "Tough", "weight_g": 1000, "price_eur": 35,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"Black","hex":"#1A1A1A"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas funcionales e impactos", "source": "elegoo.com", "updated": "2026-10-24"
+      "id": "elegoo-tough",
+      "brand": "Elegoo",
+      "name": "Tough Resin",
+      "type": "Tough",
+      "weight_g": 1000,
+      "price_eur": 35,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas funcionales e impactos",
+      "source": "elegoo.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 45,
+      "layer_normal_s": 3.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "elegoo-plant-based", "brand": "Elegoo", "name": "Plant-Based Resin",
-      "type": "Plant-Based", "weight_g": 1000, "price_eur": 30,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Bajo olor, uso doméstico", "source": "elegoo.com", "updated": "2026-10-24"
+      "id": "elegoo-plant-based",
+      "brand": "Elegoo",
+      "name": "Plant-Based Resin",
+      "type": "Plant-Based",
+      "weight_g": 1000,
+      "price_eur": 30,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Bajo olor, uso doméstico",
+      "source": "elegoo.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "anycubic-standard", "brand": "Anycubic", "name": "Standard Resin",
-      "type": "Standard", "weight_g": 1000, "price_eur": 20,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"Black","hex":"#1A1A1A"},{"name":"White","hex":"#F5F5F5"},{"name":"Skin","hex":"#E8C4A0"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Uso general, gran relación calidad/precio", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-standard",
+      "brand": "Anycubic",
+      "name": "Standard Resin",
+      "type": "Standard",
+      "weight_g": 1000,
+      "price_eur": 20,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        },
+        {
+          "name": "Skin",
+          "hex": "#E8C4A0"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Uso general, gran relación calidad/precio",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 35,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "anycubic-water-wash-2", "brand": "Anycubic", "name": "Water Wash Resin 2.0",
-      "type": "Water-Wash", "weight_g": 1000, "price_eur": 29,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"},{"name":"Black","hex":"#1A1A1A"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Limpieza con agua, sin IPA", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-water-wash-2",
+      "brand": "Anycubic",
+      "name": "Water Wash Resin 2.0",
+      "type": "Water-Wash",
+      "weight_g": 1000,
+      "price_eur": 29,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Limpieza con agua, sin IPA",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "anycubic-plant-based-2", "brand": "Anycubic", "name": "Plant-Based UV Resin 2.0",
-      "type": "Plant-Based", "weight_g": 1000, "price_eur": 25,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"},{"name":"Black","hex":"#1A1A1A"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Bajo olor, base vegetal (soja)", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-plant-based-2",
+      "brand": "Anycubic",
+      "name": "Plant-Based UV Resin 2.0",
+      "type": "Plant-Based",
+      "weight_g": 1000,
+      "price_eur": 25,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Bajo olor, base vegetal (soja)",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "anycubic-high-speed-2", "brand": "Anycubic", "name": "High Speed Resin 2.0",
-      "type": "High-Speed", "weight_g": 1000, "price_eur": 30,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"Black","hex":"#1A1A1A"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Impresoras rápidas (P1/Serie Speed)", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-high-speed-2",
+      "brand": "Anycubic",
+      "name": "High Speed Resin 2.0",
+      "type": "High-Speed",
+      "weight_g": 1000,
+      "price_eur": 30,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Impresoras rápidas (P1/Serie Speed)",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 15,
+      "layer_normal_s": 1.5,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "anycubic-tough-2", "brand": "Anycubic", "name": "Tough Resin 2.0",
-      "type": "Tough", "weight_g": 1000, "price_eur": 30,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas funcionales resistentes", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-tough-2",
+      "brand": "Anycubic",
+      "name": "Tough Resin 2.0",
+      "type": "Tough",
+      "weight_g": 1000,
+      "price_eur": 30,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas funcionales resistentes",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 45,
+      "layer_normal_s": 3.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "anycubic-high-clear", "brand": "Anycubic", "name": "High Clear Resin",
-      "type": "Clear", "weight_g": 1000, "price_eur": 24,
-      "colors": [{"name":"Clear","hex":"#E8F4F8"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas translúcidas y lentes", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-high-clear",
+      "brand": "Anycubic",
+      "name": "High Clear Resin",
+      "type": "Clear",
+      "weight_g": 1000,
+      "price_eur": 24,
+      "colors": [
+        {
+          "name": "Clear",
+          "hex": "#E8F4F8"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas translúcidas y lentes",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "anycubic-abs-like", "brand": "Anycubic", "name": "ABS-Like Resin",
-      "type": "ABS-Like", "weight_g": 1000, "price_eur": 30,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas tipo ABS, menos frágil que standard", "source": "store.anycubic.com", "updated": "2026-10-24"
+      "id": "anycubic-abs-like",
+      "brand": "Anycubic",
+      "name": "ABS-Like Resin",
+      "type": "ABS-Like",
+      "weight_g": 1000,
+      "price_eur": 30,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas tipo ABS, menos frágil que standard",
+      "source": "store.anycubic.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "creality-piocreat-ww-2", "brand": "Creality", "name": "PioCreat Water-Washable Resin 2.0",
-      "type": "Water-Wash", "weight_g": 1000, "price_eur": 16,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Limpieza con agua al mejor precio", "source": "store.creality.com", "updated": "2026-10-24"
+      "id": "creality-piocreat-ww-2",
+      "brand": "Creality",
+      "name": "PioCreat Water-Washable Resin 2.0",
+      "type": "Water-Wash",
+      "weight_g": 1000,
+      "price_eur": 16,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Limpieza con agua al mejor precio",
+      "source": "store.creality.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "creality-water-wash-plus", "brand": "Creality", "name": "Water Washable Resin Plus",
-      "type": "Water-Wash", "weight_g": 1000, "price_eur": 25,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Estable en agua, bajo olor", "source": "store.creality.com", "updated": "2026-10-24"
+      "id": "creality-water-wash-plus",
+      "brand": "Creality",
+      "name": "Water Washable Resin Plus",
+      "type": "Water-Wash",
+      "weight_g": 1000,
+      "price_eur": 25,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Estable en agua, bajo olor",
+      "source": "store.creality.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "uniformation-standard", "brand": "Uniformation", "name": "Standard Resin (Cartucho)",
-      "type": "Standard", "weight_g": 1000, "price_eur": 26,
-      "colors": [{"name":"Black","hex":"#1A1A1A"},{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"},{"name":"Clear","hex":"#E8F4F8"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Detalle con baja viscosidad (GK3)", "source": "uniformation3d.com", "updated": "2026-10-24"
+      "id": "uniformation-standard",
+      "brand": "Uniformation",
+      "name": "Standard Resin (Cartucho)",
+      "type": "Standard",
+      "weight_g": 1000,
+      "price_eur": 26,
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        },
+        {
+          "name": "Clear",
+          "hex": "#E8F4F8"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Detalle con baja viscosidad (GK3)",
+      "source": "uniformation3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 35,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "uniformation-abs-like", "brand": "Uniformation", "name": "ABS-Like Resin (Cartucho)",
-      "type": "ABS-Like", "weight_g": 1000, "price_eur": 30,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas resistentes tipo ABS", "source": "uniformation3d.com", "updated": "2026-10-24"
+      "id": "uniformation-abs-like",
+      "brand": "Uniformation",
+      "name": "ABS-Like Resin (Cartucho)",
+      "type": "ABS-Like",
+      "weight_g": 1000,
+      "price_eur": 30,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas resistentes tipo ABS",
+      "source": "uniformation3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "uniformation-water-washable", "brand": "Uniformation", "name": "Water Washable Resin (Cartucho)",
-      "type": "Water-Wash", "weight_g": 1000, "price_eur": 28,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Limpieza con agua para GK3", "source": "uniformation3d.com", "updated": "2026-10-24"
+      "id": "uniformation-water-washable",
+      "brand": "Uniformation",
+      "name": "Water Washable Resin (Cartucho)",
+      "type": "Water-Wash",
+      "weight_g": 1000,
+      "price_eur": 28,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Limpieza con agua para GK3",
+      "source": "uniformation3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "uniformation-transparent", "brand": "Uniformation", "name": "Transparent Resin (Cartucho)",
-      "type": "Clear", "weight_g": 1000, "price_eur": 60,
-      "colors": [{"name":"Clear","hex":"#E8F4F8"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Translúcido de alta claridad", "source": "uniformation3d.com", "updated": "2026-10-24"
+      "id": "uniformation-transparent",
+      "brand": "Uniformation",
+      "name": "Transparent Resin (Cartucho)",
+      "type": "Clear",
+      "weight_g": 1000,
+      "price_eur": 60,
+      "colors": [
+        {
+          "name": "Clear",
+          "hex": "#E8F4F8"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Translúcido de alta claridad",
+      "source": "uniformation3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "phrozen-aqua-8k", "brand": "Phrozen", "name": "Aqua 8K Resin",
-      "type": "Standard", "weight_g": 1000, "price_eur": 33,
-      "colors": [{"name":"Aqua-Gray","hex":"#9CA3AF"},{"name":"Aqua-Vanilla","hex":"#E8DCC8"},{"name":"Snow-Gray","hex":"#C8C8C8"},{"name":"Red-Clay","hex":"#B0715A"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Alta resolución para 8K/12K", "source": "us.phrozen3d.com", "updated": "2026-10-24"
+      "id": "phrozen-aqua-8k",
+      "brand": "Phrozen",
+      "name": "Aqua 8K Resin",
+      "type": "Standard",
+      "weight_g": 1000,
+      "price_eur": 33,
+      "colors": [
+        {
+          "name": "Aqua-Gray",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Aqua-Vanilla",
+          "hex": "#E8DCC8"
+        },
+        {
+          "name": "Snow-Gray",
+          "hex": "#C8C8C8"
+        },
+        {
+          "name": "Red-Clay",
+          "hex": "#B0715A"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Alta resolución para 8K/12K",
+      "source": "us.phrozen3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 35,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "phrozen-ww-tough", "brand": "Phrozen", "name": "Water-Washable Tough Resin",
-      "type": "Tough", "weight_g": 1000, "price_eur": 33,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Tenaz y lavable con agua", "source": "us.phrozen3d.com", "updated": "2026-10-24"
+      "id": "phrozen-ww-tough",
+      "brand": "Phrozen",
+      "name": "Water-Washable Tough Resin",
+      "type": "Tough",
+      "weight_g": 1000,
+      "price_eur": 33,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Tenaz y lavable con agua",
+      "source": "us.phrozen3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 45,
+      "layer_normal_s": 3.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "phrozen-ww-model-gray", "brand": "Phrozen", "name": "Water-Washable Resin Model Gray",
-      "type": "Water-Wash", "weight_g": 1000, "price_eur": 33,
-      "colors": [{"name":"Model Gray","hex":"#8D8D8D"},{"name":"Black","hex":"#1A1A1A"}],
-      "wash": "water", "viscosity_mpas": null, "density": null,
-      "best_for": "Modelismo lavable con agua", "source": "us.phrozen3d.com", "updated": "2026-10-24"
+      "id": "phrozen-ww-model-gray",
+      "brand": "Phrozen",
+      "name": "Water-Washable Resin Model Gray",
+      "type": "Water-Wash",
+      "weight_g": 1000,
+      "price_eur": 33,
+      "colors": [
+        {
+          "name": "Model Gray",
+          "hex": "#8D8D8D"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        }
+      ],
+      "wash": "water",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Modelismo lavable con agua",
+      "source": "us.phrozen3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "phrozen-tr300", "brand": "Phrozen", "name": "TR300 Ultra-High Temp Resin",
-      "type": "Engineering", "weight_g": 1000, "price_eur": 54,
-      "colors": [{"name":"Gray","hex":"#9CA3AF"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Ingeniería, alta temperatura", "source": "us.phrozen3d.com", "updated": "2026-10-24"
+      "id": "phrozen-tr300",
+      "brand": "Phrozen",
+      "name": "TR300 Ultra-High Temp Resin",
+      "type": "Engineering",
+      "weight_g": 1000,
+      "price_eur": 54,
+      "colors": [
+        {
+          "name": "Gray",
+          "hex": "#9CA3AF"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Ingeniería, alta temperatura",
+      "source": "us.phrozen3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 60,
+      "layer_normal_s": 4.5,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "phrozen-clear-plus", "brand": "Phrozen", "name": "Clear Plus Resin",
-      "type": "Clear", "weight_g": 1000, "price_eur": 25,
-      "colors": [{"name":"Clear","hex":"#E8F4F8"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Translúcido de calidad", "source": "us.phrozen3d.com", "updated": "2026-10-24"
+      "id": "phrozen-clear-plus",
+      "brand": "Phrozen",
+      "name": "Clear Plus Resin",
+      "type": "Clear",
+      "weight_g": 1000,
+      "price_eur": 25,
+      "colors": [
+        {
+          "name": "Clear",
+          "hex": "#E8F4F8"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Translúcido de calidad",
+      "source": "us.phrozen3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "phrozen-rapid-black", "brand": "Phrozen", "name": "Rapid Resin (Black / Model Gray)",
-      "type": "High-Speed", "weight_g": 1000, "price_eur": 29,
-      "colors": [{"name":"Rapid Black","hex":"#1A1A1A"},{"name":"Model Gray","hex":"#8D8D8D"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Impresión rápida con buen detalle", "source": "us.phrozen3d.com", "updated": "2026-10-24"
+      "id": "phrozen-rapid-black",
+      "brand": "Phrozen",
+      "name": "Rapid Resin (Black / Model Gray)",
+      "type": "High-Speed",
+      "weight_g": 1000,
+      "price_eur": 29,
+      "colors": [
+        {
+          "name": "Rapid Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "Model Gray",
+          "hex": "#8D8D8D"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Impresión rápida con buen detalle",
+      "source": "us.phrozen3d.com",
+      "updated": "2026-10-24",
+      "layer_base_s": 15,
+      "layer_normal_s": 1.5,
+      "working_temp": "20-30°C"
     },
     {
-      "id": "monocure-3drm", "brand": "Monocure3D", "name": "3D-Rapid Model Resin (3DRM)",
-      "type": "Standard", "weight_g": 500, "price_eur": 24,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"Clear","hex":"#E8F4F8"},{"name":"Black","hex":"#1A1A1A"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Modelismo de alta calidad (Australia)", "source": "monocure3d.com.au", "updated": "2026-10-24"
+      "id": "monocure-3drm",
+      "brand": "Monocure3D",
+      "name": "3D-Rapid Model Resin (3DRM)",
+      "type": "Standard",
+      "weight_g": 500,
+      "price_eur": 24,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "Clear",
+          "hex": "#E8F4F8"
+        },
+        {
+          "name": "Black",
+          "hex": "#1A1A1A"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Modelismo de alta calidad (Australia)",
+      "source": "monocure3d.com.au",
+      "updated": "2026-10-24",
+      "layer_base_s": 35,
+      "layer_normal_s": 2.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "monocure-flex100", "brand": "Monocure3D", "name": "FLEX100 Flexible Resin",
-      "type": "Flexible", "weight_g": 1000, "price_eur": 115,
-      "colors": [{"name":"Clear","hex":"#E8F4F8"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas flexibles y comprimibles", "source": "monocure3d.com.au", "updated": "2026-10-24"
+      "id": "monocure-flex100",
+      "brand": "Monocure3D",
+      "name": "FLEX100 Flexible Resin",
+      "type": "Flexible",
+      "weight_g": 1000,
+      "price_eur": 115,
+      "colors": [
+        {
+          "name": "Clear",
+          "hex": "#E8F4F8"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas flexibles y comprimibles",
+      "source": "monocure3d.com.au",
+      "updated": "2026-10-24",
+      "layer_base_s": 50,
+      "layer_normal_s": 4.0,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "monocure-cm50", "brand": "Monocure3D", "name": "CM50 Castable Resin",
-      "type": "Castable", "weight_g": 500, "price_eur": 0,
-      "colors": [{"name":"Castable","hex":"#D4C5A0"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Fundición a la cera perdida (joyería)", "source": "monocure3d.com.au", "updated": "2026-10-24"
+      "id": "monocure-cm50",
+      "brand": "Monocure3D",
+      "name": "CM50 Castable Resin",
+      "type": "Castable",
+      "weight_g": 500,
+      "price_eur": 0,
+      "colors": [
+        {
+          "name": "Castable",
+          "hex": "#D4C5A0"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Fundición a la cera perdida (joyería)",
+      "source": "monocure3d.com.au",
+      "updated": "2026-10-24",
+      "layer_base_s": 45,
+      "layer_normal_s": 3.5,
+      "working_temp": "20-25°C"
     },
     {
-      "id": "monocure-abs3d", "brand": "Monocure3D", "name": "ABS-3D Resin",
-      "type": "ABS-Like", "weight_g": 500, "price_eur": 24,
-      "colors": [{"name":"Grey","hex":"#9CA3AF"},{"name":"White","hex":"#F5F5F5"}],
-      "wash": "ipa", "viscosity_mpas": null, "density": null,
-      "best_for": "Piezas tipo ABS de alta calidad", "source": "monocure3d.com.au", "updated": "2026-10-24"
+      "id": "monocure-abs3d",
+      "brand": "Monocure3D",
+      "name": "ABS-3D Resin",
+      "type": "ABS-Like",
+      "weight_g": 500,
+      "price_eur": 24,
+      "colors": [
+        {
+          "name": "Grey",
+          "hex": "#9CA3AF"
+        },
+        {
+          "name": "White",
+          "hex": "#F5F5F5"
+        }
+      ],
+      "wash": "ipa",
+      "viscosity_mpas": null,
+      "density": null,
+      "best_for": "Piezas tipo ABS de alta calidad",
+      "source": "monocure3d.com.au",
+      "updated": "2026-10-24",
+      "layer_base_s": 40,
+      "layer_normal_s": 3.0,
+      "working_temp": "20-25°C"
     }
   ],
   "lastFullUpdate": "2026-10-24 — gamas oficiales de Anycubic, Elegoo, Creality/PioCreat, Uniformation, Phrozen y Monocure3D"
