@@ -502,13 +502,28 @@
                         cmykWhiteMax: cwMax, cmykColorMax: ccMax, cmykColorRes: cRes
                     });
                     const group = new THREE.Group();
+                    const plateColor = (hex) => new THREE.Color(hex);
                     built.plates.forEach(p => {
                         const pg = new THREE.BufferGeometry();
                         pg.setAttribute('position', new THREE.BufferAttribute(p.positions, 3));
+                        const levels = p.levels || [];
+                        // Color por vértice: sin backlight → color del filamento;
+                        // con backlight → color del filamento × transmisión
+                        // (lo fino deja pasar la luz, lo grueso la tapa).
+                        const cols = new Float32Array(p.positions.length);
+                        const pc = plateColor(p.hex);
+                        for (let i = 0, v = 0; i < p.positions.length; i += 3, v++) {
+                            const thru = back ? (1 - (levels[v] || 0)) : 1.0;
+                            cols[i]     = pc.r * thru;
+                            cols[i + 1] = pc.g * thru;
+                            cols[i + 2] = pc.b * thru;
+                        }
+                        pg.setAttribute('color', new THREE.BufferAttribute(cols, 3));
                         pg.computeVertexNormals();
-                        group.add(new THREE.Mesh(pg, new THREE.MeshStandardMaterial({
-                            color: new THREE.Color(p.hex), roughness: 0.62, metalness: 0.02
-                        })));
+                        const mat = back
+                            ? new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide })
+                            : new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02, side: THREE.FrontSide });
+                        group.add(new THREE.Mesh(pg, mat));
                     });
                     const b = new THREE.Box3().setFromObject(group); const c = new THREE.Vector3(); b.getCenter(c); group.position.sub(c);
                     s.add(group); mRef.current = group; cmykRef.current = built;
@@ -654,7 +669,7 @@
                 <div className="canvas-center">
                     <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} initialView={{ theta: 32, phi: 72, radius: 250 }} hint="3D Preview" info={pix ? (cmyk ? `CMYK Stack: ${W}×${H}mm` : `Solid Block: ${W}x${H}mm`) : "Waiting for image..."}>
                         <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
-                            {!cmyk && <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? '#fff' : '#94A3B8', border: back ? '1px solid var(--accent)' : '1px solid var(--border)', padding: '6px 12px', borderRadius: 20, boxShadow: back ? '0 0 16px var(--accent-glow)' : 'none' }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>}
+                            <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? '#fff' : '#94A3B8', border: back ? '1px solid var(--accent)' : '1px solid var(--border)', padding: '6px 12px', borderRadius: 20, boxShadow: back ? '0 0 16px var(--accent-glow)' : 'none' }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>
                         </div>
                         <div className="view-btns">
                             <button className="v-btn" onClick={() => api.current.reset()}>Reset</button>
@@ -1401,7 +1416,7 @@
                         <div style={{ display: 'flex', width: '100%' }}>
                             <button className={`nav-tab ${tab === 'stack' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('stack')}>LAYER STACK</button>
                             <button className={`nav-tab ${tab === 'library' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('library')}>FILAMENTS</button>
-                            <button className={`nav-tab ${tab === 'help' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('help')}>HOW IT WORKS</button>
+                            <button className={`nav-tab ${tab === 'help' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10, padding: '0.3rem' }} onClick={() => setTab('help')} title="How it works">❓</button>
                         </div>
                     </div>
                     {tab === 'stack' ? (
@@ -1634,7 +1649,7 @@
                         <ul className="nav-links">
                             <li><a href="../index.html">Home</a></li>
                             <li className="dropdown">
-                                <a href="#" className="dropdown-trigger">3D Calibration <i data-lucide="chevron-down"></i></a>
+                                <a href="#" className="dropdown-trigger">Calibration <i data-lucide="chevron-down"></i></a>
                                 <ul className="dropdown-menu">
                                     <li><a href="../index.html#esteps">E-steps Calibration</a></li>
                                     <li><a href="../index.html#rotation">Rotation Distance</a></li>
@@ -1647,14 +1662,22 @@
                                 </ul>
                             </li>
                             <li className="dropdown">
-                                <a href="#" className="dropdown-trigger">3D Create <i data-lucide="chevron-down"></i></a>
+                                <a href="#" className="dropdown-trigger">Create <i data-lucide="chevron-down"></i></a>
                                 <ul className="dropdown-menu">
                                     <li><a href="#litho" onClick={() => setView('litho')}>Lithophane Creator</a></li>
                                     <li><a href="#hue" onClick={() => setView('hue')}>HueForge Creator</a></li>
                                     <li><a href="#clicker" onClick={() => setView('clicker')}>Clicker Factory</a></li>
                                 </ul>
                             </li>
-                            <li><a href="../index.html#price">3D Price Calculator</a></li>
+                            <li><a href="../index.html#price">3D Print Price Calculator</a></li>
+                            <li class="dropdown">
+                                <a href="#" className="dropdown-trigger">Comparators <i data-lucide="chevron-down"></i></a>
+                                <ul className="dropdown-menu">
+                                    <li><a href="../index.html#comparator">Machines</a></li>
+                                    <li><a href="../index.html#filaments">Filaments</a></li>
+                                    <li><a href="../index.html#resins">Resins</a></li>
+                                </ul>
+                            </li>
                         </ul>
                         <div className="nav-right" style={{ display: 'flex', gap: 10 }}>
                             <button className="v-btn" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>🇬🇧 EN</button>
