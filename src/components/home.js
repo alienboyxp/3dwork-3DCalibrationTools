@@ -10,7 +10,6 @@ window.renderHome = function (container, t) {
             </div>
 
             <div class="tool-grid">
-                <!-- ROW 1: LITHOPHANE & HUEFORGE (50/50 Split) -->
                 <a href="3d-tools/index.html#litho" class="tool-card" id="card-lithophane" style="grid-column: span 2; border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
                     <div class="badge-container">
                         <span class="badge" style="background:rgba(255,120,0,0.15);color:#FF9A3C;border:1px solid rgba(255,120,0,0.3);">NEW</span>
@@ -28,7 +27,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="arrow-right"></i>
                     </div>
                 </a>
-
                 <a href="3d-tools/index.html#hue" class="tool-card" id="card-hueforge" style="grid-column: span 2; border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--bg-card) 100%);">
                     <div class="badge-container">
                         <span class="badge" style="background:rgba(59,130,246,0.15);color:#93C5FD;border:1px solid rgba(59,130,246,0.3);">LABS</span>
@@ -46,8 +44,67 @@ window.renderHome = function (container, t) {
                         <i data-lucide="arrow-right"></i>
                     </div>
                 </a>
-
-                <!-- ROW 2: CALIBRATION TOOLS -->
+                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <a href="#comparator" class="tool-card" id="card-comparator" style="grid-column: span 2; border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="badge-container">
+                        <span class="badge" style="background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">NEW</span>
+                    </div>
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(16,185,129,0.12); color: #34D399;">
+                                <i data-lucide="columns-2"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.comparatorTitle || 'Comparator'}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.comparatorSummary || 'Compare 3D printers reviewed by 3Dwork'}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+                    <a href="#filaments" class="tool-card" id="card-filaments" style="grid-column: span 2; border-color: rgba(6,182,212,0.3); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(6,182,212,0.12); color: #22D3EE;">
+                                <i data-lucide="spool"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.filamentsTitle || 'Filaments'}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.filamentsSummary || 'Compare filament specs and prices'}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+                    <a href="#resins" class="tool-card" id="card-resins" style="grid-column: span 2; border-color: rgba(168,85,247,0.3); background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, var(--bg-card) 100%);">
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon" style="background: rgba(168,85,247,0.12); color: #C4B5FD;">
+                                <i data-lucide="droplets"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.resinsTitle || 'Resins'}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.resinsSummary || 'Compare resin specs and prices (SLA/MSLA)'}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+                </a>
+                </div>
+                <a href="#price" class="tool-card col-span-full" id="card-price">
+                    <div class="tool-info">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                            <div class="tool-icon">
+                                <i data-lucide="calculator"></i>
+                            </div>
+                            <h3 style="margin: 0;">${t.priceCalculator}</h3>
+                        </div>
+                        <p style="margin: 0;">${t.priceSummary}</p>
+                    </div>
+                    <div class="tool-action">
+                        <i data-lucide="chevron-right"></i>
+                    </div>
+                </a>
                 <a href="#esteps" class="tool-card" id="card-esteps">
                     <div class="badge-container">
                         <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
@@ -66,7 +123,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
                 <a href="#rotation" class="tool-card" id="card-rotation">
                     <div class="badge-container">
                         <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
@@ -84,7 +140,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
                 <a href="#skew" class="tool-card" id="card-skew">
                     <div class="badge-container">
                         <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
@@ -103,7 +158,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="arrow-right"></i>
                     </div>
                 </a>
-
                 <a href="#bedmesh" class="tool-card" id="card-bedmesh">
                     <div class="badge-container">
                         <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
@@ -121,8 +175,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
-                <!-- ROW 3: ADVANCED TOOLS -->
                 <a href="#bedleveling" class="tool-card" id="card-bedleveling">
                     <div class="badge-container">
                         <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
@@ -140,7 +192,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
                 <a href="#vref" class="tool-card" id="card-vref">
                     <div class="badge-container">
                         <span class="badge badge-marlin"><img src="${MARLIN_LOGO}" class="badge-logo"> Marlin</span>
@@ -159,7 +210,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
                 <a href="#shaper" class="tool-card" id="card-shaper">
                     <div class="badge-container">
                         <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
@@ -177,7 +227,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
                 <a href="#loganalyzer" class="tool-card" id="card-loganalyzer">
                     <div class="badge-container">
                         <span class="badge badge-klipper"><img src="${KLIPPER_LOGO}" class="badge-logo"> Klipper</span>
@@ -195,71 +244,6 @@ window.renderHome = function (container, t) {
                         <i data-lucide="chevron-right"></i>
                     </div>
                 </a>
-
-                <!-- ROW 4: PRICE CALCULATOR (Full Width) -->
-                <a href="#price" class="tool-card col-span-full" id="card-price">
-                    <div class="tool-info">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <div class="tool-icon">
-                                <i data-lucide="calculator"></i>
-                            </div>
-                            <h3 style="margin: 0;">${t.priceCalculator}</h3>
-                        </div>
-                        <p style="margin: 0;">${t.priceSummary}</p>
-                    </div>
-                    <div class="tool-action">
-                        <i data-lucide="chevron-right"></i>
-                    </div>
-                </a>
-                <!-- COMPARATOR CARD -->
-                <a href="#comparator" class="tool-card" id="card-comparator" style="grid-column: span 2; border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
-                    <div class="badge-container">
-                        <span class="badge" style="background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">NEW</span>
-                    </div>
-                    <div class="tool-info">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <div class="tool-icon" style="background: rgba(16,185,129,0.12); color: #34D399;">
-                                <i data-lucide="columns-2"></i>
-                            </div>
-                            <h3 style="margin: 0;">${t.comparatorTitle || 'Comparator'}</h3>
-                        </div>
-                        <p style="margin: 0;">${t.comparatorSummary || 'Compare 3D printers reviewed by 3Dwork'}</p>
-                    </div>
-                    <div class="tool-action">
-                        <i data-lucide="arrow-right"></i>
-                    </div>
-                </a>
-                <!-- FILAMENTS CARD -->
-                <a href="#filaments" class="tool-card" id="card-filaments" style="grid-column: span 2; border-color: rgba(6,182,212,0.3); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, var(--bg-card) 100%);">
-                    <div class="tool-info">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <div class="tool-icon" style="background: rgba(6,182,212,0.12); color: #22D3EE;">
-                                <i data-lucide="spool"></i>
-                            </div>
-                            <h3 style="margin: 0;">${t.filamentsTitle || 'Filaments'}</h3>
-                        </div>
-                        <p style="margin: 0;">${t.filamentsSummary || 'Compare filament specs and prices'}</p>
-                    </div>
-                    <div class="tool-action">
-                        <i data-lucide="arrow-right"></i>
-                    </div>
-                </a>
-
-                <a href="#resins" class="tool-card" id="card-resins" style="grid-column: span 2; border-color: rgba(168,85,247,0.3); background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, var(--bg-card) 100%);">
-                    <div class="tool-info">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <div class="tool-icon" style="background: rgba(168,85,247,0.12); color: #C4B5FD;">
-                                <i data-lucide="droplets"></i>
-                            </div>
-                            <h3 style="margin: 0;">${t.resinsTitle || 'Resins'}</h3>
-                        </div>
-                        <p style="margin: 0;">${t.resinsSummary || 'Compare resin specs and prices (SLA/MSLA)'}</p>
-                    </div>
-                    <div class="tool-action">
-                        <i data-lucide="arrow-right"></i>
-                    </div>
-                </a>
-
             </div>
         </div>
     `;
