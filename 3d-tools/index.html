@@ -553,7 +553,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
             {!loaded && !error && (
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--panel)', zIndex: 10 }}>
                     <div style={{ fontSize: 48, marginBottom: 12 }}>⌨️</div>
-                    <div style={{ color: 'var(--muted)', fontSize: 0.9rem }}>Cargando Clicker Factory…</div>
+                    <div style={{ color: 'var(--muted)', fontSize: 0.9rem }}>Cargando Clicker Factory...</div>
                 </div>
             )}
         </div>
@@ -1887,7 +1887,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                             <div className="section-label">FILAMENT LIBRARY</div>
                             <input
                                 type="text"
-                                placeholder="Filtrar por marca, tipo o color…"
+                                placeholder="Filtrar por marca, tipo o color..."
                                 value={libFilter}
                                 onChange={e => setLibFilter(e.target.value)}
                                 className="dim-input"
@@ -2059,7 +2059,7 @@ window.ClickerTool = function ClickerTool({ onNavigate }) {
                             </div>
                         </div>
                     </div>
-                ) : v === 'litho' ? <LithophaneTool /> : v === 'clicker' ? (window.ClickerTool ? <window.ClickerTool /> : <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading Clicker Factory…<br/><small>Click any other tab and back, or refresh (Ctrl+Shift+R)</small></div>) : <HueForgeTool />}</div>
+                ) : v === 'litho' ? <LithophaneTool /> : v === 'clicker' ? (window.ClickerTool ? <window.ClickerTool /> : <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading Clicker Factory...<br/><small>Click any other tab and back, or refresh (Ctrl+Shift+R)</small></div>) : <HueForgeTool />}</div>
                 <footer style={{ padding: '20px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}>
                     &copy; 2026 3Dwork.io – HueForge logic based on the excellent open-source <a href="https://github.com/vycdev/Kromacut" target="_blank" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Kromacut</a> project.
                 </footer>
