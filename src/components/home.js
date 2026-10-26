@@ -45,7 +45,7 @@ window.renderHome = function (container, t) {
                     </div>
                 </a>
                 <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                    <a href="#comparator" class="tool-card" id="card-comparator" style="grid-column: span 2; border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
+                    <a href="#comparator" class="tool-card" id="card-comparator" style="border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
                     <div class="badge-container">
                         <span class="badge" style="background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">NEW</span>
                     </div>
@@ -62,7 +62,7 @@ window.renderHome = function (container, t) {
                         <i data-lucide="arrow-right"></i>
                     </div>
                 </a>
-                    <a href="#filaments" class="tool-card" id="card-filaments" style="grid-column: span 2; border-color: rgba(6,182,212,0.3); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, var(--bg-card) 100%);">
+                    <a href="#filaments" class="tool-card" id="card-filaments" style="border-color: rgba(6,182,212,0.3); background: linear-gradient(135deg, rgba(6,182,212,0.08) 0%, var(--bg-card) 100%);">
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon" style="background: rgba(6,182,212,0.12); color: #22D3EE;">
@@ -76,7 +76,7 @@ window.renderHome = function (container, t) {
                         <i data-lucide="arrow-right"></i>
                     </div>
                 </a>
-                    <a href="#resins" class="tool-card" id="card-resins" style="grid-column: span 2; border-color: rgba(168,85,247,0.3); background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, var(--bg-card) 100%);">
+                    <a href="#resins" class="tool-card" id="card-resins" style="border-color: rgba(168,85,247,0.3); background: linear-gradient(135deg, rgba(168,85,247,0.08) 0%, var(--bg-card) 100%);">
                     <div class="tool-info">
                         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                             <div class="tool-icon" style="background: rgba(168,85,247,0.12); color: #C4B5FD;">
