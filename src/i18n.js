@@ -85,7 +85,7 @@ window.translations = {
         step3Desc: "Measure the distance from the extruder entry to your mark.",
         step4Title: "Step 4: Calculate Results",
         step4Desc: "The new values are calculated automatically below.",
-        calibrationMenu: "3D Calibration",
+        calibrationMenu: "Calibration",
         priceCalculator: "3D Print Price Calculator",
         homeTitle: "Welcome to 3Dwork Tools",
         homeDesc: "Select a tool below to start calibrating your printer or calculating your costs.",
@@ -215,7 +215,7 @@ window.translations = {
         meshVerdictBad: "The bed is not level (range over 0.15 mm): level it mechanically first; the mesh alone will not save the first layer.",
         meshMatrix: "Mesh Matrix",
         cfgTab: "Config Data",
-        comparatorTitle: "Comparator",
+        comparatorTitle: "Machines/Accessories",
         comparatorSummary: "Compare 3D printers, resin printers and scanners reviewed by 3Dwork. Select up to 4 models for a side-by-side spec comparison.",
         filamentsTitle: "Filaments",
         filamentsSummary: "Compare filament specifications, temperatures and prices from top brands. Select up to 4 materials for comparison.",
@@ -350,7 +350,7 @@ window.translations = {
         lithophaneSummary: "Generate 3D-printable solid blocks from photos with aspect ratio control and watertight geometry.",
         hueforgeTitle: "HueForge Creator",
         hueforgeSummary: "Simulate multi-color filament painting based on Transmission Distance (TD) blending logic.",
-        createMenu: "3D Create"
+        createMenu: "Create"
     },
     es: {
         title: "3Dwork - Herramientas de Calibración 3D",
@@ -438,7 +438,7 @@ window.translations = {
         step3Desc: "Mide la distancia desde la entrada del extrusor hasta tu marca.",
         step4Title: "Paso 4: Calcular Resultados",
         step4Desc: "Los nuevos valores se calculan automáticamente a continuación.",
-        calibrationMenu: "Calibración 3D",
+        calibrationMenu: "Calibración",
         homeTitle: "Bienvenido a Herramientas 3Dwork",
         homeDesc: "Selecciona una herramienta para empezar a calibrar tu impresora o calcular tus costes.",
         estepsSummary: "Calibra tus pasos/mm de extrusora para Marlin o rotation distance para Klipper de forma sistemática.",
@@ -571,9 +571,8 @@ window.translations = {
         meshVerdictBad: "La cama no est\u00e1 nivelada (rango mayor de 0,15 mm): niv\u00e9lala a mano primero; la malla sola no salvar\u00e1 la primera capa.",
         meshMatrix: "Matriz de Malla",
         cfgTab: "Datos Configuración",
-        comparatorTitle: "Comparator",
         comparatorSummary: "Compare 3D printers, resin printers and scanners reviewed by 3Dwork. Select up to 4 models for a side-by-side spec comparison.",
-        comparatorTitle: "Comparador",
+        comparatorTitle: "Máquinas/Accesorios",
         comparatorSummary: "Compara las impresoras 3D FDM, resina y escáneres analizados por 3Dwork. Selecciona hasta 4 modelos para ver una comparativa de especificaciones.",
         filamentsTitle: "Filamentos",
         filamentsSummary: "Compara especificaciones, temperaturas y precios de los mejores filamentos. Selecciona hasta 4 materiales para comparar.",
@@ -708,6 +707,6 @@ window.translations = {
         lithophaneSummary: "Genera bloques sólidos imprimibles en 3D a partir de fotos con control de relación de aspecto y geometría estanca.",
         hueforgeTitle: "Creador HueForge",
         hueforgeSummary: "Simula pintura de filamentos multicolor basada en la lógica de mezcla de Distancia de Transmisión (TD).",
-        createMenu: "Creación 3D"
+        createMenu: "Creación"
     }
 };

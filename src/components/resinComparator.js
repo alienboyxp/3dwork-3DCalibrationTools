@@ -93,24 +93,24 @@ window.renderResinComparator = function (container, t, opts) {
         let html = `
             <style>
                 .comp-card { background:var(--bg-card); border:1px solid var(--glass-border); border-radius:16px; padding:1rem; transition:all 0.2s; }
-                .comp-card:hover { border-color:var(--accent); transform:translateY(-2px); }
-                .comp-pill { padding:0.3rem 0.7rem; border-radius:20px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-muted); font-size:0.75rem; cursor:pointer; transition:var(--trans); }
-                .comp-pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-                .spec-box { background:var(--bg-input); border:1px solid var(--glass-border); border-radius:8px; padding:0.5rem 0.6rem; }
+                .comp-card:hover { border-color:var(--primary); transform:translateY(-2px); }
+                .comp-pill { padding:0.3rem 0.7rem; border-radius:20px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.7); color:var(--text-muted); font-size:0.75rem; cursor:pointer; transition:all 0.25s ease; }
+                .comp-pill.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+                .spec-box { background:rgba(15,23,42,0.7); border:1px solid var(--glass-border); border-radius:8px; padding:0.5rem 0.6rem; }
                 .spec-label { font-size:0.65rem; color:var(--text-muted); display:block; text-transform:uppercase; letter-spacing:0.05em; }
-                .spec-value { font-size:0.85rem; font-weight:600; color:var(--text); }
+                .spec-value { font-size:0.85rem; font-weight:600; color:var(--text-main); }
                 .detail-section { margin-top:1rem; }
-                .detail-section h3 { font-size:0.85rem; color:var(--accent-light); margin-bottom:0.4rem; }
+                .detail-section h3 { font-size:0.85rem; color:var(--primary-light); margin-bottom:0.4rem; }
                 .comp-modal { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(4px); }
                 .comp-modal.active { display:flex; }
-                .comp-modal-content { background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.5rem; max-width:640px; width:92%; max-height:85vh; overflow:auto; }
+                .comp-modal-content { background:var(--bg-dark); border:1px solid var(--glass-border); border-radius:16px; padding:1.5rem; max-width:640px; width:92%; max-height:85vh; overflow:auto; }
                 .comp-modal-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; }
                 .comp-modal-close { background:none; border:none; color:var(--text-muted); cursor:pointer; }
-                .comp-btn-select { padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-muted); font-size:0.7rem; cursor:pointer; }
-                .comp-btn-select--active { background:var(--accent); color:#fff; border-color:var(--accent); }
+                .comp-btn-select { padding:0.3rem 0.6rem; border-radius:6px; border:1px solid var(--glass-border); background:rgba(15,23,42,0.7); color:var(--text-muted); font-size:0.7rem; cursor:pointer; }
+                .comp-btn-select--active { background:var(--primary); color:#fff; border-color:var(--primary); }
             </style>
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-bottom:1rem;">
-                <input id="resin-search" type="search" placeholder="${lang === 'es' ? 'Buscar resina…' : 'Search resin…'}" style="flex:1;min-width:180px;padding:0.5rem 0.7rem;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-input);color:var(--text);font-size:0.8rem;">
+                <input id="resin-search" type="search" placeholder="${lang === 'es' ? 'Buscar resina…' : 'Search resin…'}" style="flex:1;min-width:180px;padding:0.5rem 0.7rem;border-radius:8px;border:1px solid var(--glass-border);background:rgba(15,23,42,0.7);color:var(--text-main);font-size:0.8rem;">
                 <span style="font-size:0.75rem;color:var(--text-muted)">${filtered.length} / ${allResins.length}</span>
             </div>
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.6rem;">
@@ -118,7 +118,7 @@ window.renderResinComparator = function (container, t, opts) {
             </div>
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem;">
                 ${types.map(ty => `<button class="comp-pill ${activeType === ty ? 'active' : ''}" data-type="${ty}">${ty === 'all' ? (lang === 'es' ? 'Todos los tipos' : 'All types') : ty}</button>`).join('')}
-                <span style="width:1px;background:var(--border);margin:0 0.2rem;"></span>
+                <span style="width:1px;background:var(--glass-border);margin:0 0.2rem;"></span>
                 ${washes.map(w => `<button class="comp-pill ${activeWash === w ? 'active' : ''}" data-wash="${w}">${w === 'all' ? (lang === 'es' ? 'Lavado: todos' : 'Wash: all') : (w === 'water' ? '💧 agua' : '🧪 IPA')}</button>`).join('')}
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;">
@@ -134,7 +134,7 @@ window.renderResinComparator = function (container, t, opts) {
                             ${(r.colors || []).slice(0, 6).map(c => `<span style="width:14px;height:14px;border-radius:50%;background:${c.hex};border:1px solid rgba(255,255,255,0.2)" title="${c.name}"></span>`).join('')}
                         </div>
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
-                            <span style="font-size:0.85rem;font-weight:700;color:var(--accent-light)">${r.price_eur ? '~' + r.price_eur + ' €/kg' : '—'}</span>
+                            <span style="font-size:0.85rem;font-weight:700;color:var(--primary-light)">${r.price_eur ? '~' + r.price_eur + ' €/kg' : '—'}</span>
                             <span style="font-size:0.7rem;color:var(--text-muted)">${washIcon(r.wash)}</span>
                         </div>
                         <div style="display:flex;gap:0.4rem;margin-top:0.6rem;">

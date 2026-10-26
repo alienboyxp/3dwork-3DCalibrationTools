@@ -135,6 +135,12 @@ function updateUILabels() {
         navCreateMenu.textContent = t.createMenu + ' ';
         if (icon) navCreateMenu.appendChild(icon);
     }
+    const navMachinesMenu = document.getElementById('nav-machines-menu');
+    if (navMachinesMenu) {
+        const icon = navMachinesMenu.querySelector('i');
+        navMachinesMenu.textContent = t.comparatorTitle + ' ';
+        if (icon) navMachinesMenu.appendChild(icon);
+    }
     if (navEsteps) navEsteps.textContent = t.esteps;
     if (navRotation) navRotation.textContent = t.rotation;
     if (navSkew) navSkew.textContent = t.skew;
@@ -167,7 +173,7 @@ function updateUILabels() {
     if (navLogAnalyzer) navLogAnalyzer.textContent = t.logAnalyzerTitle;
 
     const navComparator = document.getElementById('nav-comparator');
-    if (navComparator) navComparator.textContent = t.comparatorTitle || (window.currentLang === 'es' ? 'Comparador' : 'Comparator');
+    if (navComparator) navComparator.textContent = window.currentLang === 'es' ? 'Máquinas' : 'Machines';
 
     const navFilaments = document.getElementById('nav-filaments');
     if (navFilaments) navFilaments.textContent = t.filamentsTitle || (window.currentLang === 'es' ? 'Filamentos' : 'Filaments');
