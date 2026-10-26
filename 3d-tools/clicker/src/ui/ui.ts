@@ -99,6 +99,8 @@ export interface UiCallbacks {
   onKeychainSize(deltaMm: number): void;
   /** Slide the keychain attachment along the body edge by delta mm. */
   onKeychainOffset(deltaMm: number): void;
+  /** Set the keychain side preset ('top' | 'right' | 'bottom' | 'left' | 'none'). */
+  onKeychainEnd(end: 'top' | 'right' | 'bottom' | 'left' | 'none'): void;
   onRemoveBg(on: boolean): void;
   onView(mode: ViewMode): void;
   onShowSwitch(on: boolean): void;
@@ -295,7 +297,14 @@ export function createUi(
 
             <div class="prow-stacked">
               <div class="prow-header">
-                <label>Position ${tip('Slides the keychain attachment around the edge of the body.')}</label>
+                <label>Side ${tip('Preset side of the body for the keychain loop. Overrides the angle dial when set.')}</label>
+                <select id="keychainEnd" style="width:100%; margin-top:4px; background:var(--bg-input); color:white; border:none; border-radius:6px; padding:4px 8px;">
+                  <option value="none">Free (angle dial)</option>
+                  <option value="top">Top</option>
+                  <option value="right">Right</option>
+                  <option value="bottom">Bottom</option>
+                  <option value="left">Left</option>
+                </select>
               </div>
               <div class="tol-stepper" id="keychainRotStepper">
                 <button class="btn" id="keychainRotMinus" type="button" aria-label="Rotate counter-clockwise">⟲</button>
@@ -1078,6 +1087,10 @@ export function createUi(
   $('keychainRotPlus').addEventListener('click', () => cb.onKeychainRotate(15));
   $('keychainOffsetMinus').addEventListener('click', () => cb.onKeychainOffset(-1.0));
   $('keychainOffsetPlus').addEventListener('click', () => cb.onKeychainOffset(1.0));
+  const keychainEndSelect = $<HTMLSelectElement>('keychainEnd');
+  keychainEndSelect.addEventListener('change', () => {
+    cb.onKeychainEnd(keychainEndSelect.value as 'top' | 'right' | 'bottom' | 'left' | 'none');
+  });
   $('keychainSizeMinus').addEventListener('click', () => cb.onKeychainSize(-0.4));
   $('keychainSizePlus').addEventListener('click', () => cb.onKeychainSize(0.4));
 
@@ -1835,6 +1848,8 @@ export function createUi(
     if (kcOffsetEl) kcOffsetEl.textContent = `${(kc.offsetMm ?? 0.0).toFixed(1)} mm`;
     const kcSizeEl = document.getElementById('keychainSizeVal');
     if (kcSizeEl) kcSizeEl.textContent = `${kc.holeDiameterMm.toFixed(1)} mm`;
+    const kcEndEl = document.getElementById('keychainEnd') as HTMLSelectElement | null;
+    if (kcEndEl) kcEndEl.value = kc.keychainEnd ?? 'none';
     $<HTMLInputElement>('removebg').checked = state.removeBg;
     $<HTMLInputElement>('removebgSvg').checked = state.removeBg;
     $<HTMLInputElement>('showswitch').checked = state.showSwitch;

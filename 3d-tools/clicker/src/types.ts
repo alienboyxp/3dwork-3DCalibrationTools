@@ -95,6 +95,12 @@ export interface KeychainParams {
   style: 'loop' | 'hole';
   /** Position around the body edge, degrees. 90 = +Y (top), counter-clockwise. */
   angleDeg: number;
+  /** Preset side for the loop: 'top' | 'right' | 'bottom' | 'left'. When set,
+   *  overrides angleDeg (top=90, right=0, bottom=270, left=180). */
+  keychainEnd: 'top' | 'right' | 'bottom' | 'left' | null;
+  /** Slide the loop along the side it is on, in millimetres. 0 is the middle
+   *  of that side. Maps to offsetMm. */
+  keychainSlideMm: number;
   /** Ring hole diameter, mm. Default 5.2. */
   holeDiameterMm: number;
   /** Lateral offset along the body edge tangent, mm. Positive = counter-clockwise

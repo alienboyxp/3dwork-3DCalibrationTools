@@ -16,6 +16,7 @@ import type {
   ClickerPart,
   EdgeStyle,
   GeometryResponse,
+  KeychainParams,
   PaletteEntry,
   RegionSet,
   RGB,
@@ -65,7 +66,7 @@ const store = createStore<UiState>({
   switches: [{ x: 0, y: 0, rotation: 0 }],
   activeSwitchIndex: 0,
   smoothing: 0.1,
-  keychain: { enabled: false, style: 'loop', angleDeg: 90, holeDiameterMm: 5.2, offsetMm: 0 },
+  keychain: { enabled: false, style: 'loop', angleDeg: 90, keychainEnd: null, keychainSlideMm: 0, holeDiameterMm: 5.2, offsetMm: 0 },
   removeBg: true,
   view: 'exploded',
   showSwitch: true,
@@ -251,6 +252,19 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
     const kc = store.get().keychain;
     const offsetMm = Math.round(Math.max(-15.0, Math.min(15.0, (kc.offsetMm ?? 0) + deltaMm)) * 10) / 10;
     store.set({ keychain: { ...kc, offsetMm } });
+    debouncedRebuild();
+  },
+  onKeychainEnd: (end) => {
+    const kc = store.get().keychain;
+    const nextEnd = end === 'none' ? null : end;
+    // When a preset side is chosen, derive angleDeg from it; when 'none', keep
+    // the existing angleDeg (user controls it with the dial).
+    let angleDeg = kc.angleDeg;
+    if (nextEnd) {
+      const map: Record<'top' | 'right' | 'bottom' | 'left', number> = { top: 90, right: 0, bottom: 270, left: 180 };
+      angleDeg = map[nextEnd];
+    }
+    store.set({ keychain: { ...kc, keychainEnd: nextEnd, angleDeg } });
     debouncedRebuild();
   },
   onSmoothing: (v) => {
@@ -949,6 +963,19 @@ function rebuild(quiet = false) {
   const capBaseColor: RGB = s.baseColorOverride ?? deriveFrameColor(s);
 
   const isText = s.importMode === 'text';
+  // Map keychainEnd preset to angleDeg and keychainSlideMm to offsetMm for the build.
+  const END_TO_ANGLE: Record<Exclude<KeychainParams['keychainEnd'], null>, number> = {
+    top: 90, right: 0, bottom: 270, left: 180,
+  };
+  const kcEnd = s.keychain.keychainEnd;
+  const kcAngle = kcEnd ? END_TO_ANGLE[kcEnd] : s.keychain.angleDeg;
+  const kcOffset = s.keychain.keychainSlideMm ?? s.keychain.offsetMm;
+  const keychainForBuild: KeychainParams = {
+    ...s.keychain,
+    angleDeg: kcAngle,
+    offsetMm: kcOffset,
+  };
+
   const params: BuildParams = {
     baseShape: effectiveBaseShape,
     capWidthMm: s.capWidthMm,
@@ -964,7 +991,7 @@ function rebuild(quiet = false) {
     travel: 4.0,
     floorThickness: 1.6,
     switches: s.switches,
-    keychain: s.keychain,
+    keychain: keychainForBuild,
     baseFilamentRgb: capBaseColor,
     bodyColorRgb: s.bodyColorRgb ?? ([120, 124, 130] as RGB),
     edgeSettings: s.edgeSettings,
