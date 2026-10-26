@@ -454,6 +454,78 @@ window.LithoGeometry = (function () {
             return plate;
         });
 
+        // ── Colores combinados para el preview (transmisión CMYK) ────────
+        // Para cada vértice de la placa blanca (máxima resolución), se
+        // calcula el color resultante de atravesar las 4 placas:
+        //   R = (1-Lw)·(1-Lc)  G = (1-Lw)·(1-Lm)  B = (1-Lw)·(1-Ly)
+        // donde Lx = nivel de grosor (0=translúcido, 1=opaco) de cada placa.
+        // Se recalculan los 4 campos de altura a la resolución de la placa
+        // blanca (más denso que el de color) para no tener que interpolar.
+        const whitePlate = plates[0];
+        const combinedColors = new Float32Array(whitePlate.positions.length);
+        const channelBaseMax = [
+            [opt.cmykWhiteBase, opt.cmykWhiteMax],
+            [opt.cmykColorBase, opt.cmykColorMax],
+            [opt.cmykColorBase, opt.cmykColorMax],
+            [opt.cmykColorBase, opt.cmykColorMax]
+        ];
+        const fields = ['luma', 'r', 'g', 'b'].map((ch, ci) => {
+            return buildHeightField(pixels, imgW, imgH, Object.assign({}, opt, {
+                channel: ch, res: opt.res,
+                resV: Math.max(8, Math.round(opt.res * opt.height / opt.width)),
+                baseT: channelBaseMax[ci][0],
+                maxT: channelBaseMax[ci][1]
+            }));
+        });
+        const nx = fields[0].xs.length, ny = fields[0].ys.length;
+        const cellsX = nx - 1, cellsY = ny - 1;
+        const baseTs = [opt.cmykWhiteBase, opt.cmykColorBase, opt.cmykColorBase, opt.cmykColorBase];
+        const maxTs = [opt.cmykWhiteMax, opt.cmykColorMax, opt.cmykColorMax, opt.cmykColorMax];
+        // combined por punto de malla (col,row)
+        const combinedGrid = new Float32Array(nx * ny * 3);
+        for (let row = 0; row < ny; row++) {
+            for (let col = 0; col < nx; col++) {
+                const levels = fields.map((f, ci) => {
+                    const h = f.heights[row * nx + col] || 0;
+                    const bt = baseTs[ci], mt = maxTs[ci];
+                    return Math.max(0, Math.min(1, (h - bt) / (mt - bt)));
+                });
+                const thruW = 1 - levels[0];
+                const idx = (row * nx + col) * 3;
+                combinedGrid[idx]     = thruW * (1 - levels[1]);
+                combinedGrid[idx + 1] = thruW * (1 - levels[2]);
+                combinedGrid[idx + 2] = thruW * (1 - levels[3]);
+            }
+        }
+        // Mapeo vértice → punto de malla para la cara FRONTAL (los únicos
+        // que muestran la imagen). El orden de build() es: frontal (6 por
+        // celda), trasera (6 por celda), pared inferior (6 por col), pared
+        // superior (6 por col). El resto (back/walls) usa el color del
+        // punto más cercano o blanco.
+        const frontCells = cellsX * cellsY;
+        const frontVerts = frontCells * 6;
+        // tri 0: (col,row),(col+1,row),(col+1,row+1) → índices grid: col+row*nx, col+1+row*nx, col+1+(row+1)*nx
+        // tri 1: (col,row),(col+1,row+1),(col,row+1) → col+row*nx, col+1+(row+1)*nx, col+(row+1)*nx
+        const triPts = [[0, 0], [1, 0], [1, 1], [0, 0], [1, 1], [0, 1]]; // offsets (dc, dr) por tri-vertex
+        for (let ci = 0; ci < frontCells; ci++) {
+            const col = ci % cellsX;
+            const row = Math.floor(ci / cellsX);
+            for (let tv = 0; tv < 6; tv++) {
+                const dc = triPts[tv][0], dr = triPts[tv][1];
+                const gidx = (row + dr) * nx + (col + dc);
+                const vi = ci * 6 + tv;
+                combinedColors[vi * 3]     = combinedGrid[gidx * 3];
+                combinedColors[vi * 3 + 1] = combinedGrid[gidx * 3 + 1];
+                combinedColors[vi * 3 + 2] = combinedGrid[gidx * 3 + 2];
+            }
+        }
+        // back face + walls: color neutro (no visibles en el preview frontal)
+        for (let vi = frontVerts; vi < whitePlate.positions.length / 3; vi++) {
+            combinedColors[vi * 3]     = 0.3;
+            combinedColors[vi * 3 + 1] = 0.3;
+            combinedColors[vi * 3 + 2] = 0.3;
+        }
+
         // stats agregadas (zOffset final = altura teórica de la pila)
         const tris = plates.reduce((s, p) => s + p.stats.triangles, 0);
         const stlSize = plates.reduce((s, p) => s + 84 + p.stats.triangles * 50, 0);
@@ -469,7 +541,7 @@ window.LithoGeometry = (function () {
             layerHeight: lh,
             colorRes: opt.cmykColorRes
         };
-        return { plates: plates, stats: stats };
+        return { plates: plates, combinedColors: combinedColors, stats: stats };
     }
 
     /**
