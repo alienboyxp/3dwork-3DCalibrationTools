@@ -65,6 +65,17 @@ window.renderResinComparator = function (container, t, opts) {
                 </div>
             </div>
             <div class="detail-section">
+                <h3>${lang === 'es' ? 'Tiempo de capa y temperatura' : 'Layer time & temperature'}</h3>
+                <p style="font-size:0.72rem;color:var(--text-muted);line-height:1.5;margin-bottom:0.4rem">
+                    ${lang === 'es'
+                        ? 'Los tiempos de capa (base/normal) y la temperatura de trabajo son valores ORIENTATIVOS basados en las guías del fabricante. Cada impresora (potencia del LED, altura de capa, velocidad de elevación) necesita su propio test de exposición. No son valores definitivos.'
+                        : 'Layer times (base/normal) and working temperature are APPROXIMATE values from the manufacturer guides. Each printer (LED power, layer height, lift speed) needs its own exposure test. Not definitive values.'}
+                </p>
+                <p style="font-size:0.72rem;color:var(--text-muted);">
+                    <a href="https://labs.3dwork.io/guias-impresion-3d/calibracion_3d" target="_blank" rel="noopener" style="color:var(--primary-light);text-decoration:none;font-weight:600;">${lang === 'es' ? 'Guía SLA de 3Dwork Labs ↗' : '3Dwork Labs SLA Guide ↗'}</a>
+                </p>
+            </div>
+            <div class="detail-section">
                 <h3>${lang === 'es' ? 'Fuente' : 'Source'}</h3>
                 <p style="font-size:0.75rem;color:var(--text-muted)">${r.source || '—'} · actualizado ${r.updated || '—'}</p>
             </div>`;

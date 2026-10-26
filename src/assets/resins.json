@@ -31,8 +31,8 @@
       "best_for": "Miniaturas y piezas de detalle",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 35,
-      "layer_normal_s": 2.5,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.0,
       "working_temp": "20-25°C"
     },
     {
@@ -62,9 +62,9 @@
       "best_for": "Detalle 8K sin IPA",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-30°C"
+      "layer_base_s": 2.5,
+      "layer_normal_s": 2.2,
+      "working_temp": "20-25°C"
     },
     {
       "id": "elegoo-abs-like-v3",
@@ -93,8 +93,8 @@
       "best_for": "Piezas resistentes tipo ABS",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 3.5,
+      "layer_normal_s": 2.5,
       "working_temp": "20-25°C"
     },
     {
@@ -120,8 +120,8 @@
       "best_for": "Resistencia + limpieza con agua",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.5,
       "working_temp": "20-25°C"
     },
     {
@@ -147,8 +147,8 @@
       "best_for": "Piezas funcionales e impactos",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 45,
-      "layer_normal_s": 3.5,
+      "layer_base_s": 4.0,
+      "layer_normal_s": 3.0,
       "working_temp": "20-25°C"
     },
     {
@@ -174,8 +174,8 @@
       "best_for": "Bajo olor, uso doméstico",
       "source": "elegoo.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.0,
       "working_temp": "20-25°C"
     },
     {
@@ -209,8 +209,8 @@
       "best_for": "Uso general, gran relación calidad/precio",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 35,
-      "layer_normal_s": 2.5,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 1.7,
       "working_temp": "20-25°C"
     },
     {
@@ -240,9 +240,9 @@
       "best_for": "Limpieza con agua, sin IPA",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
-      "working_temp": "20-30°C"
+      "layer_base_s": 3.5,
+      "layer_normal_s": 2.0,
+      "working_temp": "20-25°C"
     },
     {
       "id": "anycubic-plant-based-2",
@@ -271,8 +271,8 @@
       "best_for": "Bajo olor, base vegetal (soja)",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 1.8,
       "working_temp": "20-25°C"
     },
     {
@@ -298,9 +298,9 @@
       "best_for": "Impresoras rápidas (P1/Serie Speed)",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 15,
+      "layer_base_s": 1.5,
       "layer_normal_s": 1.5,
-      "working_temp": "20-30°C"
+      "working_temp": "20-25°C"
     },
     {
       "id": "anycubic-tough-2",
@@ -325,8 +325,8 @@
       "best_for": "Piezas funcionales resistentes",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 45,
-      "layer_normal_s": 3.5,
+      "layer_base_s": 4.0,
+      "layer_normal_s": 3.0,
       "working_temp": "20-25°C"
     },
     {
@@ -348,8 +348,8 @@
       "best_for": "Piezas translúcidas y lentes",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 6.0,
+      "layer_normal_s": 3.5,
       "working_temp": "20-25°C"
     },
     {
@@ -375,8 +375,8 @@
       "best_for": "Piezas tipo ABS, menos frágil que standard",
       "source": "store.anycubic.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 3.5,
+      "layer_normal_s": 2.5,
       "working_temp": "20-25°C"
     },
     {
@@ -576,8 +576,8 @@
       "best_for": "Alta resolución para 8K/12K",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 35,
-      "layer_normal_s": 2.5,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.0,
       "working_temp": "20-25°C"
     },
     {
@@ -599,8 +599,8 @@
       "best_for": "Tenaz y lavable con agua",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 45,
-      "layer_normal_s": 3.5,
+      "layer_base_s": 4.0,
+      "layer_normal_s": 3.0,
       "working_temp": "20-25°C"
     },
     {
@@ -626,9 +626,9 @@
       "best_for": "Modelismo lavable con agua",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
+      "layer_base_s": 4.0,
       "layer_normal_s": 3.0,
-      "working_temp": "20-30°C"
+      "working_temp": "20-25°C"
     },
     {
       "id": "phrozen-tr300",
@@ -649,8 +649,8 @@
       "best_for": "Ingeniería, alta temperatura",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 60,
-      "layer_normal_s": 4.5,
+      "layer_base_s": 8.0,
+      "layer_normal_s": 5.0,
       "working_temp": "20-30°C"
     },
     {
@@ -672,7 +672,7 @@
       "best_for": "Translúcido de calidad",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
+      "layer_base_s": 4.0,
       "layer_normal_s": 3.0,
       "working_temp": "20-25°C"
     },
@@ -699,9 +699,9 @@
       "best_for": "Impresión rápida con buen detalle",
       "source": "us.phrozen3d.com",
       "updated": "2026-10-24",
-      "layer_base_s": 15,
-      "layer_normal_s": 1.5,
-      "working_temp": "20-30°C"
+      "layer_base_s": 2.5,
+      "layer_normal_s": 1.8,
+      "working_temp": "20-25°C"
     },
     {
       "id": "monocure-3drm",
@@ -734,8 +734,8 @@
       "best_for": "Modelismo de alta calidad (Australia)",
       "source": "monocure3d.com.au",
       "updated": "2026-10-24",
-      "layer_base_s": 35,
-      "layer_normal_s": 2.5,
+      "layer_base_s": 3.0,
+      "layer_normal_s": 2.0,
       "working_temp": "20-25°C"
     },
     {
@@ -757,8 +757,8 @@
       "best_for": "Piezas flexibles y comprimibles",
       "source": "monocure3d.com.au",
       "updated": "2026-10-24",
-      "layer_base_s": 50,
-      "layer_normal_s": 4.0,
+      "layer_base_s": 5.0,
+      "layer_normal_s": 3.5,
       "working_temp": "20-25°C"
     },
     {
@@ -780,8 +780,8 @@
       "best_for": "Fundición a la cera perdida (joyería)",
       "source": "monocure3d.com.au",
       "updated": "2026-10-24",
-      "layer_base_s": 45,
-      "layer_normal_s": 3.5,
+      "layer_base_s": 5.0,
+      "layer_normal_s": 4.0,
       "working_temp": "20-25°C"
     },
     {
@@ -807,8 +807,8 @@
       "best_for": "Piezas tipo ABS de alta calidad",
       "source": "monocure3d.com.au",
       "updated": "2026-10-24",
-      "layer_base_s": 40,
-      "layer_normal_s": 3.0,
+      "layer_base_s": 3.5,
+      "layer_normal_s": 2.5,
       "working_temp": "20-25°C"
     }
   ],
