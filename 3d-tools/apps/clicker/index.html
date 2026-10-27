@@ -14,20 +14,111 @@
         const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const theme = saved || (systemDark ? 'dark' : 'light');
         document.documentElement.setAttribute('data-theme', theme);
-        // Soporte para integración externa (WordPress, etc.):
-        //   ?noheader=1  -> oculta las barras laterales, deja solo el visor 3D
+        // Integración externa (WordPress, etc.):
+        //   ?noheader=1 → oculta el header del sitio Y las barras laterales
         const params = new URLSearchParams(window.location.search);
         if (params.get('noheader') === '1') {
           const style = document.createElement('style');
-          style.textContent = '#sidebar-left, #sidebar-right { display: none !important; } #viewport { grid-column: 1 / -1; }';
+          style.textContent =
+            '#site-header { display: none !important; }' +
+            '#sidebar-left, #sidebar-right { display: none !important; }' +
+            '#layout { grid-template-columns: 1fr !important; }' +
+            'html, body { height: 100% !important; }';
           document.head.appendChild(style);
         }
       })();
     </script>
+    <style>
+      /* Header del sitio (mismo estilo que 3d-tools y el hub principal) */
+      #site-header {
+        flex: 0 0 auto;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 1rem 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      :root[data-theme="light"] #site-header { background: rgba(255,255,255,0.85); border-bottom: 1px solid #d1d5db; }
+      #site-header nav { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%; }
+      #site-header .logo-img { height: 42px; width: auto; object-fit: contain; }
+      #site-header .nav-links {
+        list-style: none; display: flex; gap: 1rem;
+        background: rgba(255, 255, 255, 0.05); padding: 0.4rem; border-radius: 100px; align-items: center; margin: 0;
+      }
+      :root[data-theme="light"] #site-header .nav-links { background: rgba(0,0,0,0.05); }
+      #site-header .nav-links a { color: #94A3B8; text-decoration: none; font-weight: 500; font-size: 0.9rem; padding: 0.6rem 1.2rem; border-radius: 100px; transition: all 0.4s ease; display: block; }
+      #site-header .nav-links a:hover { color: white; background: rgba(255, 255, 255, 0.1); }
+      :root[data-theme="light"] #site-header .nav-links a:hover { color: #1f2937; background: rgba(0,0,0,0.06); }
+      #site-header .dropdown { position: relative; }
+      #site-header .dropdown-menu {
+        display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+        background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+        padding: 0.5rem; min-width: 220px; list-style: none; margin: 0.5rem 0 0; box-shadow: 0 10px 25px rgba(0,0,0,0.3); white-space: nowrap; z-index: 1001;
+      }
+      :root[data-theme="light"] #site-header .dropdown-menu { background: #ffffff; border-color: #e5e7eb; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+      #site-header .dropdown:hover .dropdown-menu,
+      #site-header .dropdown:focus-within .dropdown-menu { display: block; }
+      #site-header .dropdown-menu a { display: block; padding: 0.6rem 1rem; border-radius: 8px; }
+      #site-header .nav-right { display: flex; gap: 10px; align-items: center; }
+      #site-header .lang-btn {
+        background: rgba(255,255,255,0.05); color: #94A3B8; border: none; border-radius: 8px;
+        font-size: 0.8rem; padding: 4px 10px; cursor: pointer; transition: all 0.2s;
+      }
+      #site-header .lang-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+      :root[data-theme="light"] #site-header .lang-btn { background: rgba(0,0,0,0.05); color: #4b5563; }
+      :root[data-theme="light"] #site-header .lang-btn:hover { color: #1f2937; background: rgba(0,0,0,0.1); }
+      @media (max-width: 900px) {
+        #site-header .nav-links { display: none; }
+      }
+    </style>
     <script type="module" crossorigin src="./assets/index-JdalJGVh.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-MHhc0jni.css">
   </head>
   <body>
+    <header id="site-header">
+      <nav>
+        <a href="../../../index.html" class="logo-container">
+          <img src="https://3dwork.io/wp-content/uploads/2023/07/3dwork_white_logo.png" alt="3Dwork Logo" class="logo-img" />
+        </a>
+        <ul class="nav-links">
+          <li><a href="../../../index.html">Home</a></li>
+          <li class="dropdown">
+            <a href="#">Create</a>
+            <ul class="dropdown-menu">
+              <li><a href="../../litho.html">Lithophane Creator</a></li>
+              <li><a href="../../hueforge.html">HueForge Creator</a></li>
+              <li><a href="index.html">Clicker Factory</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a href="#">Comparadores</a>
+            <ul class="dropdown-menu">
+              <li><a href="../../../index.html#comparator">Machines</a></li>
+              <li><a href="../../../index.html#filaments">Filaments</a></li>
+              <li><a href="../../../index.html#resins">Resins</a></li>
+            </ul>
+          </li>
+          <li><a href="../../../index.html#price">3D Print Price Calculator</a></li>
+          <li class="dropdown">
+            <a href="#">Calibration</a>
+            <ul class="dropdown-menu">
+              <li><a href="../../../index.html#esteps">E-steps Calibration</a></li>
+              <li><a href="../../../index.html#rotation">Rotation Distance</a></li>
+              <li><a href="../../../index.html#skew">Skew Calibration</a></li>
+              <li><a href="../../../index.html#bedmesh">Bed Mesh Alignment</a></li>
+              <li><a href="../../../index.html#loganalyzer">Log Analyzer & AI Support</a></li>
+            </ul>
+          </li>
+        </ul>
+        <div class="nav-right">
+          <button class="lang-btn" onclick="window.open('../../../index.html','_self')">🇬🇧 EN</button>
+          <button class="lang-btn" onclick="window.open('../../../index.html','_self')">🇪🇸 ES</button>
+        </div>
+      </nav>
+    </header>
     <div id="layout">
       <aside id="sidebar-left" class="sidebar left"></aside>
       <div id="viewport">
