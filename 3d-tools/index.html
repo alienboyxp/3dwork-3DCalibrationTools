@@ -1852,7 +1852,16 @@ window.ClickerTool = function ClickerTool() {
         };
 
         const App = () => {
-            const [v, setV] = useState('home');
+            // Inicializar con el hash actual para que el primer render ya
+            // muestre la tool correcta (sin el "flash" de la home antes).
+            const initialView = () => {
+                const hash = window.location.hash;
+                if (hash === '#litho') return 'litho';
+                if (hash === '#hue') return 'hue';
+                if (hash === '#clicker') return 'clicker';
+                return 'home';
+            };
+            const [v, setV] = useState(initialView);
 
             useEffect(() => {
                 const handleHash = () => {
