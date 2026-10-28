@@ -131,7 +131,21 @@ export async function importFontFile(file: File): Promise<FontOption> {
  *   whole word selects/recolors/extrudes together. When true each glyph becomes its own
  *   region (part `top-color-{k}-0`), so letters can be picked and colored individually.
  */
-export function parseLetter(text: string, fontId: string, maxLen = 30, separate = false): RegionSet {
+/**
+ * Build a RegionSet from text.
+ * @param separate  When false (default) every letter is merged into one element so the
+ *   whole word selects/recolors/extrudes together. When true each glyph becomes its own
+ *   region (part `top-color-{k}-0`), so letters can be picked and colored individually.
+ * @param spacing  Extra letter spacing (normalized units, added between glyphs) and
+ *   line spacing multiplier (1 = default 130-unit line gap). Mirrors the live generator.
+ */
+export function parseLetter(
+  text: string,
+  fontId: string,
+  maxLen = 30,
+  separate = false,
+  spacing: { letterSpacing?: number; lineSpacing?: number } = {},
+): RegionSet {
   if (!text.trim()) throw new Error('Type a letter first.');
 
   const option = FONT_OPTIONS.find((font) => font.id === fontId) || FONT_OPTIONS[0];
@@ -145,59 +159,70 @@ export function parseLetter(text: string, fontId: string, maxLen = 30, separate 
 
   const lines = text.split('\n');
   let currentY = 0;
+  const letterSpacingUnits = (spacing.letterSpacing ?? 0) * 100; // normalized → font units
+  const lineGap = 130 * (spacing.lineSpacing ?? 1);
 
   for (const rawLine of lines) {
-    const value = Array.from((rawLine || '').trim()).slice(0, maxLen).join('');
-    if (!value) continue;
+    const chars = Array.from((rawLine || '').trim()).slice(0, maxLen);
+    if (!chars.length) continue;
 
-    const shapes = option.font.generateShapes(value, 100);
-    const lineBox = new THREE.Box2(
-      new THREE.Vector2(Infinity, Infinity),
-      new THREE.Vector2(-Infinity, -Infinity)
-    );
-    const lineGlyphs: Ring[][] = [];
+    const lineGlyphs: { rings: Ring[]; advanceX: number }[] = [];
 
-    for (const shape of shapes) {
-      const extracted = shape.extractPoints(16);
+    // Generate each glyph individually so letterSpacing can shift them apart.
+    let xCursor = 0;
+    let lastAdvance = 0;
+    for (const ch of chars) {
+      if (ch === ' ') { xCursor += 34 + letterSpacingUnits; continue; }
+      const shapes = option.font.generateShapes(ch, 100);
       const glyphRings: Ring[] = [];
-      if (extracted.shape.length >= 3) {
-        const ring: Ring = [];
-        for (const p of extracted.shape) {
-          lineBox.expandByPoint(p);
-          ring.push([p.x, p.y]);
-        }
-        glyphRings.push(ring);
-      }
-      for (const hole of extracted.holes) {
-        if (hole.length >= 3) {
+      let gMinX = Infinity, gMaxX = -Infinity;
+      for (const shape of shapes) {
+        const extracted = shape.extractPoints(16);
+        if (extracted.shape.length >= 3) {
           const ring: Ring = [];
-          for (const p of hole) {
-            lineBox.expandByPoint(p);
+          for (const p of extracted.shape) {
+            if (p.x < gMinX) gMinX = p.x;
+            if (p.x > gMaxX) gMaxX = p.x;
             ring.push([p.x, p.y]);
           }
           glyphRings.push(ring);
         }
+        for (const hole of extracted.holes) {
+          if (hole.length >= 3) {
+            const ring: Ring = [];
+            for (const p of hole) ring.push([p.x, p.y]);
+            glyphRings.push(ring);
+          }
+        }
       }
-      if (glyphRings.length) lineGlyphs.push(glyphRings);
+      if (glyphRings.length) {
+        // Horizontal advance: glyph width + side bearings from the font data.
+        const cp = ch.codePointAt(0) ?? 0;
+        const glyphData = (option.font as any).data?.glyphs?.[ch] ?? (option.font as any).data?.glyphs?.[cp];
+        const advance = glyphData?.ha ?? Math.max(gMaxX - gMinX, 20);
+        lineGlyphs.push({ rings: glyphRings, advanceX: xCursor });
+        lastAdvance = advance;
+        xCursor += advance + letterSpacingUnits;
+      }
     }
 
     if (lineGlyphs.length === 0) continue;
 
-    const lineWidth = lineBox.max.x - lineBox.min.x;
-    const offsetX = -(lineBox.min.x + lineWidth / 2);
+    const lineWidth = xCursor - lastAdvance; // total advance of the line
+    const offsetX = -lineWidth / 2;
 
-    for (const glyphRings of lineGlyphs) {
-      for (const ring of glyphRings) {
+    for (const g of lineGlyphs) {
+      for (const ring of g.rings) {
         for (const pt of ring) {
-          pt[0] += offsetX;
+          pt[0] += offsetX + g.advanceX;
           pt[1] += currentY;
           box.expandByPoint(new THREE.Vector2(pt[0], pt[1]));
         }
       }
-      glyphs.push(glyphRings);
+      glyphs.push(g.rings);
     }
 
-    currentY -= 130; // Move down for the next line
+    currentY -= lineGap; // Move down for the next line
   }
 
   if (!glyphs.length) throw new Error('No drawable outlines found in this font.');

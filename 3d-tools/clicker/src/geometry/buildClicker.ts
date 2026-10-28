@@ -517,9 +517,12 @@ export function buildClicker(
     if (validRings.length === 0) continue;
     let cs: Section = simp(track(new CrossSection(validRings, 'NonZero')), 0.03);
     if (params.colorBleed > 0.001) cs = grow(cs, params.colorBleed);
+    // Text bold: fatten (+) or thin (−) the letter strokes, in mm.
+    const bold = r.boldMm ?? 0;
+    if (bold > 0.001) cs = grow(cs, bold);
+    else if (bold < -0.001) cs = shrink(cs, -bold, cs);
     const clipped = track(cs.intersect(imageArea));
     if (sectionIsEmpty(clipped)) continue;
-    
     // Prevent overlapping with smaller parts processed earlier
     let fp = clipped;
     if (placed2D) fp = track(fp.subtract(placed2D));
@@ -693,6 +696,32 @@ export function buildClicker(
   // Subtract the well and every socket afterwards to ensure the interior cavity is clean
   body = track(body.subtract(well));
   for (const sk of socketAts) body = track(body.subtract(sk));
+
+  // Hollow base: print the base as a shell instead of a solid block. The switch
+  // column and its surround stay solid. The cavity opens through the bottom face
+  // (no support needed — it prints directly on the plate) and stops 1.2 mm below
+  // the well floor so the ceiling always stays closed.
+  if (params.hollowBase) {
+    const wall = Math.max(1.6, params.floorThickness);
+    let inner = track(bodyFootprint.offset(-wall, 'Round', 2.0, 24));
+    if (!sectionIsEmpty(inner)) {
+      // Keep-out: everything within the switch columns stays solid.
+      let keepOut: Section | null = null;
+      for (const sw of applied) {
+        const ko = track(roundedRect(switchClear + 2 * wall, switchClear + 2 * wall, 2.5).translate([sw.x, sw.y]));
+        keepOut = keepOut ? track(keepOut.add(ko)) : ko;
+      }
+      if (keepOut) inner = track(inner.subtract(keepOut));
+      if (!sectionIsEmpty(inner)) {
+        const cavityTopZ = wellFloorZ - 1.2; // leave a ceiling under the well
+        if (cavityTopZ > bodyBottomZ + 0.4) {
+          const cavity = extrudeAt(inner, cavityTopZ - bodyBottomZ + 0.1, bodyBottomZ - 0.05);
+          body = track(body.subtract(cavity));
+        }
+      }
+    }
+  }
+
 
   // Covert identity mark: subtract a seeded void constellation anchored to switch #0's
   // socket, buried in the always-solid ring (invisible on prints, visible in a slicer

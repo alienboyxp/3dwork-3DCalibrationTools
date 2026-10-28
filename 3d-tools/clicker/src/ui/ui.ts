@@ -54,6 +54,16 @@ export interface UiState {
   extrudeChamfer: boolean;
   /** Text mode: when true each letter is its own selectable/colorable part. Default false. */
   separateLetters: boolean;
+  /** Text mode: scale of the letters on the cap (0.5–2.0). */
+  textScale: number;
+  /** Text mode: stroke bold offset in mm (−0.3 … +0.8). */
+  textBold: number;
+  /** Text mode: extra gap between letters (−0.08 … 0.4). */
+  letterSpacing: number;
+  /** Text mode: gap between lines (0.5–1.8 × default). */
+  lineSpacing: number;
+  /** Print the base as a shell (switch column stays solid). */
+  hollowBase: boolean;
   /** Current extrude height being dragged (for HUD display), null when not dragging. */
   extrudeHeight: number | null;
   /** Component-specific heights */
@@ -129,6 +139,16 @@ export interface UiCallbacks {
   onExtrudeChamfer(on: boolean): void;
   /** Text mode: toggle splitting the word into per-letter parts. */
   onSeparateLetters(on: boolean): void;
+  /** Text mode: scale of the letters (0.5–2.0). */
+  onTextScale(v: number): void;
+  /** Text mode: stroke bold offset in mm (−0.3 … +0.8). */
+  onTextBold(mm: number): void;
+  /** Text mode: extra gap between letters (−0.08 … 0.4). */
+  onLetterSpacing(v: number): void;
+  /** Text mode: gap between lines (0.5–1.8). */
+  onLineSpacing(v: number): void;
+  /** Print the base as a shell (switch column stays solid). */
+  onHollowBase(on: boolean): void;
   onGenerate(): void;
   onUndo(): void;
   onRedo(): void;
@@ -284,6 +304,10 @@ export function createUi(
       <details class="section section-collapsible" id="sectionShape">
         <summary class="label collapsible-head">2 · More Settings</summary>
         <div class="collapsible-body">
+        <div class="switch-row" style="margin-bottom: 12px;">
+          <span class="switch-label">Hollow the base ${tip('Prints the base as a shell instead of a solid block, which saves a lot of filament on bigger clickers. The switch column and its surround stay solid.')}</span>
+          <label class="toggle"><input id="hollowBaseToggle" type="checkbox" /><span class="slider"></span></label>
+        </div>
         <div class="keychain-panel" style="margin-bottom: 16px;">
           <div class="switch-row" style="margin-bottom: 12px;">
             <span class="switch-label">Keychain ${tip('Adds a keyring attachment to the body so you can clip the clicker to a keychain.')}</span>
@@ -574,6 +598,16 @@ export function createUi(
             <input id="fontUpload" type="file" accept=".ttf,.otf,.json,font/ttf,font/otf,application/json" />
           </label>
         </div>
+        <div class="field" style="margin-top: 12px;">
+          <label>Letter size <span class="hint" style="color: var(--muted); font-size: 11px;">(100% fills the flat top of the cap)</span></label>
+          <div class="control-group"><div class="control-label"><span id="textScaleVal">100%</span></div><input type="range" id="textScale" min="50" max="200" step="5" value="100" /></div>
+          <label style="margin-top: 8px;">Boldness <span class="hint" style="color: var(--muted); font-size: 11px;">(fattens or thins the strokes, in mm)</span></label>
+          <div class="control-group"><div class="control-label"><span id="textBoldVal">+0.00 mm</span></div><input type="range" id="textBold" min="-0.3" max="0.8" step="0.05" value="0" /></div>
+          <label style="margin-top: 8px;">Letter spacing <span class="hint" style="color: var(--muted); font-size: 11px;">(squash letters together or spread them apart)</span></label>
+          <div class="control-group"><div class="control-label"><span id="letterSpacingVal">+0.00</span></div><input type="range" id="letterSpacing" min="-0.08" max="0.4" step="0.02" value="0" /></div>
+          <label style="margin-top: 8px;">Line spacing <span class="hint" style="color: var(--muted); font-size: 11px;">(gap between lines, % of line height)</span></label>
+          <div class="control-group"><div class="control-label"><span id="lineSpacingVal">100%</span></div><input type="range" id="lineSpacing" min="50" max="180" step="5" value="100" /></div>
+        </div>
         <button class="primary" id="generateText" style="margin-top: 10px; width: 100%;">Generate</button>
       </div>
     </div>
@@ -834,6 +868,40 @@ export function createUi(
   letterText.addEventListener('input', () => {
     cb.onTextChange(letterText.value);
   });
+
+  // --- Text mode sliders: letter size, boldness, spacing (mirrors the live generator) ---
+  const textScaleSlider = document.getElementById('textScale') as HTMLInputElement | null;
+  const textScaleVal = document.getElementById('textScaleVal');
+  textScaleSlider?.addEventListener('input', () => {
+    const v = +textScaleSlider.value / 100;
+    if (textScaleVal) textScaleVal.textContent = `${textScaleSlider.value}%`;
+    cb.onTextScale(v);
+  });
+  const textBoldSlider = document.getElementById('textBold') as HTMLInputElement | null;
+  const textBoldVal = document.getElementById('textBoldVal');
+  textBoldSlider?.addEventListener('input', () => {
+    const v = +textBoldSlider.value;
+    if (textBoldVal) textBoldVal.textContent = `${v > 0 ? '+' : ''}${v.toFixed(2)} mm`;
+    cb.onTextBold(v);
+  });
+  const letterSpacingSlider = document.getElementById('letterSpacing') as HTMLInputElement | null;
+  const letterSpacingVal = document.getElementById('letterSpacingVal');
+  letterSpacingSlider?.addEventListener('input', () => {
+    const v = +letterSpacingSlider.value;
+    if (letterSpacingVal) letterSpacingVal.textContent = `${v > 0 ? '+' : ''}${v.toFixed(2)}`;
+    cb.onLetterSpacing(v);
+  });
+  const lineSpacingSlider = document.getElementById('lineSpacing') as HTMLInputElement | null;
+  const lineSpacingVal = document.getElementById('lineSpacingVal');
+  lineSpacingSlider?.addEventListener('input', () => {
+    const v = +lineSpacingSlider.value / 100;
+    if (lineSpacingVal) lineSpacingVal.textContent = `${lineSpacingSlider.value}%`;
+    cb.onLineSpacing(v);
+  });
+
+  // --- Hollow base toggle ---
+  const hollowEl = document.getElementById('hollowBaseToggle') as HTMLInputElement | null;
+  hollowEl?.addEventListener('change', () => cb.onHollowBase(hollowEl.checked));
   fontUpload.addEventListener('change', () => {
     const f = fontUpload.files?.[0];
     if (f) cb.onImportFont(f);
@@ -1951,6 +2019,27 @@ export function createUi(
       const sepInput = lettersToggleEl.querySelector('#separateLetters') as HTMLInputElement | null;
       if (sepInput) sepInput.checked = state.separateLetters;
     }
+
+    // --- Text mode sliders sync ---
+    const tsSlider = document.getElementById('textScale') as HTMLInputElement | null;
+    if (tsSlider) tsSlider.value = String(Math.round(state.textScale * 100));
+    const tsVal = document.getElementById('textScaleVal');
+    if (tsVal) tsVal.textContent = `${Math.round(state.textScale * 100)}%`;
+    const tbSlider = document.getElementById('textBold') as HTMLInputElement | null;
+    if (tbSlider) tbSlider.value = String(state.textBold);
+    const tbVal = document.getElementById('textBoldVal');
+    if (tbVal) tbVal.textContent = `${state.textBold > 0 ? '+' : ''}${state.textBold.toFixed(2)} mm`;
+    const lsSlider = document.getElementById('letterSpacing') as HTMLInputElement | null;
+    if (lsSlider) lsSlider.value = String(state.letterSpacing);
+    const lsVal = document.getElementById('letterSpacingVal');
+    if (lsVal) lsVal.textContent = `${state.letterSpacing > 0 ? '+' : ''}${state.letterSpacing.toFixed(2)}`;
+    const lnSlider = document.getElementById('lineSpacing') as HTMLInputElement | null;
+    if (lnSlider) lnSlider.value = String(Math.round(state.lineSpacing * 100));
+    const lnVal = document.getElementById('lineSpacingVal');
+    if (lnVal) lnVal.textContent = `${Math.round(state.lineSpacing * 100)}%`;
+    // Hollow base sync
+    const hbEl = document.getElementById('hollowBaseToggle') as HTMLInputElement | null;
+    if (hbEl) hbEl.checked = state.hollowBase;
 
     // --- Extrude panel ---
     const extrudePanelEl = document.getElementById('extrudePanel');

@@ -94,6 +94,13 @@ const store = createStore<UiState>({
   ],
   extrudeChamfer: false,
   separateLetters: false,
+  // Text mode params (mirrors the live generator)
+  textScale: 1.0,        // 0.5–2.0 (50%–200% of the cap top)
+  textBold: 0,          // −0.3 … +0.8 mm stroke offset
+  letterSpacing: 0,     // −0.08 … 0.4
+  lineSpacing: 1.0,      // 0.5 … 1.8
+  // Geometry extras
+  hollowBase: false,     // print the base as a shell (switch column stays solid)
   extrudeHeight: null,
   componentHeights: {},
   selectedParts: [],
@@ -465,6 +472,26 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
     store.set({ separateLetters: on, selectedParts: [] });
     reprocess();
   },
+  onTextScale: (v) => {
+    store.set({ textScale: v });
+    if (store.get().importMode === 'text') debouncedRebuild();
+  },
+  onTextBold: (mm) => {
+    store.set({ textBold: mm });
+    if (store.get().importMode === 'text') debouncedQuietRebuild();
+  },
+  onLetterSpacing: (v) => {
+    store.set({ letterSpacing: v });
+    if (store.get().importMode === 'text') reprocess();
+  },
+  onLineSpacing: (v) => {
+    store.set({ lineSpacing: v });
+    if (store.get().importMode === 'text') reprocess();
+  },
+  onHollowBase: (on) => {
+    store.set({ hollowBase: on });
+    debouncedRebuild();
+  },
   onUndo: () => undo(),
   onRedo: () => redo(),
   onRefresh: () => refreshDesign(),
@@ -478,6 +505,7 @@ const HISTORY_FIELDS = [
   'palette', 'paletteOverrides', 'partOverrides', 'bodyColorRgb', 'baseColorOverride',
   'componentHeights', 'edgeSettings', 'extrudeChamfer', 'baseShape', 'capWidthMm', 'plateSize', 'topThickness',
   'imageDepth', 'tolerance', 'stemTolerance', 'switches', 'keychain',
+  'textScale', 'textBold', 'letterSpacing', 'lineSpacing', 'hollowBase',
 ] as const;
 let history: string[] = [];
 let histIndex = -1;
@@ -930,7 +958,10 @@ function reprocess() {
   } else if (s.importMode === 'text') {
     try {
       store.set({ building: true, status: 'Generating Text…' });
-      regionSet = parseLetter(currentText, currentFontId, 15, s.separateLetters);
+      regionSet = parseLetter(currentText, currentFontId, 15, s.separateLetters, {
+        letterSpacing: s.letterSpacing,
+        lineSpacing: s.lineSpacing,
+      });
     } catch (e: any) {
       store.set({ building: false, status: 'Error: ' + e.message });
       return;
@@ -961,6 +992,7 @@ function rebuild(quiet = false) {
   }
   const s = store.get();
 
+  const isText = s.importMode === 'text';
   const regions: BuildRegion[] = [];
   regionSet.regions.forEach((r, i) => {
     const baseColor = s.palette[i]?.filamentRgb ?? r.quantRgb;
@@ -971,6 +1003,7 @@ function rebuild(quiet = false) {
         coverage: r.coverage, // Use the parent coverage for priority
         rings: comp.rings,
         partName,
+        ...(isText ? { boldMm: s.textBold } : {}),
       });
     });
   });
@@ -984,7 +1017,6 @@ function rebuild(quiet = false) {
   // deriveFrameColor). A frame the user pinned by clicking the model wins over it.
   const capBaseColor: RGB = s.baseColorOverride ?? deriveFrameColor(s);
 
-  const isText = s.importMode === 'text';
   // Map keychainEnd preset to angleDeg and keychainSlideMm to offsetMm for the build.
   const END_TO_ANGLE: Record<Exclude<KeychainParams['keychainEnd'], null>, number> = {
     top: 90, right: 0, bottom: 270, left: 180,
@@ -1000,7 +1032,11 @@ function rebuild(quiet = false) {
 
   const params: BuildParams = {
     baseShape: effectiveBaseShape,
-    capWidthMm: s.capWidthMm,
+    // Text on an outline grows the base with the text instead of clipping it
+    // (mirrors the live generator): capWidth scales by textScale, clamped 20–70.
+    capWidthMm: isText && s.baseShape === 'outline' && s.textScale > 1
+      ? Math.max(20, Math.min(70, Math.round(s.capWidthMm * s.textScale)))
+      : s.capWidthMm,
     topThickness: Math.max(1, s.topThickness),
     imageDepth: s.imageDepth,
     imageMargin: isText ? 2.5 : 1.2,
@@ -1008,6 +1044,7 @@ function rebuild(quiet = false) {
     capProud: 4.0,
     tolerance: s.tolerance,
     stemTolerance: s.stemTolerance,
+    hollowBase: s.hollowBase,
     colorBleed: 0.12,
     stepHeight: 0.6,
     travel: 4.0,
@@ -1202,6 +1239,11 @@ function saveProject() {
       edgeSettings: s.edgeSettings,
       extrudeChamfer: s.extrudeChamfer,
       separateLetters: s.separateLetters,
+      textScale: s.textScale,
+      textBold: s.textBold,
+      letterSpacing: s.letterSpacing,
+      lineSpacing: s.lineSpacing,
+      hollowBase: s.hollowBase,
       componentHeights: s.componentHeights,
     },
     palette: s.palette, // filament mappings
@@ -1259,6 +1301,11 @@ async function loadProject(file: File) {
       edgeSettings: set.edgeSettings ?? store.get().edgeSettings,
       extrudeChamfer: set.extrudeChamfer ?? false,
       separateLetters: set.separateLetters ?? false,
+      textScale: set.textScale ?? 1.0,
+      textBold: set.textBold ?? 0,
+      letterSpacing: set.letterSpacing ?? 0,
+      lineSpacing: set.lineSpacing ?? 1.0,
+      hollowBase: set.hollowBase ?? false,
       componentHeights: set.componentHeights ?? {},
     });
 

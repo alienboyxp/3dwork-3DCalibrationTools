@@ -88,6 +88,18 @@ export interface SwitchPlacement {
   rotation: number;
 }
 
+/** Text mode parameters (mirrors the live Vostok generator). */
+export interface TextParams {
+  /** Scales the text on the cap. 1 = fills the flat top (50%–200%). */
+  scale: number;
+  /** Fattens (+) or thins (−) the letter strokes, in mm. 0 = as authored. */
+  boldMm: number;
+  /** Extra gap between letters (normalized units; −0.08 … 0.4). */
+  letterSpacing: number;
+  /** Gap between lines when the text has more than one (0.5 … 1.8 × line height). */
+  lineSpacing: number;
+}
+
 /** Keychain attachment settings. */
 export interface KeychainParams {
   enabled: boolean;
@@ -147,6 +159,9 @@ export interface BuildParams {
   borderWidth: number; // raised body border around the cap (the bezel wall)
   capProud: number; // how far the cap top sticks up above the body border at rest (≈ travel → flush when pressed)
   tolerance: number; // slip-fit gap between cap outer wall and body well wall ("switch socket" fit)
+  /** Print the base as a shell instead of a solid block — saves filament on bigger
+   *  clickers. The switch column and its surround stay solid. */
+  hollowBase: boolean;
   /** XY scale offset (mm) applied to the cap's keycap-mount stem so it fits the MX
    *  switch: +looser (opens the cross socket, easier to press on), −tighter. 0 = as
    *  authored. Only the XY footprint scales — Z is kept so the cap rest height is fixed. */
@@ -196,6 +211,8 @@ export interface BuildRegion {
   coverage: number; // fraction of foreground — drives carve priority (small detail wins)
   rings: Ring[];
   partName: string;
+  /** Text regions: stroke bold offset in mm (+fatten, −thin). Applied by the worker. */
+  boldMm?: number;
 }
 
 // ---- Worker messages ----
