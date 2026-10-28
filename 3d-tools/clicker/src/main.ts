@@ -1,4 +1,5 @@
 import './style.css';
+import './vl-ui.css'; // Design system adaptado de Vostok Labs (reference) — ver cabecera del archivo
 import { createStore } from './store/store';
 import { createViewer } from './viewer/viewer';
 import { createUi, type UiState } from './ui/ui';
