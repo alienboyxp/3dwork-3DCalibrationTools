@@ -78,6 +78,8 @@ export interface UiState {
   modelCutPct: number;
   /** Model mode: how the imported solid becomes clickable. */
   modelCutter: 'slice' | 'stand' | 'button';
+  /** Build plate size for the 3MF layout (mm; A1=256, P/X=180/220). */
+  plateMm: number;
   /** Current extrude height being dragged (for HUD display), null when not dragging. */
   extrudeHeight: number | null;
   /** Component-specific heights */
@@ -127,6 +129,10 @@ export interface UiCallbacks {
   onKeychainEnd(end: 'top' | 'right' | 'bottom' | 'left' | 'none'): void;
   onRemoveBg(on: boolean): void;
   onView(mode: ViewMode): void;
+  /** Cut the model open (section view) on/off. */
+  onCutOpen(on: boolean): void;
+  /** Build plate size for the 3MF layout (mm). */
+  onPlate(mm: number): void;
   onShowSwitch(on: boolean): void;
   onSection(axis: SectionAxis, pos: number): void;
   onExport(): void;
@@ -259,6 +265,18 @@ export function createUi(
       <div class="switch-row">
         <span class="switch-label">Show MX switch ${tip('Shows a reference MX switch in the preview so you can check the fit. It is not part of the exported model.')}</span>
         <label class="toggle"><input id="showswitch" type="checkbox" /><span class="slider"></span></label>
+      </div>
+      <div class="switch-row" style="margin-top: 8px;">
+        <span class="switch-label">Cut it open ${tip('Cuts the model open so you can see the switch pocket and the fit inside.')}</span>
+        <label class="toggle"><input id="cutopen" type="checkbox" /><span class="slider"></span></label>
+      </div>
+      <div class="field" style="margin-top: 10px;">
+        <label for="plateSelect">Plate ${tip('The build plate you will print on. The parts are laid out to fit it.')}</label>
+        <select id="plateSelect" style="width:100%; margin-top:4px; background:var(--bg-input); color:white; border:none; border-radius:6px; padding:4px 8px;">
+          <option value="256">A1 / A1 mini (256 × 256 mm)</option>
+          <option value="180">P1P / P1S (180 × 180 mm)</option>
+          <option value="220">X1 series (220 × 220 mm)</option>
+        </select>
       </div>
     </div>
 
@@ -1340,6 +1358,12 @@ export function createUi(
     cb.onShowSwitch((e.target as HTMLInputElement).checked)
   );
 
+  // --- Cut it open (section view) + plate selector ---
+  const cutOpenEl = document.getElementById('cutopen') as HTMLInputElement | null;
+  cutOpenEl?.addEventListener('change', () => cb.onCutOpen(cutOpenEl.checked));
+  const plateSelect = document.getElementById('plateSelect') as HTMLSelectElement | null;
+  plateSelect?.addEventListener('change', () => cb.onPlate(+plateSelect.value));
+
   // --- Export and Utility actions ---
   $('export').addEventListener('click', () => cb.onExport());
   // render PNG and AI prompt buttons removed per design
@@ -2062,6 +2086,12 @@ export function createUi(
     $<HTMLInputElement>('removebg').checked = state.removeBg;
     $<HTMLInputElement>('removebgSvg').checked = state.removeBg;
     $<HTMLInputElement>('showswitch').checked = state.showSwitch;
+    // Cut it open sync (active in section view)
+    const cutEl = document.getElementById('cutopen') as HTMLInputElement | null;
+    if (cutEl) cutEl.checked = state.view === 'section';
+    // Plate select sync
+    const plateEl = document.getElementById('plateSelect') as HTMLSelectElement | null;
+    if (plateEl) plateEl.value = String(state.plateMm);
 
     // Update Import Mode tabs and panels
     for (const b of importTabs.querySelectorAll<HTMLElement>('[data-mode]')) {

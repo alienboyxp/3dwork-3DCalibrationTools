@@ -118,6 +118,8 @@ const store = createStore<UiState>({
   modelName: '',
   modelCutPct: 0.5 as number,               // slice height (fraction of model height)
   modelCutter: 'slice' as 'slice' | 'stand' | 'button',
+  // Build plate size for the 3MF layout (A1=256, P/X=180/220).
+  plateMm: 256 as number,
   extrudeHeight: null,
   componentHeights: {},
   selectedParts: [],
@@ -327,6 +329,18 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
     store.set({ view: mode });
     viewer.setView(mode);
   },
+  onCutOpen: (on) => {
+    // "Cut it open": swap the preview to the section (clipped) view.
+    const mode = on ? 'section' : 'exploded';
+    store.set({ view: mode });
+    viewer.setView(mode);
+  },
+  onPlate: (mm) => {
+    store.set({ plateMm: mm });
+    // The plate only changes the export layout, not the geometry — rebuild so
+    // the parts land on the new plate footprint.
+    rebuild();
+  },
   onShowSwitch: (on) => {
     store.set({ showSwitch: on });
     viewer.showSwitch(on);
@@ -334,7 +348,7 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
   onSection: (axis, pos) => viewer.setSection(axis, pos),
   onExport: () => {
     if (!latestParts.length) return;
-    downloadThreeMF(latestParts, 'clicker.3mf');
+    downloadThreeMF(latestParts, 'clicker.3mf', { plate: store.get().plateMm });
     // First download of the session → big license modal; later ones → quiet corner toast.
     // The counter is in-memory, so a page refresh re-shows the big modal on the next download.
     downloadCount += 1;
@@ -593,7 +607,7 @@ const HISTORY_FIELDS = [
   'componentHeights', 'edgeSettings', 'extrudeChamfer', 'baseShape', 'capWidthMm', 'plateSize', 'topThickness',
   'imageDepth', 'tolerance', 'stemTolerance', 'switches', 'keychain',
   'textScale', 'textBold', 'letterSpacing', 'lineSpacing', 'hollowBase',
-  'fitTestStepMm', 'bodyRimRaise',
+  'fitTestStepMm', 'bodyRimRaise', 'plateMm',
 ] as const;
 let history: string[] = [];
 let histIndex = -1;
