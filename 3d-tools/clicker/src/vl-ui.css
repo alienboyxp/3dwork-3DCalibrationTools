@@ -137,3 +137,49 @@ input[type=range] { width: 100%; min-width: 0; accent-color: var(--accent); heig
 /* ---- Swatches & fila de filamento ---- */
 .fil-row .swatch { border: 1px solid var(--line); border-radius: 6px; }
 .fil-chip { border: 1px solid var(--line); border-radius: 6px; }
+
+/* =====================================================================
+   3DWORK OVERLAY 2 — layout de doble panel como la versión en vivo:
+   [tool-rail | settings-panel | viewport | tools-panel]
+   ===================================================================== */
+#layout { display: grid; grid-template-columns: auto 22vw 1fr 24vw; }
+#toolRail {
+  display: flex; flex-direction: column; gap: 4px; padding: 10px 8px;
+  background: var(--panel); border-right: 1px solid var(--line);
+  align-items: center; overflow-y: auto; scrollbar-width: thin;
+}
+#toolRail .vl-tool-rail__btn {
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: var(--radius-md, 8px);
+  background: transparent; color: var(--muted); cursor: pointer;
+  transition: all var(--dur-hover, .12s); position: relative;
+}
+#toolRail .vl-tool-rail__btn:hover { color: var(--text); background: var(--panel-2); }
+#toolRail .vl-tool-rail__btn.is-active {
+  color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+#toolRail .vl-tool-rail__btn__lbl {
+  position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%);
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+  font-family: var(--font-display); font-size: 0.62rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 6px; white-space: nowrap; opacity: 0;
+  pointer-events: none; transition: opacity var(--dur-hover, .12s); z-index: 50;
+}
+#toolRail .vl-tool-rail__btn:hover .vl-tool-rail__btn__lbl,
+#toolRail .vl-tool-rail__btn:focus-visible .vl-tool-rail__btn__lbl { opacity: 1; }
+.sidebar.left { padding-top: 14px; }
+[data-tool-section] { display: none; }
+[data-tool-section].is-open { display: block; }
+#railHomeBtn {
+  width: 100%; margin-bottom: 6px; border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--muted);
+  font-family: var(--font-display); font-weight: 600; font-size: 0.62rem; padding: 5px 0;
+  cursor: pointer; transition: all var(--dur-hover, .12s);
+}
+#railHomeBtn:hover { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 1100px) {
+  #layout { grid-template-columns: auto 1fr 24vw; }
+  .sidebar.left { display: none; }
+  [data-tool-section] { display: block; }
+}
