@@ -64,6 +64,10 @@ export interface UiState {
   lineSpacing: number;
   /** Print the base as a shell (switch column stays solid). */
   hollowBase: boolean;
+  /** Fit test: preview/export show a strip of five stem-fit tiles. */
+  fitTest: boolean;
+  /** Fit test: step between tiles (0.10 first, then 0.05). */
+  fitTestStepMm: number;
   /** Current extrude height being dragged (for HUD display), null when not dragging. */
   extrudeHeight: number | null;
   /** Component-specific heights */
@@ -149,6 +153,12 @@ export interface UiCallbacks {
   onLineSpacing(v: number): void;
   /** Print the base as a shell (switch column stays solid). */
   onHollowBase(on: boolean): void;
+  /** Swap the preview/export to the five-tile fit test strip. */
+  onFitTest(): void;
+  /** Exit the fit test and rebuild the clicker. */
+  onFitTestExit(): void;
+  /** Set the fit test step between tiles (0.10, 0.05). */
+  onFitTestStep(mm: number): void;
   onGenerate(): void;
   onUndo(): void;
   onRedo(): void;
@@ -460,6 +470,20 @@ export function createUi(
         </div>
         <div class="switch-pad-readout" id="switchReadout">Centered</div>
         <button class="secondary" id="switchResetAll" type="button" style="display:none; width:100%; margin-top:8px;">Reset all switches</button>
+        <div id="fitTestBlock" style="margin-top: 14px; border-top: 1px solid var(--line); padding-top: 12px;">
+          <div class="prow-header">
+            <label>Fit test ${tip('Swaps your clicker for a strip of five test tiles. The middle tile is your current Switch stem fit; each neighbour is one step tighter or looser. Print once at 0.10 mm, then again at 0.05 mm around whichever tile fitted best.')}</label>
+          </div>
+          <div class="control-group" style="margin-top: 6px;">
+            <div class="control-label"><span>Fit test step</span></div>
+            <select id="fitTestStep" style="width: 100%; margin-top: 4px; background: var(--bg-input); color: white; border: none; border-radius: 6px; padding: 4px 8px;">
+              <option value="0.1">0.10 mm (first run)</option>
+              <option value="0.05">0.05 mm (fine tune)</option>
+            </select>
+          </div>
+          <button class="secondary" id="fitTestBtn" type="button" style="width:100%; margin-top:8px;">Print a fit test</button>
+          <button class="primary" id="fitTestExitBtn" type="button" style="display:none; width:100%; margin-top:8px;">Back to my clicker</button>
+        </div>
         </div>
       </details>
     </div>
@@ -1143,6 +1167,14 @@ export function createUi(
     if (t) cb.onActiveSwitch(+t.dataset.sw!);
   });
   $('switchResetAll').addEventListener('click', () => cb.onSwitchResetAll());
+
+  // --- Fit test ---
+  const fitTestBtn = document.getElementById('fitTestBtn') as HTMLButtonElement | null;
+  fitTestBtn?.addEventListener('click', () => cb.onFitTest());
+  const fitTestExitBtn = document.getElementById('fitTestExitBtn') as HTMLButtonElement | null;
+  fitTestExitBtn?.addEventListener('click', () => cb.onFitTestExit());
+  const fitTestStepSel = document.getElementById('fitTestStep') as HTMLSelectElement | null;
+  fitTestStepSel?.addEventListener('change', () => cb.onFitTestStep(+fitTestStepSel.value));
 
   const keychain = $<HTMLInputElement>('keychain');
   keychain.addEventListener('change', () => cb.onKeychainToggle(keychain.checked));
@@ -1901,6 +1933,23 @@ export function createUi(
     }
     const resetAllEl = document.getElementById('switchResetAll');
     if (resetAllEl) resetAllEl.style.display = switchCountN > 1 ? 'block' : 'none';
+
+    // --- Fit test sync: swap the buttons and lock the other settings ---
+    const ftBtn = document.getElementById('fitTestBtn') as HTMLButtonElement | null;
+    const ftExit = document.getElementById('fitTestExitBtn') as HTMLButtonElement | null;
+    const ftStep = document.getElementById('fitTestStep') as HTMLSelectElement | null;
+    if (ftBtn) ftBtn.hidden = state.fitTest;
+    if (ftExit) ftExit.hidden = !state.fitTest;
+    if (ftStep) ftStep.value = state.fitTestStepMm.toFixed(2);
+    // While the fit test is showing, the other settings are locked (live generator
+    // does the same: "the other settings are locked").
+    const ftLockables = Array.from(sidebarLeft.querySelectorAll<HTMLElement>(
+      '[data-mode], .tabs .tab, input[type="range"], select, .prow .btn',
+    )).filter((el) => !el.closest('#fitTestBlock'));
+    for (const el of ftLockables) {
+      if (state.fitTest) el.setAttribute('inert', '');
+      else el.removeAttribute('inert');
+    }
     const kc = state.keychain;
     keychain.checked = kc.enabled;
     const kcOpts = document.getElementById('keychainOpts');

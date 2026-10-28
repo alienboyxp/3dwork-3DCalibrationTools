@@ -223,6 +223,12 @@ export type GeometryRequest =
       regions: BuildRegion[];
       outline: Ring[];
       params: BuildParams;
+    }
+  | {
+      /** Fit test: strip of five stem-fit tiles centred on the current fit. */
+      type: 'buildFitTest';
+      params: BuildParams;
+      stepMm: number;
     };
 
 export type GeometryResponse =

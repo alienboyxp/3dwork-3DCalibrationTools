@@ -933,3 +933,125 @@ function edgePointAt(footprint: Section, angleDeg: number): { p: [number, number
   }
   return { p: [ox + dir[0] * bestT, oy + dir[1] * bestT], dir };
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// FIT TEST — strip of five test tiles (mirrors the live generator).
+//
+// "Print a fit test": the clicker is swapped in the preview for a strip of
+// five tiles. The middle tile is the current Switch stem fit; each neighbour
+// is one step tighter (−) or looser (+). Print once at 0.10 mm steps, then
+// again at 0.05 mm around whichever tile fitted best.
+//
+// Each tile is a small square cap: backing plate + the (scaled) MX stem
+// underneath, so pressing it onto the switch tells you which offset grips
+// the way you want.
+// ─────────────────────────────────────────────────────────────────────
+export function buildFitTest(
+  wasm: Wasm,
+  socket: Solid,
+  stem: Solid,
+  params: BuildParams,
+  stepMm: number,
+): { parts: ClickerPart[]; warnings: string[] } {
+  const { Manifold, CrossSection } = wasm;
+  const trash: { delete(): void }[] = [];
+  const track = <T extends { delete(): void }>(o: T): T => {
+    trash.push(o);
+    return o;
+  };
+
+  const socketBB = socket.boundingBox();
+  const stemBB = stem.boundingBox();
+  const stemDim = Math.max(stemBB.max[0] - stemBB.min[0], stemBB.max[1] - stemBB.min[1]);
+
+  // Tile geometry: small rounded square plate, sized to comfortably cover the stem.
+  const TILE = Math.max(16, socketBB.max[0] - socketBB.min[0] + 4);
+  const GAP = 4; // mm between tiles
+  const BACKING = 2.0; // mm plate thickness
+  const R = TILE * 0.18; // corner radius
+
+  const warnings: string[] = [];
+  const parts: ClickerPart[] = [];
+  const color = params.baseFilamentRgb ?? [240, 240, 240];
+
+  const baseSolid = track(
+    Manifold.extrude(
+      track(new CrossSection([
+        (() => {
+            const seg = 10;
+          // Rounded square via 4 arcs + 4 edges (simple polygon approx).
+          const r = R;
+          // Build the rounded rect ring: walk edges + arcs CCW.
+          const ring: [number, number][] = [];
+          const push = (x: number, y: number) => ring.push([x, y]);
+          // Start at left-middle of top edge.
+          push(-TILE / 2 + r, -TILE / 2);
+          push(TILE / 2 - r, -TILE / 2);
+          // Top-right arc.
+          for (let i = 0; i <= seg; i++) {
+            const a = -Math.PI / 2 + (i / seg) * (Math.PI / 2);
+            push(TILE / 2 - r + Math.cos(a) * r, -TILE / 2 + r + Math.sin(a) * r);
+          }
+          // Right edge.
+          push(TILE / 2, TILE / 2 - r);
+          // Bottom-right arc.
+          for (let i = 0; i <= seg; i++) {
+            const a = 0 + (i / seg) * (Math.PI / 2);
+            push(TILE / 2 - r + Math.cos(a) * r, TILE / 2 - r + Math.sin(a) * r);
+          }
+          // Bottom edge.
+          push(-TILE / 2 + r, TILE / 2);
+          // Bottom-left arc.
+          for (let i = 0; i <= seg; i++) {
+            const a = Math.PI / 2 + (i / seg) * (Math.PI / 2);
+            push(-TILE / 2 + r + Math.cos(a) * r, TILE / 2 - r + Math.sin(a) * r);
+          }
+          // Left edge.
+          push(-TILE / 2, -TILE / 2 + r);
+          // Top-left arc.
+          for (let i = 0; i <= seg; i++) {
+            const a = Math.PI + (i / seg) * (Math.PI / 2);
+            push(-TILE / 2 + r + Math.cos(a) * r, -TILE / 2 + r + Math.sin(a) * r);
+          }
+          return ring;
+        })(),
+      ], 'NonZero')),
+      BACKING,
+    ),
+  );
+
+  for (let i = 0; i < 5; i++) {
+    const offset = (i - 2) * stepMm;
+    const stemTol = (params.stemTolerance ?? 0) + offset;
+
+    // Scale the stem in XY by the fit offset.
+    let stemSized: Solid = stem;
+    if (stemDim > 0.1) {
+      const f = Math.max(0.5, (stemDim + stemTol) / stemDim);
+      stemSized = track((stem as any).scale([f, f, 1]));
+    }
+
+    // Tile = plate + stem, placed at its slot in the strip.
+    const tileX = (i - 2) * (TILE + GAP);
+    let tile = track((baseSolid as any).add(stemSized));
+    tile = track((tile as any).translate([tileX, 0, 0]));
+
+    const mesh = (tile as any).getMesh();
+    parts.push({
+      kind: 'cap',
+      group: 'top',
+      colorRgb: color,
+      name: i === 2 ? 'fit-test-current' : `fit-test-${offset > 0 ? 'plus' : 'minus'}-${Math.abs(offset).toFixed(2)}`,
+      numProp: mesh.numProp,
+      vertProperties: new Float32Array(mesh.vertProperties),
+      triVerts: new Uint32Array(mesh.triVerts),
+      extruder: 1,
+    });
+  }
+
+  for (const o of trash) {
+    try { o.delete(); } catch { /* already freed */ }
+  }
+
+  return { parts, warnings };
+}

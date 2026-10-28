@@ -101,6 +101,9 @@ const store = createStore<UiState>({
   lineSpacing: 1.0,      // 0.5 … 1.8
   // Geometry extras
   hollowBase: false,     // print the base as a shell (switch column stays solid)
+  // Fit test: when true the preview/export swap to a strip of five stem-fit tiles.
+  fitTest: false,
+  fitTestStepMm: 0.1,    // 0.10 mm steps first, then 0.05 around the best tile
   extrudeHeight: null,
   componentHeights: {},
   selectedParts: [],
@@ -492,6 +495,27 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
     store.set({ hollowBase: on });
     debouncedRebuild();
   },
+  onFitTest: () => {
+    // Swap the clicker for a strip of five stem-fit tiles. The current design is
+    // kept and rebuilt unchanged when the user exits (the worker output is swapped,
+    // not the state, so nothing about the clicker is lost).
+    if (!assetsReady) { store.set({ status: 'Waiting for switch assets...' }); return; }
+    store.set({ fitTest: true, building: true, status: 'Building fit test tiles...' });
+    const s = store.get();
+    worker.postMessage({ type: 'buildFitTest', params: buildParamsFrom(s), stepMm: s.fitTestStepMm });
+  },
+  onFitTestExit: () => {
+    store.set({ fitTest: false });
+    rebuild();
+  },
+  onFitTestStep: (mm) => {
+    store.set({ fitTestStepMm: mm });
+    // If the test is already showing, regenerate the strip with the new step.
+    const s = store.get();
+    if (s.fitTest) {
+      rebuild();
+    }
+  },
   onUndo: () => undo(),
   onRedo: () => redo(),
   onRefresh: () => refreshDesign(),
@@ -506,6 +530,7 @@ const HISTORY_FIELDS = [
   'componentHeights', 'edgeSettings', 'extrudeChamfer', 'baseShape', 'capWidthMm', 'plateSize', 'topThickness',
   'imageDepth', 'tolerance', 'stemTolerance', 'switches', 'keychain',
   'textScale', 'textBold', 'letterSpacing', 'lineSpacing', 'hollowBase',
+  'fitTestStepMm',
 ] as const;
 let history: string[] = [];
 let histIndex = -1;
@@ -1008,13 +1033,28 @@ function rebuild(quiet = false) {
     });
   });
 
-  // Icons are line-art (a single-color silhouette), not a multi-color picture.
-  // Using their thin stroke as the body outline makes a broken ring, so the body
-  // is always a solid shape (circle/square) and the icon rides on top as a design.
+  const params = buildParamsFrom(s);
+
+  if (quiet) {
+    // Live edit preview (extrude / edges): rebuild silently — no full-screen overlay.
+  } else if (isInitialLoad) {
+    store.set({ status: 'Building clicker…' });
+  } else {
+    store.set({ building: true, status: 'Building clicker…' });
+  }
+  if (s.fitTest) {
+    // Fit test mode: build the strip of five stem-fit tiles instead of the clicker.
+    worker.postMessage({ type: 'buildFitTest', params, stepMm: s.fitTestStepMm });
+  } else {
+    worker.postMessage({ type: 'buildClicker', regions, outline: regionSet.outline, params });
+  }
+}
+
+/** BuildParams derived from the current store state — shared by rebuild() and fit test. */
+function buildParamsFrom(s: UiState): BuildParams {
   const isIcon = s.importMode === 'icon';
   const effectiveBaseShape = isIcon && s.baseShape === 'outline' ? 'circle' : s.baseShape;
-  // The cap backing contrasts line-art designs so they stay visible (see
-  // deriveFrameColor). A frame the user pinned by clicking the model wins over it.
+  const isText = s.importMode === 'text';
   const capBaseColor: RGB = s.baseColorOverride ?? deriveFrameColor(s);
 
   // Map keychainEnd preset to angleDeg and keychainSlideMm to offsetMm for the build.
@@ -1030,7 +1070,7 @@ function rebuild(quiet = false) {
     offsetMm: kcOffset,
   };
 
-  const params: BuildParams = {
+  return {
     baseShape: effectiveBaseShape,
     // Text on an outline grows the base with the text instead of clipping it
     // (mirrors the live generator): capWidth scales by textScale, clamped 20–70.
@@ -1057,15 +1097,6 @@ function rebuild(quiet = false) {
     extrudeChamfer: s.extrudeChamfer,
     componentHeights: s.componentHeights,
   };
-
-  if (quiet) {
-    // Live edit preview (extrude / edges): rebuild silently — no full-screen overlay.
-  } else if (isInitialLoad) {
-    store.set({ status: 'Building clicker…' });
-  } else {
-    store.set({ building: true, status: 'Building clicker…' });
-  }
-  worker.postMessage({ type: 'buildClicker', regions, outline: regionSet.outline, params });
 }
 
 // ---- Debounce ----
