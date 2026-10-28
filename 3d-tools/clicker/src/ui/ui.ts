@@ -68,6 +68,8 @@ export interface UiState {
   fitTest: boolean;
   /** Fit test: step between tiles (0.10 first, then 0.05). */
   fitTestStepMm: number;
+  /** Body rim height: how far the body wall rises around the button (mm). */
+  bodyRimRaise: number;
   /** Current extrude height being dragged (for HUD display), null when not dragging. */
   extrudeHeight: number | null;
   /** Component-specific heights */
@@ -159,6 +161,8 @@ export interface UiCallbacks {
   onFitTestExit(): void;
   /** Set the fit test step between tiles (0.10, 0.05). */
   onFitTestStep(mm: number): void;
+  /** Set the body rim height around the button (mm, 0.4–6.0). */
+  onBodyRimRaise(mm: number): void;
   onGenerate(): void;
   onUndo(): void;
   onRedo(): void;
@@ -411,7 +415,14 @@ export function createUi(
         </div>
         <div class="prow-stacked">
           <div class="prow-header">
-            <label>Switch socket tolerance ${tip('Clearance between the top part and the base it presses into. Press + if the two halves are hard to fit together, − if they feel loose. 0 = default fit.')}</label>
+            <label>Body rim height ${tip('How tall the body wall is around the button. Higher hides more of the button; it always stands proud enough to press.')}</label>
+            <input type="text" class="val" id="rimHeightVal" />
+          </div>
+          <input type="range" id="rimHeight" min="0.4" max="6.0" step="0.2" value="2.4" />
+        </div>
+        <div class="prow-stacked">
+          <div class="prow-header">
+            <label>Switch pocket fit (base) ${tip('How tightly the switch itself sits in the base. Press + if the switch is hard to push in, − if it rattles or falls out. 0 = default fit.')}</label>
           </div>
           <div class="tol-stepper" id="socketTolStepper">
             <button class="btn" id="socketTolMinus" type="button" aria-label="Tighter fit">−</button>
@@ -421,7 +432,7 @@ export function createUi(
         </div>
         <div class="prow-stacked">
           <div class="prow-header">
-            <label>Switch stem (top part) tolerance ${tip('Scales the stem under the top part that grips your MX switch. If the stem is too tight to push onto the switch, press + to loosen it; press − for a firmer grip. Adjusts in 0.2 mm steps.')}</label>
+            <label>Switch stem fit (top) ${tip('Scales the stem under the top part that grips your MX switch. Each step widens or narrows the cross hole. If the stem is too tight to push onto the switch, press + to loosen it; press − for a firmer grip.')}</label>
           </div>
           <div class="tol-stepper" id="stemTolStepper">
             <button class="btn" id="stemTolMinus" type="button" aria-label="Tighter stem">−</button>
@@ -1135,6 +1146,15 @@ export function createUi(
   $('socketTolPlus').addEventListener('click', () => cb.onSocketTolStep(0.05));
   $('stemTolMinus').addEventListener('click', () => cb.onStemTolStep(-0.2));
   $('stemTolPlus').addEventListener('click', () => cb.onStemTolStep(0.2));
+
+  // --- Body rim height slider ---
+  const rimSlider = document.getElementById('rimHeight') as HTMLInputElement | null;
+  const rimVal = document.getElementById('rimHeightVal') as HTMLInputElement | null;
+  rimSlider?.addEventListener('input', () => {
+    const v = +rimSlider.value;
+    if (rimVal) rimVal.value = `${v.toFixed(1)} mm`;
+    cb.onBodyRimRaise(v);
+  });
 
   // --- Switch D-pad: arrows nudge one step; top corners rotate; center resets. ---
   const SWITCH_STEP = 1; // mm per click
@@ -1887,6 +1907,11 @@ export function createUi(
     setVal('topthickVal', state.topThickness.toFixed(1) + ' mm');
     imgdepth.value = String(state.imageDepth);
     setVal('imgdepthVal', state.imageDepth.toFixed(1) + ' mm');
+    // Body rim height sync
+    const rimSliderEl = document.getElementById('rimHeight') as HTMLInputElement | null;
+    if (rimSliderEl) rimSliderEl.value = String(Math.max(0.4, Math.min(6.0, state.bodyRimRaise)));
+    const rimValEl = document.getElementById('rimHeightVal') as HTMLInputElement | null;
+    if (rimValEl && document.activeElement !== rimValEl) rimValEl.value = `${state.bodyRimRaise.toFixed(1)} mm`;
     // Fit steppers show a signed offset from neutral, so a default design reads 0.
     const fmtSigned = (v: number, dec: number) =>
       (v > 0.0001 ? '+' : v < -0.0001 ? '−' : '') + Math.abs(v).toFixed(dec) + ' mm';

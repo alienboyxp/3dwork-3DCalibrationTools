@@ -104,6 +104,9 @@ const store = createStore<UiState>({
   // Fit test: when true the preview/export swap to a strip of five stem-fit tiles.
   fitTest: false,
   fitTestStepMm: 0.1,    // 0.10 mm steps first, then 0.05 around the best tile
+  // Body rim height: how far the body wall rises around the button (the cap
+  // still stands proud enough to press; capProud = 6.4 - rimRaise).
+  bodyRimRaise: 2.4,     // 0.4 … 6.0 mm
   extrudeHeight: null,
   componentHeights: {},
   selectedParts: [],
@@ -516,6 +519,10 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
       rebuild();
     }
   },
+  onBodyRimRaise: (mm) => {
+    store.set({ bodyRimRaise: mm });
+    debouncedRebuild();
+  },
   onUndo: () => undo(),
   onRedo: () => redo(),
   onRefresh: () => refreshDesign(),
@@ -530,7 +537,7 @@ const HISTORY_FIELDS = [
   'componentHeights', 'edgeSettings', 'extrudeChamfer', 'baseShape', 'capWidthMm', 'plateSize', 'topThickness',
   'imageDepth', 'tolerance', 'stemTolerance', 'switches', 'keychain',
   'textScale', 'textBold', 'letterSpacing', 'lineSpacing', 'hollowBase',
-  'fitTestStepMm',
+  'fitTestStepMm', 'bodyRimRaise',
 ] as const;
 let history: string[] = [];
 let histIndex = -1;
@@ -1081,7 +1088,7 @@ function buildParamsFrom(s: UiState): BuildParams {
     imageDepth: s.imageDepth,
     imageMargin: isText ? 2.5 : 1.2,
     borderWidth: isText ? 3.5 : 2.6,
-    capProud: 4.0,
+    capProud: Math.max(1.0, 6.4 - Math.max(0.4, Math.min(6.0, s.bodyRimRaise))),
     tolerance: s.tolerance,
     stemTolerance: s.stemTolerance,
     hollowBase: s.hollowBase,
@@ -1275,6 +1282,7 @@ function saveProject() {
       letterSpacing: s.letterSpacing,
       lineSpacing: s.lineSpacing,
       hollowBase: s.hollowBase,
+      bodyRimRaise: s.bodyRimRaise,
       componentHeights: s.componentHeights,
     },
     palette: s.palette, // filament mappings
@@ -1337,6 +1345,7 @@ async function loadProject(file: File) {
       letterSpacing: set.letterSpacing ?? 0,
       lineSpacing: set.lineSpacing ?? 1.0,
       hollowBase: set.hollowBase ?? false,
+      bodyRimRaise: set.bodyRimRaise ?? 2.4,
       componentHeights: set.componentHeights ?? {},
     });
 
