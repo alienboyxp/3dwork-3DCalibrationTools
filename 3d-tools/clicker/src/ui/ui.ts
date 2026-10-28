@@ -36,7 +36,7 @@ export interface UiState {
   removeBg: boolean;
   view: ViewMode;
   showSwitch: boolean;
-  importMode: 'image' | 'svg' | 'icon' | 'text';
+  importMode: 'image' | 'svg' | 'icon' | 'text' | 'model';
   currentIconName: string;
   colorMode: 'normal' | 'limited';
   limitedColors: RGB[];
@@ -70,6 +70,14 @@ export interface UiState {
   fitTestStepMm: number;
   /** Body rim height: how far the body wall rises around the button (mm). */
   bodyRimRaise: number;
+  /** Model mode: a solid (STL/3MF/OBJ) is loaded. */
+  modelLoaded: boolean;
+  /** Model mode: display name of the loaded model. */
+  modelName: string;
+  /** Model mode: slice height as a fraction of model height (0.5 = middle). */
+  modelCutPct: number;
+  /** Model mode: how the imported solid becomes clickable. */
+  modelCutter: 'slice' | 'stand' | 'button';
   /** Current extrude height being dragged (for HUD display), null when not dragging. */
   extrudeHeight: number | null;
   /** Component-specific heights */
@@ -129,7 +137,7 @@ export interface UiCallbacks {
   onBodyColor(hex: string): void;
 
   // New callbacks for vector modes
-  onImportMode(mode: 'image' | 'svg' | 'icon' | 'text'): void;
+  onImportMode(mode: 'image' | 'svg' | 'icon' | 'text' | 'model'): void;
   onSvgUpload(file: File): void;
   onSelectSvg(svgText: string, name: string): void;
   onSelectIcon(svgText: string, name: string): void;
@@ -163,6 +171,12 @@ export interface UiCallbacks {
   onFitTestStep(mm: number): void;
   /** Set the body rim height around the button (mm, 0.4–6.0). */
   onBodyRimRaise(mm: number): void;
+  /** Load an imported 3D model (STL / 3MF / OBJ). */
+  onModelUpload(file: File): void;
+  /** Model mode: pick how the model becomes clickable. */
+  onModelCutter(mode: 'slice' | 'stand' | 'button'): void;
+  /** Model mode: slice height as a fraction of model height (0.1–0.9). */
+  onModelCutHeight(pct: number): void;
   onGenerate(): void;
   onUndo(): void;
   onRedo(): void;
@@ -560,6 +574,38 @@ export function createUi(
           </span>
           <span class="card-label">Text</span>
         </button>
+        <button class="import-card" data-mode="model" type="button">
+          <span class="card-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2 2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12h20"/>
+            </svg>
+          </span>
+          <span class="card-label">Model</span>
+        </button>
+      </div>
+
+      <!-- Model Panel: STL / 3MF / OBJ -->
+      <div id="modelPanel" class="mode-panel" hidden>
+        <div class="field">
+          <label>How it clicks ${tip('Split in two: the top of the model becomes the button. On a stand: the whole model rides on a base. Button on top: a button cut into the model top.')}</label>
+          <div class="tabs" id="modelCutterTabs" role="tablist" style="margin-bottom: 12px;">
+            <button class="tab active" data-cutter="slice" type="button">Split</button>
+            <button class="tab" data-cutter="stand" type="button">Stand</button>
+            <button class="tab" data-cutter="button" type="button">Button</button>
+          </div>
+        </div>
+        <div class="field" id="cutHeightField">
+          <label>Where it splits ${tip('Everything above this height becomes the button.')}</label>
+          <div class="control-group"><div class="control-label"><span id="cutHeightVal">middle</span></div><input type="range" id="cutHeight" min="10" max="100" step="5" value="50" /></div>
+          <p class="hint" style="font-size: 10px; color: var(--muted); margin: 4px 0;">Percent of model height. The switch goes in through the split, so leave enough room on each side.</p>
+        </div>
+        <label class="upload">
+          Upload model (.stl / .3mf / .obj)
+          <input id="modelUpload" type="file" accept=".stl,.3mf,.obj,model/stl,application/sla,text/plain" />
+        </label>
+        <p class="hint" style="font-size: 10px; color: var(--muted); margin: 8px 0;">The limit is 100 MB. The model is centered and scaled to the size you set.</p>
       </div>
 
       <!-- Image Panel -->
@@ -1093,6 +1139,28 @@ export function createUi(
   importTabs.addEventListener('click', (e) => {
     const t = (e.target as HTMLElement).closest('[data-mode]') as HTMLElement | null;
     if (t) cb.onImportMode(t.dataset.mode as any);
+
+  // --- Model mode: file upload, cutter tabs, slice-height slider ---
+  const modelFile = document.getElementById('modelUpload') as HTMLInputElement | null;
+  modelFile?.addEventListener('change', () => {
+    const f = modelFile.files?.[0];
+    if (f) cb.onModelUpload(f);
+    modelFile.value = '';
+  });
+  const cutterTabs = document.getElementById('modelCutterTabs');
+  cutterTabs?.addEventListener('click', (e) => {
+    const t = (e.target as HTMLElement).closest('[data-cutter]') as HTMLElement | null;
+    if (!t) return;
+    for (const b of cutterTabs.querySelectorAll<HTMLElement>('button')) b.classList.toggle('active', b === t);
+    cb.onModelCutter((t.dataset.cutter as 'slice' | 'stand' | 'button'));
+  });
+  const cutHeightSlider = document.getElementById('cutHeight') as HTMLInputElement | null;
+  const cutHeightVal = document.getElementById('cutHeightVal');
+  cutHeightSlider?.addEventListener('input', () => {
+    const v = +cutHeightSlider.value;
+    if (cutHeightVal) cutHeightVal.textContent = v + '%';
+    cb.onModelCutHeight(v / 100);
+  });
   });
 
   // --- Colors ---
@@ -2000,6 +2068,21 @@ export function createUi(
     $('svgPanel').hidden = state.importMode !== 'svg';
     $('iconPanel').hidden = state.importMode !== 'icon';
     $('letterPanel').hidden = state.importMode !== 'text';
+    $('modelPanel').hidden = state.importMode !== 'model';
+    // Model mode: only the slice cutter needs the height slider.
+    const cutField = $('cutHeightField');
+    if (cutField) cutField.style.display = state.importMode === 'model' && state.modelCutter === 'slice' ? '' : 'none';
+    // Model mode sync
+    if (state.importMode === 'model') {
+      const chSlider = document.getElementById('cutHeight') as HTMLInputElement | null;
+      if (chSlider) chSlider.value = String(Math.round(state.modelCutPct * 100));
+      const chVal = document.getElementById('cutHeightVal');
+      if (chVal) chVal.textContent = Math.round(state.modelCutPct * 100) + '%';
+      const ct = document.getElementById('modelCutterTabs');
+      for (const b of ct?.querySelectorAll<HTMLElement>('button') ?? []) {
+        b.classList.toggle('active', b.dataset.cutter === state.modelCutter);
+      }
+    }
 
     // Hide/show image specific fields in colors section
     const showSmoothingAndBg = state.importMode === 'image';

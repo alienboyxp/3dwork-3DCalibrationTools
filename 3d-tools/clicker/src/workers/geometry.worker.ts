@@ -3,7 +3,7 @@
 import Module from 'manifold-3d';
 import wasmUrl from 'manifold-3d/manifold.wasm?url';
 import { parse3MF } from '../geometry/threemfImport';
-import { buildClicker, buildFitTest } from '../geometry/buildClicker';
+import { buildClicker, buildFitTest, buildModelCut } from '../geometry/buildClicker';
 import type { GeometryRequest, GeometryResponse } from '../types';
 
 type Wasm = Awaited<ReturnType<typeof Module>>;
@@ -138,6 +138,17 @@ self.onmessage = async (e: MessageEvent<GeometryRequest>) => {
       const transfer: Transferable[] = [];
       for (const p of parts) transfer.push(p.vertProperties.buffer, p.triVerts.buffer);
       post({ type: 'parts', parts, switchPlacements: msg.params.switches, warnings }, transfer);
+      return;
+    }
+
+    if (msg.type === 'buildModel') {
+      if (!socket || !stem) throw new Error('Assets not initialized');
+      const { parts, switchPlacements, warnings } = buildModelCut(
+        wasm, socket, stem, msg.mesh, msg.params, msg.cutter, msg.cutHeightPct,
+      );
+      const transfer: Transferable[] = [];
+      for (const p of parts) transfer.push(p.vertProperties.buffer, p.triVerts.buffer);
+      post({ type: 'parts', parts, switchPlacements, warnings }, transfer);
       return;
     }
   } catch (err) {

@@ -1055,3 +1055,194 @@ export function buildFitTest(
 
   return { parts, warnings };
 }
+
+/** How far the cap top stands proud of the body border at rest (mm). */
+function capProudOf(params: BuildParams, capH: number): number {
+  return Math.max(0.4, Math.min(params.capProud, capH - 1.0));
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MODEL MODE — "Make a clicker from any 3D model" (mirrors the live
+// generator's Model tab). Three ways to make an imported SOLID click:
+//   • slice  — split the model in two: the top becomes the button, the
+//              bottom becomes the body.
+//   • stand  — the whole model sits on a stand (the body).
+//   • button — a round/square button cut out of the model's top; the
+//              model itself becomes the body.
+// The MX socket is always cut into the body and the stem minted under
+// the cap, so the mechanism is identical to a converted design.
+// ─────────────────────────────────────────────────────────────────────
+export function buildModelCut(
+  wasm: Wasm,
+  socket: Solid,
+  stem: Solid,
+  mesh: { vertProperties: Float32Array; triVerts: Uint32Array; numProp: number },
+  params: BuildParams,
+  cutter: 'slice' | 'stand' | 'button',
+  cutHeightPct: number,
+): { parts: ClickerPart[]; switchPlacements: SwitchPlacement[]; warnings: string[] } {
+  const { Manifold, CrossSection } = wasm;
+  const trash: { delete(): void }[] = [];
+  const track = <T extends { delete(): void }>(o: T): T => {
+    trash.push(o);
+    return o;
+  };
+
+  // 1. Mesh → solid, centered on XY, base at Z = 0.
+  const raw = new (wasm as any).Mesh({
+    numProp: mesh.numProp,
+    vertProperties: mesh.vertProperties,
+    triVerts: mesh.triVerts,
+  });
+  raw.merge();
+  let solid = track((wasm as any).Manifold.ofMesh(raw));
+  const bb = solid.boundingBox();
+  const wMm = Math.max(bb.max[0] - bb.min[0], bb.max[1] - bb.min[1], 1);
+  const scale = params.capWidthMm / wMm;
+  solid = track(solid.scale([scale, scale, scale]));
+  const bbS = solid.boundingBox();
+  solid = track(solid.translate([
+    -(bbS.min[0] + bbS.max[0]) / 2,
+    -(bbS.min[1] + bbS.max[1]) / 2,
+    -bbS.min[2],
+  ]));
+  const bbC = solid.boundingBox();
+  const modelW = bbC.max[0] - bbC.min[0];
+  const modelD = bbC.max[1] - bbC.min[1];
+  const modelH = bbC.max[2] - bbC.min[2];
+
+  // 2. Mechanism metrics (shared assembly frame, like the converter).
+  const socketBB = socket.boundingBox();
+  const stemBB = stem.boundingBox();
+  const tol = Math.max(0.05, params.tolerance);
+  const travel = Math.max(0, params.travel);
+  const floorT = params.floorThickness || 1.6;
+
+  const parts: ClickerPart[] = [];
+  const warnings: string[] = [];
+  const colorOf = (c: RGB) => c;
+  const pushPart = (s: Solid, name: string, group: PartGroup, rgb: RGB) => {
+    const m = s.getMesh();
+    parts.push({
+      kind: group === 'top' ? 'cap' : 'body',
+      group,
+      colorRgb: colorOf(rgb),
+      name,
+      numProp: m.numProp,
+      vertProperties: new Float32Array(m.vertProperties),
+      triVerts: new Uint32Array(m.triVerts),
+      extruder: 1,
+    });
+  };
+
+  // 3. Cut the model per the chosen cutter.
+  let capSolid: Solid | null = null;
+  let bodySolid: Solid | null = null;
+  let bodyTopZ = 0;
+
+  if (cutter === 'slice') {
+    const pct = Math.max(0.1, Math.min(0.9, cutHeightPct || 0.5));
+    const zCut = modelH * pct;
+    const BIG = Math.max(modelW, modelD, modelH) * 4 + 100;
+    // Big boxes to act as half-spaces.
+    const upBox = track((wasm as any).Manifold.cube([modelW + 20, modelD + 20, BIG], true).translate([0, 0, zCut + BIG / 2]));
+    const dnBox = track((wasm as any).Manifold.cube([modelW + 20, modelD + 20, BIG], true).translate([0, 0, zCut - BIG / 2]));
+    const top = track(solid.intersect(upBox));
+    const bottom = track(solid.intersect(dnBox));
+    const capH = bbC.max[2] - zCut;
+    bodyTopZ = zCut;
+    capSolid = top;
+    // Body: keep the bottom; the well is cut later at bodyTopZ.
+    bodySolid = bottom;
+    if (capH < travel + 0.8) warnings.push('The top slice is thin — raise the cut height for enough travel.');
+  } else if (cutter === 'stand') {
+    capSolid = track(solid);
+    bodyTopZ = 1.2; // stand plate thickness
+    const standShape: 'circle' | 'square' = 'circle';
+    void standShape;
+    const plateR = Math.max(modelW, modelD) / 2 + 4;
+    const bodyPlate = track(Manifold.extrude(track(CrossSection.circle(plateR, 64)), bodyTopZ));
+    bodySolid = bodyPlate;
+  } else {
+    // button: cut a round button out of the model top.
+    const btnR = Math.min(modelW, modelD, params.capWidthMm) / 2.4;
+    const ring = track(CrossSection.circle(btnR, 64));
+    const zFrom = Math.max(0, modelH - Math.min(btnR * 1.6, modelH * 0.4));
+    const button = track(Manifold.extrude(ring, modelH - zFrom).translate([0, 0, zFrom]));
+    capSolid = track(solid.intersect(button));
+    bodySolid = track(solid.subtract(capSolid));
+    bodyTopZ = modelH;
+  }
+
+  if (!capSolid || capSolid.isEmpty() || !bodySolid || bodySolid.isEmpty()) {
+    warnings.push('The model could not be cut into a clicker — try another model or cut height.');
+    for (const o of trash) { try { o.delete(); } catch { /* freed */ } }
+    return { parts: [], switchPlacements: [{ x: 0, y: 0, rotation: 0 }], warnings };
+  }
+
+  // 4. Z stack. The cap rides the switch: its underside rests at the stem top
+  //    (slabBottomZ), so pressing it travel down brings it flush with the body.
+  const capBB0 = capSolid.boundingBox();
+  const capH = capBB0.max[2] - capBB0.min[2];
+  if (capH < travel + 0.8) {
+    warnings.push('The cap is thinner than the switch travel — the clicker will bottom out.');
+  }
+  const bodyBottomZ = socketBB.min[2] - floorT;
+  const bodyTopZFinal = cutter === 'stand' ? bodyTopZ : Math.max(bodyTopZ, socketBB.max[2] + 0.4);
+  const slabBottomZ = Math.max(stemBB.max[2], bodyTopZFinal - capProudOf(params, capH));
+  const capFinalZ = slabBottomZ - capBB0.min[2];
+  capSolid = track(capSolid.translate([0, 0, capFinalZ]));
+  const capBB = capSolid.boundingBox();
+  const capW = capBB.max[0] - capBB.min[0];
+  const capD = capBB.max[1] - capBB.min[1];
+  // The cap needs a well only when it is smaller than the body footprint
+  // (button cutter); in slice/stand mode both halves share the footprint.
+  const bodySpan = cutter === 'button' ? Math.max(modelW, modelD) : Math.min(modelW, modelD);
+  const usesWell = capW + 2 * tol < bodySpan;
+
+  // 5. Stem minted under the cap (a post connects the switch to a high cap).
+  const stemDim = Math.max(stemBB.max[0] - stemBB.min[0], stemBB.max[1] - stemBB.min[1]);
+  let stemSized: Solid = stem;
+  if (stemDim > 0.1) {
+    const f = Math.max(0.5, (stemDim + (params.stemTolerance ?? 0)) / stemDim);
+    stemSized = track((stem as any).scale([f, f, 1]));
+  }
+  let capFinal = track(capSolid.add(stemSized.translate([0, 0, capFinalZ])));
+  if (capFinalZ > 1.0) {
+    // The cap floats high above the plate: add a post down to the switch so
+    // the two parts are connected (the socket is re-cut in the body anyway).
+    const postW = Math.max(2.0, stemDim * 0.55);
+    const post = track((wasm as any).Manifold.cube([postW, postW, capFinalZ + 0.2], true).translate([0, 0, (capFinalZ + 0.2) / 2]));
+    capFinal = track(capFinal.add(post));
+  }
+
+  // Body: cut the well (only when the cap is smaller than the body) + the socket.
+  let body = track(bodySolid);
+  if (usesWell) {
+    const wellW = capW + 2 * tol, wellD = capD + 2 * tol;
+    const wellFloorZ = Math.min(socketBB.max[2], bodyTopZFinal - travel);
+    const wellHeight = bodyTopZFinal - wellFloorZ + 1;
+    body = track(body.subtract(
+      track(Manifold.extrude(track(CrossSection.square([wellW, wellD], true)), wellHeight).translate([0, 0, wellFloorZ])),
+    ));
+  }
+  body = track(body.subtract(socket));
+  // Floor the body's bottom flat.
+  if (params.flattenMm && params.flattenMm > 0) {
+    body = track(body.subtract(
+      track(Manifold.extrude(track(CrossSection.square([1000, 1000], true)), 1000).translate([0, 0, bodyBottomZ - 1000])),
+    ));
+  }
+
+  if (body.isEmpty() || capFinal.isEmpty()) {
+    warnings.push('The mechanism did not fit — the model may be too small for an MX switch.');
+    for (const o of trash) { try { o.delete(); } catch { /* freed */ } }
+    return { parts: [], switchPlacements: [{ x: 0, y: 0, rotation: 0 }], warnings };
+  }
+
+  pushPart(capFinal, 'top-model', 'top', params.baseFilamentRgb ?? [240, 240, 240]);
+  pushPart(body, 'base-body', 'base', params.bodyColorRgb ?? [120, 124, 130]);
+
+  for (const o of trash) { try { o.delete(); } catch { /* freed */ } }
+  return { parts, switchPlacements: [{ x: 0, y: 0, rotation: 0 }], warnings };
+}

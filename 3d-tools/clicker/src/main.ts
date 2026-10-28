@@ -23,6 +23,11 @@ import type {
   SwitchPlacement,
 } from './types';
 import { FILAMENTS, PLATE_SIZES, DEFAULT_PLATE_SIZE } from './types';
+import { parseStl, parseObj } from './model/parsers';
+
+// Expose the mesh parsers globally so the upload callback can use them.
+(window as any).parseStl = (f: File) => parseStl(f);
+(window as any).parseObj = (f: File) => parseObj(f);
 
 // Start fetching switch assets immediately at startup to run in parallel with worker setup
 const base = import.meta.env.BASE_URL;
@@ -106,7 +111,12 @@ const store = createStore<UiState>({
   fitTestStepMm: 0.1,    // 0.10 mm steps first, then 0.05 around the best tile
   // Body rim height: how far the body wall rises around the button (the cap
   // still stands proud enough to press; capProud = 6.4 - rimRaise).
-  bodyRimRaise: 2.4,     // 0.4 … 6.0 mm
+  bodyRimRaise: 2.4,     // 0.4 … 6.0
+  // Model mode: build a clicker from an imported STL / 3MF / OBJ.
+  modelLoaded: false,
+  modelName: '',
+  modelCutPct: 0.5 as number,               // slice height (fraction of model height)
+  modelCutter: 'slice' as 'slice' | 'stand' | 'button',
   extrudeHeight: null,
   componentHeights: {},
   selectedParts: [],
@@ -356,10 +366,17 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
     const s = store.get();
     store.set({
       importMode: mode,
-      baseShape: mode === 'text' ? 'outline' : s.baseShape,
+      baseShape: mode === 'text' ? 'outline' : (mode === 'model' ? 'outline' : s.baseShape),
       colorMode: mode !== 'image' ? 'normal' : s.colorMode,
     });
-    reprocess();
+    if (mode === 'model') {
+      // Model mode rebuilds straight from the imported solid; the status
+      // tells the user to upload first if no model is loaded yet.
+      if (!s.modelLoaded) store.set({ status: 'Upload a model (STL, 3MF or OBJ) to start.' });
+      rebuild();
+    } else {
+      reprocess();
+    }
   },
   onSvgUpload: async (file) => {
     try {
@@ -370,6 +387,44 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
     } catch (err) {
       store.set({ building: false, status: 'Error reading SVG: ' + String(err) });
     }
+  },
+  onModelUpload: async (file) => {
+    // Read a 3D model (STL / 3MF / OBJ) and hand it to the geometry worker.
+    try {
+      store.set({ building: true, status: 'Reading ' + file.name + '…' });
+      const ext = (file.name.match(/\.(stl|3mf|obj)$/i) || [])[1]?.toLowerCase();
+      let mesh: { vertProperties: Float32Array; triVerts: Uint32Array; numProp: number };
+      if (ext === 'stl') {
+        mesh = await window.parseStl(file);
+      } else if (ext === 'obj') {
+        mesh = await window.parseObj(file);
+      } else if (ext === '3mf') {
+        const { parse3MF } = await import('./geometry/threemfImport');
+        const buf = await file.arrayBuffer();
+        mesh = parse3MF(buf);
+      } else {
+        throw new Error('Unsupported file: use .stl, .3mf or .obj');
+      }
+      (window as any).__modelMesh = mesh;
+      store.set({
+        importMode: 'model',
+        modelLoaded: true,
+        modelName: file.name.replace(/\.[^.]+$/, ''),
+        status: 'Model loaded. Building clicker…',
+        building: true,
+      });
+      rebuild();
+    } catch (err) {
+      store.set({ building: false, status: 'Error reading model: ' + String(err) });
+    }
+  },
+  onModelCutter: (cutter) => {
+    store.set({ modelCutter: cutter });
+    if (store.get().modelLoaded) rebuild();
+  },
+  onModelCutHeight: (pct) => {
+    store.set({ modelCutPct: pct });
+    if (store.get().modelLoaded && store.get().modelCutter === 'slice') rebuild();
   },
   onSelectSvg: (svgText, name) => {
     currentSvgText = svgText;
@@ -1017,6 +1072,26 @@ function reprocess() {
 }
 
 function rebuild(quiet = false) {
+  const s0 = store.get();
+
+  // Model mode: build from the imported solid (no regionSet needed) — must be
+  // checked BEFORE the regionSet guard below.
+  if (s0.importMode === 'model') {
+    const mesh = (window as any).__modelMesh;
+    if (!mesh) { store.set({ status: 'Upload a model first (STL, 3MF or OBJ).' }); return; }
+    if (!assetsReady) { store.set({ status: 'Waiting for switch assets…' }); return; }
+    const params = buildParamsFrom(s0);
+    store.set({ building: true, status: 'Building clicker from ' + (s0.modelName || 'model') + '…' });
+    worker.postMessage({
+      type: 'buildModel',
+      mesh,
+      params,
+      cutter: s0.modelCutter,
+      cutHeightPct: s0.modelCutPct,
+    });
+    return;
+  }
+
   if (!regionSet || regionSet.regions.length === 0) return;
   if (!assetsReady) {
     store.set({ status: 'Waiting for switch assets…' });

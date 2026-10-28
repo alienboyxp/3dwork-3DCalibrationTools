@@ -162,6 +162,8 @@ export interface BuildParams {
   /** Print the base as a shell instead of a solid block — saves filament on bigger
    *  clickers. The switch column and its surround stay solid. */
   hollowBase: boolean;
+  /** Model mode: flatten the body bottom by this many mm (null = off). */
+  flattenMm?: number | null;
   /** XY scale offset (mm) applied to the cap's keycap-mount stem so it fits the MX
    *  switch: +looser (opens the cross socket, easier to press on), −tighter. 0 = as
    *  authored. Only the XY footprint scales — Z is kept so the cap rest height is fixed. */
@@ -229,6 +231,15 @@ export type GeometryRequest =
       type: 'buildFitTest';
       params: BuildParams;
       stepMm: number;
+    }
+  | {
+      /** Model mode: build a clicker from an imported solid (STL/3MF/OBJ). */
+      type: 'buildModel';
+      mesh: { vertProperties: Float32Array; triVerts: Uint32Array; numProp: number };
+      params: BuildParams;
+      cutter: 'slice' | 'stand' | 'button';
+      /** Slice height as a fraction of model height (0.5 = middle); used by 'slice'. */
+      cutHeightPct: number;
     };
 
 export type GeometryResponse =
