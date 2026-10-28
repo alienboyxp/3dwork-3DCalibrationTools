@@ -1179,6 +1179,7 @@ function buildParamsFrom(s: UiState): BuildParams {
     edgeSettings: s.edgeSettings,
     extrudeChamfer: s.extrudeChamfer,
     componentHeights: s.componentHeights,
+    polySides: 6,
   };
 }
 

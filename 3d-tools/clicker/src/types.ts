@@ -60,7 +60,7 @@ export interface PaletteEntry {
   coverage: number; // fraction of foreground pixels
 }
 
-export type BaseShapeKind = 'outline' | 'circle' | 'square' | 'hexagon' | 'heart' | 'star' | 'egg';
+export type BaseShapeKind = 'outline' | 'circle' | 'square' | 'hexagon' | 'heart' | 'star' | 'egg' | 'polygon' | 'shield' | 'arch';
 export type ViewMode = 'assembled' | 'exploded' | 'section';
 
 /** Which interaction mode the viewport is in. */
@@ -164,6 +164,8 @@ export interface BuildParams {
   hollowBase: boolean;
   /** Model mode: flatten the body bottom by this many mm (null = off). */
   flattenMm?: number | null;
+  /** Polygon shape sides (3–12; default 6 = hexagon-equivalent). */
+  polySides?: number;
   /** XY scale offset (mm) applied to the cap's keycap-mount stem so it fits the MX
    *  switch: +looser (opens the cross socket, easier to press on), −tighter. 0 = as
    *  authored. Only the XY footprint scales — Z is kept so the cap rest height is fixed. */

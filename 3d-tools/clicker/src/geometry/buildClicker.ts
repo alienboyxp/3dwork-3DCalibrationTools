@@ -182,6 +182,66 @@ export function buildClicker(
     return track(new CrossSection([pts], 'NonZero'));
   };
 
+  // Generic regular polygon (sides configurable; hexagon-equivalent at 6).
+  const makePolygon = (r: number, sides = 6): Section => {
+    const n = Math.max(3, Math.round(sides));
+    const pts: Ring = [];
+    for (let i = 0; i < n; i++) {
+      const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+      pts.push([Math.cos(angle) * r, Math.sin(angle) * r]);
+    }
+    return track(new CrossSection([pts], 'NonZero'));
+  };
+
+  // Classic shield: flat top, tapered sides, point at the bottom.
+  const makeShield = (r: number): Section => {
+    const w = r, h = r * 1.15;
+    const pts: Ring = [];
+    const seg = 18;
+    // Top edge (flat), then taper to the bottom point.
+    pts.push([-w, h]); pts.push([w, h]);
+    pts.push([w, h * 0.15]);
+    // Right taper curve down to the point.
+    for (let i = 0; i <= seg; i++) {
+      const t = i / seg;
+      const x = w * Math.cos((t * Math.PI) / 2) * Math.cos(0.18 * t);
+      const y = h * 0.15 - Math.sin((t * Math.PI) / 2) * (h * 1.15);
+      pts.push([x, y]);
+    }
+    // Left taper curve back up.
+    for (let i = seg; i >= 0; i--) {
+      const t = i / seg;
+      const x = -w * Math.cos((t * Math.PI) / 2) * Math.cos(0.18 * t);
+      const y = h * 0.15 - Math.sin((t * Math.PI) / 2) * (h * 1.15);
+      pts.push([x, y]);
+    }
+    return track(new CrossSection([pts], 'NonZero'));
+  };
+
+  // Arch (horseshoe): rectangular body, semicircular top, flat base.
+  const makeArch = (r: number): Section => {
+    const seg = 24;
+    const outer: Ring = [];
+    const innerR = r * 0.62;
+    // Outer: start bottom-left, up the left wall, over the semicircle, down the right wall.
+    outer.push([-r, -r]);
+    outer.push([-r, 0]);
+    for (let i = 0; i <= seg; i++) {
+      const a = Math.PI - (i / seg) * Math.PI;
+      outer.push([Math.cos(a) * r, Math.sin(a) * r]);
+    }
+    outer.push([r, -r]);
+    const inner: Ring = [];
+    inner.push([innerR, -r]);
+    inner.push([innerR, 0]);
+    for (let i = 0; i <= seg; i++) {
+      const a = (i / seg) * Math.PI;
+      inner.push([Math.cos(a) * innerR, Math.sin(a) * innerR]);
+    }
+    inner.push([-innerR, -r]);
+    return track(new CrossSection([outer, inner], 'NonZero'));
+  };
+
   const makeStar = (r: number, points = 5): Section => {
     // Cute chubby star: short legs (high inner radius) with rounded tips AND valleys
     // — not a spiky communist star.
@@ -293,6 +353,9 @@ export function buildClicker(
         case 'heart': return makeHeart(rr);
         case 'star': return makeStar(rr);
         case 'egg': return makeEgg(rr);
+        case 'polygon': return makePolygon(rr, params.polySides);
+        case 'shield': return makeShield(rr);
+        case 'arch': return makeArch(rr);
         case 'circle':
         default: return track(CrossSection.circle(rr, 160));
       }

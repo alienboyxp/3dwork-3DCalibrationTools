@@ -279,6 +279,9 @@ export function createUi(
           <option value="heart">Heart</option>
           <option value="star">Star</option>
           <option value="egg">Egg</option>
+          <option value="polygon">Polygon</option>
+          <option value="shield">Shield</option>
+          <option value="arch">Arch</option>
         </select>
       </div>
       <div class="prow-stacked">
@@ -298,7 +301,7 @@ export function createUi(
 
     <div id="geometrySettingsContainer">
       <details class="section section-collapsible" id="sectionColors">
-        <summary class="label collapsible-head">1 · Colors &amp; Smoothing</summary>
+        <summary class="label collapsible-head">Colors &amp; smoothing</summary>
         <div class="collapsible-body">
         <div class="field" id="colorCountField">
           <label for="ccount">Colors ${tip('How many distinct filament colors the image is split into. Each color becomes a separate part in the export.')}</label>
@@ -330,7 +333,7 @@ export function createUi(
       </details>
 
       <details class="section section-collapsible" id="sectionShape">
-        <summary class="label collapsible-head">2 · More Settings</summary>
+        <summary class="label collapsible-head">Body &amp; keychain</summary>
         <div class="collapsible-body">
         <div class="switch-row" style="margin-bottom: 12px;">
           <span class="switch-label">Hollow the base ${tip('Prints the base as a shell instead of a solid block, which saves a lot of filament on bigger clickers. The switch column and its surround stay solid.')}</span>
@@ -458,7 +461,7 @@ export function createUi(
       </details>
 
       <details class="section section-collapsible" id="sectionSwitch">
-        <summary class="label collapsible-head">3 · Switch</summary>
+        <summary class="label collapsible-head">Switch &amp; fit</summary>
         <div class="collapsible-body">
         <div class="field" style="margin-bottom:10px;">
           <label>Switches ${tip('Use 1–3 MX switches for larger or wider designs — more click points and stability. Each switch can be moved and rotated individually.')}</label>
@@ -1580,14 +1583,14 @@ export function createUi(
       focus: 'left',
       target: '#geometrySettingsContainer',
       title: 'Geometry & Style Settings',
-      text: 'Fine-tune your model in collapsible sections. <strong>1 · Colors &amp; Smoothing</strong> picks filament colors and smooths the outline. <strong>2 · More Settings</strong> adds a keychain loop, changes thicknesses, and dials in the <strong>switch socket &amp; stem fit tolerances</strong> that control how tightly the top and bottom parts clip together.',
+      text: 'Fine-tune your model in collapsible sections. <strong>Colors &amp; smoothing</strong> picks filament colors and smooths the outline. <strong>Body &amp; keychain</strong> adds a keychain loop, changes thicknesses, and dials in the <strong>switch pocket &amp; stem fit</strong> that control how tightly the top and bottom parts clip together.',
       arrow: 'left'
     },
     {
       focus: 'left',
       target: '#sectionSwitch',
       title: 'Position the Switch',
-      text: 'Open the <strong>3 · Switch</strong> section to <strong>move and rotate</strong> the MX switch. Handy when the switch doesn\'t sit neatly in the centre of your design.',
+      text: 'Open the <strong>Switch &amp; fit</strong> section to <strong>move and rotate</strong> the MX switch, or print the fit test. Handy when the switch doesn\'t sit neatly in the centre of your design.',
       arrow: 'left'
     },
     {
