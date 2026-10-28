@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Anti-cache: esta app cambia de build (hash del bundle) - si el navegador
+         se queda con una versión antigua del HTML, no ve la UI nueva. -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Clicker Factory — 3Dwork</title>
     <!-- Chakra Petch (misma familia que el design system de referencia) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
