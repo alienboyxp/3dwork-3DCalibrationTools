@@ -250,6 +250,20 @@ header {
     grid-column: 1 / -1;
 }
 
+/* Subgrids de 3 columnas (creación, comparadores): colapsan en móvil */
+@media (max-width: 720px) {
+    .subgrid-3 {
+        grid-template-columns: 1fr !important;
+    }
+    .tool-card {
+        min-width: 0;
+    }
+    .tool-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
 @media (max-width: 1024px) {
     .tool-grid {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

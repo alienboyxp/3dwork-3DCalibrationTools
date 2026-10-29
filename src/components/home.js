@@ -10,7 +10,7 @@ window.renderHome = function (container, t) {
             </div>
 
             <div class="tool-grid">
-                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div class="subgrid-3" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                     <a href="3d-tools/index.html#litho" class="tool-card" id="card-lithophane" style="border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
                         <div class="tool-info">
                             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
@@ -54,7 +54,7 @@ window.renderHome = function (container, t) {
                         </div>
                     </a>
                 </div>
-                <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div class="subgrid-3" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                     <a href="#comparator" class="tool-card" id="card-comparator" style="border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">
                     <div class="badge-container">
                         <span class="badge" style="background:rgba(16,185,129,0.15);color:#34D399;border:1px solid rgba(16,185,129,0.3);">NEW</span>
