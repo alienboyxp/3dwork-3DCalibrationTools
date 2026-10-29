@@ -89,6 +89,7 @@ window.SharedHeader = (function () {
             { href: root + 'litho.html', label: 'Lithophane Creator', active: active === 'litho' },
             { href: root + 'hueforge.html', label: 'HueForge Creator', active: active === 'hueforge' },
             { href: root + 'apps/clicker/index.html', label: 'Clicker Factory', active: active === 'clicker' },
+            { href: root + 'apps/clicker2/index.html', label: 'Clicker Factory 2 (zonas · beta)', active: active === 'clicker2' },
         ];
 
         const compItems = [

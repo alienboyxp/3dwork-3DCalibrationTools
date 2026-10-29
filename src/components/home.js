@@ -53,6 +53,23 @@ window.renderHome = function (container, t) {
                             <i data-lucide="arrow-right"></i>
                         </div>
                     </a>
+                        <a href="apps/clicker2/index.html" style="text-decoration: none; display: block;">
+                            <div class="tool-entry-card clicker">
+                                <div class="tool-badge teal">MX Clickers (Zonas)</div>
+                                <div class="tool-entry-icon teal">🔘🔘🔘🔘</div>
+                                <div class="tool-entry-info">
+                                    <h2>Clicker Factory 2</h2>
+                                    <p>Split a design into a grid of independent MX-switch clickers. Image, SVG, icon, or text → multi-key layout with auto-scale, fit test and per-zone fit control.
+                                </p>
+                                </div>
+                                <ul class="tool-feature-list">
+                                    <li>Multi-zone grid (image/SVG/icon/text)</li>
+                                    <li>Auto-scale & fit test per zone</li>
+                                    <li>Per-zone fit & key placement</li>
+                                </ul>
+                                <button class="tool-cta teal">Open Zones <i data-lucide="chevron-right"></i></button>
+                            </div>
+                        </a>
                 </div>
                 <div class="subgrid-3" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
                     <a href="#comparator" class="tool-card" id="card-comparator" style="border-color: rgba(16,185,129,0.3); background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, var(--bg-card) 100%);">

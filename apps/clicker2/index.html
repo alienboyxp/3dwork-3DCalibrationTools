@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Clicker Factory 2 (Zonas) — 3Dwork</title>
+    <!-- Favicon 3Dwork (propio) -->
+    <link rel="icon" type="image/png" href="./assets/favicon/3dworkfaviconblack.png?v=2" />
+    <link rel="icon" type="image/png" href="./assets/favicon/3dworkfaviconblack.png?v=2" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="./assets/favicon/3dworkfaviconblack.png?v=2" />
+    <script>
+      (function() {
+        const saved = localStorage.getItem('clicker_theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (systemDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <!-- Zonas (experimento): hook del worker + panel. Debe cargar ANTES del bundle. -->
+    <script src="zones/zones.js?v=1"></script>
+    <script type="module" crossorigin src="./assets/index-DiKeyH7v.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Dz0MBiHC.css">
+  </head>
+  <body>
+
+  <!-- Header compartido de las tools 3Dwork (reemplaza el del bundle) -->
+  <style>
+    /* Ocultar el topbar original del bundle */
+    #topbar, .vl-topbar { display: none !important; }
+    /* Nuestro header - mismo estilo que el resto de tools */
+    #site-header {
+      flex: 0 0 auto;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: sticky; top: 0; z-index: 1000;
+    }
+    :root[data-theme="light"] #site-header { background: rgba(255,255,255,0.85); border-bottom: 1px solid #cfd7e4; }
+    #site-header nav { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%; gap: 12px; }
+    #site-header a { text-decoration: none; }
+    #site-header .logo-img { height: 40px; width: auto; object-fit: contain; }
+    #site-header .nav-links { list-style: none; display: flex; gap: 0.75rem; background: rgba(255,255,255,0.05); padding: 0.4rem; border-radius: 100px; align-items: center; margin: 0; }
+    #site-header .nav-links > li > a, #site-header .dropdown-trigger { color: #94A3B8; font-weight: 500; font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 100px; display: flex; align-items: center; gap: 5px; transition: all .25s; cursor: pointer; white-space: nowrap; }
+    #site-header .nav-links > li > a:hover, #site-header .dropdown:hover .dropdown-trigger { color: white; background: rgba(255,255,255,0.1); }
+    :root[data-theme="light"] #site-header .nav-links > li > a:hover { color: #16202f; background: rgba(0,0,0,0.06); }
+    #site-header .dropdown { position: relative; }
+    #site-header .dropdown-menu { display: none; position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #1d2027; border: 1px solid #2f3440; border-radius: 12px; padding: 0.5rem; min-width: 230px; list-style: none; margin: 0; box-shadow: 0 12px 28px rgba(0,0,0,0.35); flex-direction: column; gap: 2px; z-index: 1100; }
+    :root[data-theme="light"] #site-header .dropdown-menu { background: #ffffff; border-color: #d1d5db; box-shadow: 0 12px 28px rgba(0,0,0,0.12); }
+    #site-header .dropdown:hover .dropdown-menu, #site-header .dropdown:focus-within .dropdown-menu { display: flex; }
+    #site-header .dropdown-menu a { display: block; color: #94A3B8; font-size: 0.82rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all .15s; }
+    #site-header .dropdown-menu a:hover { color: var(--accent, #9E77ED); background: rgba(158,119,237,0.1); }
+    :root[data-theme="light"] #site-header .dropdown-menu a { color: #5d6b80; }
+    #site-header .nav-right { display: flex; gap: 8px; align-items: center; }
+    #site-header .lang-btn { background: rgba(255,255,255,0.05); color: #94A3B8; border: none; border-radius: 8px; font-size: 0.78rem; padding: 5px 10px; cursor: pointer; font-weight: 600; }
+    #site-header .lang-btn:hover { color: white; }
+    .nav-toggle { display: none; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #cbd5e1; padding: 8px; cursor: pointer; line-height: 0; }
+    @media (max-width: 860px) {
+      #site-header { position: relative; }
+      .nav-toggle { display: inline-flex; }
+      .nav-links { display: none; position: absolute; top: calc(100% + 10px); left: 10px; right: 10px; flex-direction: column; align-items: stretch; gap: 4px; background: #1d2027; border: 1px solid #2f3440; border-radius: 12px; padding: 10px; box-shadow: 0 14px 30px rgba(0,0,0,0.4); z-index: 1100; }
+      #site-header.nav-open .nav-links { display: flex; }
+      .nav-links .dropdown-menu { position: static; transform: none; display: flex; flex-direction: column; min-width: 0; box-shadow: none; border: 0; padding: 2px 0 2px 14px; margin: 2px 0 4px; border-left: 2px solid #2f3440; }
+    }
+  </style>
+  <header id="site-header">
+    <nav>
+      <a href="../../index.html" class="logo-container">
+        <img src="https://3dwork.io/wp-content/uploads/2023/07/3dwork_white_logo.png" alt="3Dwork Logo" class="logo-img" />
+      </a>
+      <button class="nav-toggle" aria-label="Menu" onclick="document.getElementById('site-header').classList.toggle('nav-open')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
+      <ul class="nav-links">
+        <li><a href="../../index.html">Home</a></li>
+        <li class="dropdown">
+          <a class="dropdown-trigger">Calibration <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+          <ul class="dropdown-menu">
+            <li><a href="../index.html#esteps">E-steps Calibration</a></li>
+            <li><a href="../index.html#rotation">Rotation Distance</a></li>
+            <li><a href="../index.html#skew">Skew Calibration</a></li>
+            <li><a href="../index.html#bedmesh">Bed Mesh Alignment</a></li>
+            <li><a href="../index.html#bedleveling">Manual Bed Leveling</a></li>
+            <li><a href="../index.html#vref">Vref &amp; RMS Calculator</a></li>
+            <li><a href="../index.html#shaper">Input Shaper Analysis</a></li>
+            <li><a href="../index.html#loganalyzer">Log Analyzer &amp; AI Support</a></li>
+          </ul>
+        </li>
+        <li class="dropdown">
+          <a class="dropdown-trigger">Create <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+          <ul class="dropdown-menu">
+            <li><a href="../litho.html">Lithophane Creator</a></li>
+            <li><a href="../hueforge.html">HueForge Creator</a></li>
+            <li><a href="./index.html">Clicker Factory</a></li>
+          </ul>
+        </li>
+        <li><a href="../index.html#price">3D Print Price Calculator</a></li>
+        <li class="dropdown">
+          <a class="dropdown-trigger">Comparators <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
+          <ul class="dropdown-menu">
+            <li><a href="../index.html#comparator">Machines</a></li>
+            <li><a href="../index.html#filaments">Filaments</a></li>
+            <li><a href="../index.html#resins">Resins</a></li>
+          </ul>
+        </li>
+      </ul>
+      <div class="nav-right">
+        <button class="lang-btn" onclick="localStorage.setItem('3dwork_lang','en');location.reload()">🇬🇧 EN</button>
+        <button class="lang-btn" onclick="localStorage.setItem('3dwork_lang','es');location.reload()">🇪🇸 ES</button>
+      </div>
+    </nav>
+  </header>
+
+    <div id="root"></div>
+  </body>
+</html>
