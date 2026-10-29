@@ -56,13 +56,23 @@
     #site-header .nav-right { display: flex; gap: 8px; align-items: center; }
     #site-header .lang-btn { background: rgba(255,255,255,0.05); color: #94A3B8; border: none; border-radius: 8px; font-size: 0.78rem; padding: 5px 10px; cursor: pointer; font-weight: 600; }
     #site-header .lang-btn:hover { color: white; }
-    @media (max-width: 960px) { #site-header .nav-links { display: none; } }
+    .nav-toggle { display: none; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; color: #cbd5e1; padding: 8px; cursor: pointer; line-height: 0; }
+    @media (max-width: 860px) {
+      #site-header { position: relative; }
+      .nav-toggle { display: inline-flex; }
+      .nav-links { display: none; position: absolute; top: calc(100% + 10px); left: 10px; right: 10px; flex-direction: column; align-items: stretch; gap: 4px; background: #1d2027; border: 1px solid #2f3440; border-radius: 12px; padding: 10px; box-shadow: 0 14px 30px rgba(0,0,0,0.4); z-index: 1100; }
+      #site-header.nav-open .nav-links { display: flex; }
+      .nav-links .dropdown-menu { position: static; transform: none; display: flex; flex-direction: column; min-width: 0; box-shadow: none; border: 0; padding: 2px 0 2px 14px; margin: 2px 0 4px; border-left: 2px solid #2f3440; }
+    }
   </style>
   <header id="site-header">
     <nav>
       <a href="../../index.html" class="logo-container">
         <img src="https://3dwork.io/wp-content/uploads/2023/07/3dwork_white_logo.png" alt="3Dwork Logo" class="logo-img" />
       </a>
+      <button class="nav-toggle" aria-label="Menu" onclick="document.getElementById('site-header').classList.toggle('nav-open')">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
       <ul class="nav-links">
         <li><a href="../../index.html">Home</a></li>
         <li class="dropdown">

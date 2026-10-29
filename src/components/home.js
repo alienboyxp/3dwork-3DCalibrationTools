@@ -11,7 +11,7 @@ window.renderHome = function (container, t) {
 
             <div class="tool-grid">
                 <div class="subgrid-3" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                    <a href="3d-tools/index.html#litho" class="tool-card" id="card-lithophane" style="border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
+                    <a href="3d-tools/litho.html" class="tool-card" id="card-lithophane" style="border-color: rgba(255,120,0,0.3); background: linear-gradient(135deg, rgba(255,120,0,0.08) 0%, var(--bg-card) 100%);">
                         <div class="tool-info">
                             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                                 <div class="tool-icon" style="background: rgba(255,120,0,0.12); color: #FF9A3C;">
@@ -25,7 +25,7 @@ window.renderHome = function (container, t) {
                             <i data-lucide="arrow-right"></i>
                         </div>
                     </a>
-                    <a href="3d-tools/index.html#hue" class="tool-card" id="card-hueforge" style="border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--bg-card) 100%);">
+                    <a href="3d-tools/hueforge.html" class="tool-card" id="card-hueforge" style="border-color: rgba(59,130,246,0.3); background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, var(--bg-card) 100%);">
                         <div class="tool-info">
                             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                                 <div class="tool-icon" style="background: rgba(59,130,246,0.12); color: #93C5FD;">
@@ -39,7 +39,7 @@ window.renderHome = function (container, t) {
                             <i data-lucide="arrow-right"></i>
                         </div>
                     </a>
-                    <a href="3d-tools/index.html#clicker" class="tool-card" id="card-clicker" style="border-color: rgba(20,184,166,0.3); background: linear-gradient(135deg, rgba(20,184,166,0.08) 0%, var(--bg-card) 100%);">
+                    <a href="3d-tools/apps/clicker/index.html" class="tool-card" id="card-clicker" style="border-color: rgba(20,184,166,0.3); background: linear-gradient(135deg, rgba(20,184,166,0.08) 0%, var(--bg-card) 100%);">
                         <div class="tool-info">
                             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                                 <div class="tool-icon" style="background: rgba(20,184,166,0.12); color: #5EEAD4;">
