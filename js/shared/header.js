@@ -100,14 +100,14 @@ window.SharedHeader = (function () {
         return (
             <header>
                 <nav id="top-nav">
-                    <a href={root + '../index.html'} className="logo-container">
+                    <a href={root + 'index.html'} className="logo-container">
                         <img src="https://3dwork.io/wp-content/uploads/2023/07/3dwork_white_logo.png" alt="3Dwork Logo" className="logo-img" />
                     </a>
                     <button className="nav-toggle" aria-label="Menu" onClick={() => setNavOpen(!navOpen)}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
                     </button>
                     <ul className={'nav-links' + (navOpen ? ' open' : '')}>
-                        <li><a href={root + '../index.html'}>{menuItems.home}</a></li>
+                        <li><a href={root + 'index.html'}>{menuItems.home}</a></li>
                         <li className={'dropdown' + (dropdownOpen === 'cal' ? ' open' : '')}>
                             <a href="#" className="dropdown-trigger" onClick={(e) => { e.preventDefault(); setDropdownOpen(dropdownOpen === 'cal' ? null : 'cal'); }}>
                                 {menuItems.calibration} <i data-lucide="chevron-down"></i>
