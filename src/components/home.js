@@ -38,6 +38,7 @@ window.renderHome = function (container, t) {
                         <div class="tool-action">
                             <i data-lucide="arrow-right"></i>
                         </div>
+                    </a>
                     <a href="apps/clicker/index.html" class="tool-card" id="card-clicker" style="border-color: rgba(20,184,166,0.3); background: linear-gradient(135deg, rgba(20,184,166,0.08) 0%, var(--bg-card) 100%); position: relative;">
                         <div class="badge-container" style="z-index: 2;">
                             <span class="badge" style="background: #f59e0b; color: #1f2937; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; font-family: var(--font-display); cursor: pointer;" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='apps/clicker2/index.html';" title="Probar Clicker Factory 2 (Zonas)">
