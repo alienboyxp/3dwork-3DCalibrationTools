@@ -21,6 +21,7 @@ import type {
   PaletteEntry,
   RegionSet,
   RGB,
+  Ring,
   SwitchPlacement,
 } from './types';
 import { FILAMENTS, PLATE_SIZES, DEFAULT_PLATE_SIZE } from './types';
@@ -126,6 +127,14 @@ const store = createStore<UiState>({
   canUndo: false,
   canRedo: false,
   canRefresh: false,
+
+  // Grid/MultiClick mode
+  gridEnabled: false,
+  gridRows: 2,
+  gridCols: 2,
+  gridMarginMm: 2.0,
+  gridAutoScale: true,
+  gridDesignScale: 100,
 });
 
 // Global error handler: surface any uncaught error in the status div so the user
@@ -592,6 +601,32 @@ const ui = createUi(sidebarLeft, sidebarRight, statusEl, {
   onBodyRimRaise: (mm) => {
     store.set({ bodyRimRaise: mm });
     debouncedRebuild();
+  },
+  // Grid/MultiClick callbacks
+  onGridToggle: (on) => {
+    store.set({ gridEnabled: on });
+    if (on) rebuild(); // rebuild immediately when enabled
+    else rebuild(); // rebuild to return to normal single clicker
+  },
+  onGridRows: (n) => {
+    store.set({ gridRows: Math.max(1, Math.min(6, n)) });
+    if (store.get().gridEnabled) debouncedRebuild();
+  },
+  onGridCols: (n) => {
+    store.set({ gridCols: Math.max(1, Math.min(6, n)) });
+    if (store.get().gridEnabled) debouncedRebuild();
+  },
+  onGridMargin: (mm) => {
+    store.set({ gridMarginMm: Math.max(0.5, Math.min(5, mm)) });
+    if (store.get().gridEnabled) debouncedRebuild();
+  },
+  onGridAutoScale: (on) => {
+    store.set({ gridAutoScale: on });
+    if (store.get().gridEnabled) debouncedRebuild();
+  },
+  onGridDesignScale: (pct) => {
+    store.set({ gridDesignScale: Math.max(50, Math.min(200, pct)) });
+    if (store.get().gridEnabled) debouncedRebuild();
   },
   onUndo: () => undo(),
   onRedo: () => redo(),
@@ -1107,6 +1142,12 @@ function rebuild(quiet = false) {
     return;
   }
 
+  // Grid/MultiClick mode
+  if (s0.gridEnabled) {
+    gridRebuild(quiet);
+    return;
+  }
+
   if (!regionSet || regionSet.regions.length === 0) return;
   if (!assetsReady) {
     store.set({ status: 'Waiting for switch assets…' });
@@ -1145,6 +1186,155 @@ function rebuild(quiet = false) {
   } else {
     worker.postMessage({ type: 'buildClicker', regions, outline: regionSet.outline, params });
   }
+}
+
+/** ========== GRID / MULTICLICK HELPERS ========== **/
+type GridRegion = { 
+  quantRgb: RGB; 
+  components: { rings: Ring[]; coverage: number }[]; 
+  coverage: number;
+  rings?: Ring[]; // Optional: for outline/centroid calculations - derived from components
+};
+
+function regionCentroid(r: GridRegion): { x: number; y: number } {
+  const ring = (r.rings && r.rings[0]) || [];
+  if (!ring.length) return { x: 0, y: 0 };
+  let cx = 0, cy = 0;
+  for (let p = 0; p < ring.length; p++) { cx += ring[p][0]; cy += ring[p][1]; }
+  return { x: cx / ring.length, y: cy / ring.length };
+}
+
+function regionBBox(regions: GridRegion[]): { minX: number; maxX: number; minY: number; maxY: number } {
+  let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+  for (const r of regions) {
+    for (const ring of r.rings || []) {
+      for (const [x, y] of ring) {
+        if (x < minx) minx = x; if (x > maxx) maxx = x;
+        if (y < miny) miny = y; if (y > maxy) maxy = y;
+      }
+    }
+  }
+  if (!isFinite(minx)) return { minX: -0.5, maxX: 0.5, minY: -0.5, maxY: 0.5 };
+  return { minX: minx, maxX: maxx, minY: miny, maxY: maxy };
+}
+
+/** Grid/MultiClick rebuild: partitions design into N×M clickers */
+function gridRebuild(_quiet = false) {
+  const s = store.get();
+  if (!regionSet || regionSet.regions.length === 0) return;
+  if (!assetsReady) { store.set({ status: 'Waiting for switch assets…' }); return; }
+
+  const rows = Math.max(1, Math.min(6, s.gridRows | 0));
+  const cols = Math.max(1, Math.min(6, s.gridCols | 0));
+  Math.max(0.5, Math.min(5, s.gridMarginMm)); // margin
+
+  // Auto-scale to fill grid cells
+  if (s.gridAutoScale) {
+    const bbox = regionBBox(regionSet.regions);
+    const designW = bbox.maxX - bbox.minX;
+    const designH = bbox.maxY - bbox.minY;
+    if (designW > 0 && designH > 0) {
+      const targetScale = 0.8 / Math.max(designW, designH);
+      const autoPct = Math.round(targetScale * 100);
+      const clamped = Math.max(50, Math.min(200, autoPct));
+      if (clamped !== s.gridDesignScale) {
+        store.set({ gridDesignScale: clamped });
+        // scaleFactor = clamped / 100;
+      }
+    }
+  }
+
+  // 1) Scale all regions globally
+  const scaledRegions: GridRegion[] = regionSet.regions.map(r => {
+    // Combine all component rings for outline/centroid
+    const allRings: Ring[] = [];
+    for (const c of r.components) {
+      for (const ring of c.rings) allRings.push(ring);
+    }
+    return {
+      quantRgb: r.quantRgb,
+      components: r.components.map(c => ({
+        rings: c.rings.map(ring => ring.map(([x, y]) => [x * s.gridDesignScale / 100, y * s.gridDesignScale / 100] as [number, number])),
+        coverage: c.coverage
+      })),
+      coverage: r.coverage,
+      rings: allRings.map(ring => ring.map(([x, y]) => [x * s.gridDesignScale / 100, y * s.gridDesignScale / 100] as [number, number]))
+    };
+  });
+
+  // 2) Group regions by grid cell (centroid-based)
+  const cells: Record<string, { regions: GridRegion[]; cents: { x: number; y: number }[] }> = {};
+  for (const r of scaledRegions) {
+    const c = regionCentroid(r);
+    const col = Math.max(0, Math.min(cols - 1, Math.floor((c.x + 0.5) * cols)));
+    const row = Math.max(0, Math.min(rows - 1, Math.floor((0.5 - c.y) * rows)));
+    const key = `${row},${col}`;
+    if (!cells[key]) cells[key] = { regions: [], cents: [] };
+    cells[key].regions.push(r);
+    cells[key].cents.push(c);
+  }
+
+  const cellKeys = Object.keys(cells);
+  if (!cellKeys.length) { store.set({ status: 'No regions to partition.' }); return; }
+
+  // 3) Build sub-messages for each cell
+  const msgs: any[] = [];
+  const positions: { x: number; y: number }[] = [];
+
+  for (const key of Object.keys(cells)) {
+    const cell = cells[key];
+    const [rowStr, colStr] = key.split(',');
+    const row = parseInt(rowStr, 10);
+    const col = parseInt(colStr, 10);
+
+    const bbox = regionBBox(cell.regions);
+    const cx = (bbox.minX + bbox.maxX) / 2;
+    const cy = (bbox.minY + bbox.maxY) / 2;
+
+    // Recenter cell regions at (0,0)
+    const cellRegions = cell.regions.map(r => ({
+      ...r,
+      rings: (r.rings || []).map(ring => ring.map(([x, y]) => [x - cx, y - cy] as [number, number])),
+      components: r.components.map(c => ({
+        rings: c.rings.map(ring => ring.map(([x, y]) => [x - cx, y - cy] as [number, number])),
+        coverage: c.coverage
+      }))
+    }));
+
+    // Simple outline for this cell
+    const cellOutline = [[
+      [-(bbox.maxX - bbox.minX) / 2, -(bbox.maxY - bbox.minY) / 2],
+      [(bbox.maxX - bbox.minX) / 2, -(bbox.maxY - bbox.minY) / 2],
+      [(bbox.maxX - bbox.minX) / 2, (bbox.maxY - bbox.minY) / 2],
+      [-(bbox.maxX - bbox.minX) / 2, (bbox.maxY - bbox.minY) / 2]
+    ]];
+
+    const bw = bbox.maxX - bbox.minX;
+    const bh = bbox.maxY - bbox.minY;
+    if (bw < 0.10 || bh < 0.10) {
+      console.warn(`Grid cell too small for switch`);
+    }
+
+    const p = buildParamsFrom(store.get() as any);
+    p.baseShape = s.baseShape;
+    p.capWidthMm = Math.max(17, s.capWidthMm - (s.gridMarginMm || 2));
+    p.borderWidth = 1.2;
+    p.hollowBase = false;
+    p.switches = [{ x: 0, y: 0, rotation: 0 }];
+    p.componentHeights = {};
+    if (p.keychain) p.keychain = { ...p.keychain, enabled: false };
+
+    msgs.push({ type: 'buildClicker', regions: cellRegions, outline: cellOutline, params: p });
+
+    positions.push({
+      x: (col - (s.gridCols - 1) / 2) * (s.capWidthMm + s.gridMarginMm),
+      y: ((s.gridRows - 1) / 2 - row) * (s.capWidthMm + s.gridMarginMm)
+    });
+  }
+
+  // For now, fall back to normal rebuild
+  console.warn('[Grid] Grid rebuild not fully implemented yet, falling back to normal rebuild');
+  rebuild(false);
 }
 
 /** BuildParams derived from the current store state — shared by rebuild() and fit test. */

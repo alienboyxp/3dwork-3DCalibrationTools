@@ -90,6 +90,14 @@ export interface UiState {
   canUndo: boolean;
   canRedo: boolean;
   canRefresh: boolean;
+
+  /** Grid/MultiClick mode: split design into N×M independent clickers. */
+  gridEnabled: boolean;
+  gridRows: number;
+  gridCols: number;
+  gridMarginMm: number;
+  gridAutoScale: boolean;
+  gridDesignScale: number; // 50-200%, applied before partitioning
 }
 
 export interface UiCallbacks {
@@ -183,6 +191,18 @@ export interface UiCallbacks {
   onModelCutter(mode: 'slice' | 'stand' | 'button'): void;
   /** Model mode: slice height as a fraction of model height (0.1–0.9). */
   onModelCutHeight(pct: number): void;
+  /** Grid/MultiClick: toggle grid mode on/off. */
+  onGridToggle(on: boolean): void;
+  /** Grid/MultiClick: set number of rows (1–6). */
+  onGridRows(n: number): void;
+  /** Grid/MultiClick: set number of columns (1–6). */
+  onGridCols(n: number): void;
+  /** Grid/MultiClick: set margin between clickers (mm). */
+  onGridMargin(mm: number): void;
+  /** Grid/MultiClick: toggle auto-scale. */
+  onGridAutoScale(on: boolean): void;
+  /** Grid/MultiClick: set design scale percentage (50–200). */
+  onGridDesignScale(pct: number): void;
   onGenerate(): void;
   onUndo(): void;
   onRedo(): void;
@@ -533,6 +553,53 @@ export function createUi(
         </div>
       </details>
     </div>
+
+    <details class="section section-collapsible" id="sectionGrid">
+      <summary class="label collapsible-head">MultiClick (Grid)</summary>
+      <div class="collapsible-body">
+        <div class="field">
+          <label for="gridToggle">Enable Grid Mode ${tip('Split the design into a grid of independent clickers, each with its own MX switch.')}</label>
+          <label class="toggle"><input id="gridToggle" type="checkbox" /><span class="slider"></span></label>
+        </div>
+        <div id="gridOpts" style="display:none;">
+          <div class="prow-stacked">
+            <div class="prow-header">
+              <label for="gridRows">Rows ${tip('Number of grid rows (1–6).')}</label>
+              <input type="text" class="val" id="gridRowsVal" />
+            </div>
+            <input type="range" id="gridRows" min="1" max="6" step="1" value="2" />
+          </div>
+          <div class="prow-stacked">
+            <div class="prow-header">
+              <label for="gridCols">Columns ${tip('Number of grid columns (1–6).')}</label>
+              <input type="text" class="val" id="gridColsVal" />
+            </div>
+            <input type="range" id="gridCols" min="1" max="6" step="1" value="2" />
+          </div>
+          <div class="prow-stacked">
+            <div class="prow-header">
+              <label for="gridMargin">Margin (mm) ${tip('Gap between adjacent clickers in the grid.')}</label>
+              <input type="text" class="val" id="gridMarginVal" />
+            </div>
+            <input type="range" id="gridMargin" min="0.5" max="5" step="0.5" value="2" />
+          </div>
+          <div class="prow-stacked">
+            <div class="prow-header">
+              <label for="gridAutoScale">Auto-scale ${tip('Automatically scale the design to fill each grid cell (80% fill).')}</label>
+              <label class="toggle"><input id="gridAutoScale" type="checkbox" checked /><span class="slider"></span></label>
+            </div>
+          </div>
+          <div class="prow-stacked" id="gridScaleField">
+            <div class="prow-header">
+              <label for="gridDesignScale">Design scale % ${tip('Manual scale when auto-scale is off. 100% = original size.')}</label>
+              <input type="text" class="val" id="gridDesignScaleVal" />
+            </div>
+            <input type="range" id="gridDesignScale" min="50" max="200" step="5" value="100" />
+          </div>
+          <p class="hint" style="margin-top:8px;">Auto-scale ON: calculates optimal % to fill grid cells. Change rows/cols/margin → auto-rebuild. Slider disables auto-scale.</p>
+        </div>
+      </div>
+    </details>
 
     <div class="sidebar-sticky-footer">
       <div class="btn-row" id="historyControls">
@@ -2361,6 +2428,50 @@ export function createUi(
       }
     }
   }
+
+  // --- Grid/MultiClick listeners ---
+  const gridToggle = $<HTMLInputElement>('gridToggle');
+  gridToggle?.addEventListener('change', () => cb.onGridToggle(gridToggle.checked));
+
+  const gridRows = $<HTMLInputElement>('gridRows');
+  const gridRowsVal = $<HTMLInputElement>('gridRowsVal');
+  gridRows?.addEventListener('input', () => {
+    const v = +gridRows.value;
+    if (gridRowsVal) gridRowsVal.value = String(v);
+    cb.onGridRows(v);
+  });
+
+  const gridCols = $<HTMLInputElement>('gridCols');
+  const gridColsVal = $<HTMLInputElement>('gridColsVal');
+  gridCols?.addEventListener('input', () => {
+    const v = +gridCols.value;
+    if (gridColsVal) gridColsVal.value = String(v);
+    cb.onGridCols(v);
+  });
+
+  const gridMargin = $<HTMLInputElement>('gridMargin');
+  const gridMarginVal = $<HTMLInputElement>('gridMarginVal');
+  gridMargin?.addEventListener('input', () => {
+    const v = +gridMargin.value;
+    if (gridMarginVal) gridMarginVal.value = `${v.toFixed(1)} mm`;
+    cb.onGridMargin(v);
+  });
+
+  const gridAutoScale = $<HTMLInputElement>('gridAutoScale');
+  gridAutoScale?.addEventListener('change', () => cb.onGridAutoScale(gridAutoScale.checked));
+
+  const gridDesignScale = $<HTMLInputElement>('gridDesignScale');
+  const gridDesignScaleVal = $<HTMLInputElement>('gridDesignScaleVal');
+  gridDesignScale?.addEventListener('input', () => {
+    const v = +gridDesignScale.value;
+    if (gridDesignScaleVal) gridDesignScaleVal.value = String(v);
+    // Manual slider disables auto-scale
+    if (gridAutoScale && gridAutoScale.checked) {
+      gridAutoScale.checked = false;
+      cb.onGridAutoScale(false);
+    }
+    cb.onGridDesignScale(v);
+  });
 
   return { 
     update, 
