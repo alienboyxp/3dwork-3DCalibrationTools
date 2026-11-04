@@ -21,7 +21,7 @@
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            padding: 1rem 2rem;
+            padding: 0.5rem 2rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: sticky;
             top: 0;
@@ -155,63 +155,122 @@
         .aspect-lock.active {
             border-color: var(--accent);
             color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
         }
 
         .view-btns {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
+            bottom: 15px;
+            right: 15px;
             display: flex;
-            gap: 6px;
+            gap: 8px;
+            z-index: 10;
         }
 
         .v-btn {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
             border: 1px solid var(--border);
-            color: #94A3B8;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
+            color: var(--text-dim);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
+            transition: var(--trans);
         }
 
         .v-btn:hover {
             color: white;
             border-color: var(--accent);
+            background: rgba(255, 120, 0, 0.1);
         }
 
         .f-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: #1E293B;
+            gap: 12px;
+            background: var(--bg-input);
             border: 1px solid var(--border);
-            padding: 6px;
-            border-radius: 6px;
+            padding: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            transition: var(--trans);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .f-item:hover {
             border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .f-col {
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
         }
 
         .f-details {
             flex: 1;
             font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .f-td {
             font-size: 10px;
             color: var(--accent);
-            font-weight: 700;
+            font-weight: 800;
         }
+
+        .nav-tab {
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            transition: var(--trans);
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            background: rgba(255, 120, 0, 0.05);
+
+            /* Sleek Sliders */
+            input[type=range] {
+                -webkit-appearance: none;
+                appearance: none;
+                background: rgba(255, 255, 255, 0.05);
+                height: 4px;
+                border-radius: 2px;
+                outline: none;
+                margin: 10px 0;
+            }
+
+            input[type=range]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 12px;
+                height: 12px;
+                background: var(--accent);
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: 0 0 5px var(--accent-glow);
+                transition: transform 0.2s;
+            }
+
+            input[type=range]:active::-webkit-slider-thumb {
+                transform: scale(1.3);
+            }
     </style>
 </head>
 
@@ -220,6 +279,37 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useId, useCallback } = React;
+
+        const FILAMENT_DATA = [
+            { "id": "anycubic-pla-black", "brand": "Anycubic", "type": "PLA", "colorName": "Black", "hex": "#1A1A1A", "td": 1.0 },
+            { "id": "anycubic-pla-white", "brand": "Anycubic", "type": "PLA", "colorName": "White", "hex": "#F5F5F5", "td": 5.0 },
+            { "id": "anycubic-pla-red", "brand": "Anycubic", "type": "PLA", "colorName": "Red", "hex": "#C0392B", "td": 2.5 },
+            { "id": "anycubic-pla-blue", "brand": "Anycubic", "type": "PLA", "colorName": "Blue", "hex": "#2980B9", "td": 3.2 },
+            { "id": "anycubic-pla-orange", "brand": "Anycubic", "type": "PLA", "colorName": "Orange", "hex": "#E67E22", "td": 2.8 },
+            { "id": "anycubic-pla-green", "brand": "Anycubic", "type": "PLA", "colorName": "Green", "hex": "#27AE60", "td": 3.0 },
+            { "id": "anycubic-pla-yellow", "brand": "Anycubic", "type": "PLA", "colorName": "Yellow", "hex": "#F1C40F", "td": 4.2 },
+            { "id": "anycubic-pla-gray", "brand": "Anycubic", "type": "PLA", "colorName": "Gray", "hex": "#7F8C8D", "td": 2.0 },
+            { "id": "elegoo-pla-black", "brand": "Elegoo", "type": "PLA", "colorName": "Black", "hex": "#111111", "td": 0.9 },
+            { "id": "elegoo-pla-white", "brand": "Elegoo", "type": "PLA", "colorName": "White", "hex": "#FFFFFF", "td": 5.2 },
+            { "id": "elegoo-pla-red", "brand": "Elegoo", "type": "PLA", "colorName": "Red", "hex": "#B03A2E", "td": 2.3 },
+            { "id": "elegoo-pla-blue", "brand": "Elegoo", "type": "PLA", "colorName": "Blue", "hex": "#1F618D", "td": 3.5 },
+            { "id": "elegoo-pla-orange", "brand": "Elegoo", "type": "PLA", "colorName": "Orange", "hex": "#D35400", "td": 2.6 },
+            { "id": "elegoo-pla-green", "brand": "Elegoo", "type": "PLA", "colorName": "Green", "hex": "#1E8449", "td": 2.9 },
+            { "id": "elegoo-pla-purple", "brand": "Elegoo", "type": "PLA", "colorName": "Purple", "hex": "#7D3C98", "td": 2.4 },
+            { "id": "elegoo-pla-gray", "brand": "Elegoo", "type": "PLA", "colorName": "Gray", "hex": "#626567", "td": 1.8 },
+            { "id": "rosa3d-pla-black", "brand": "Rosa3D", "type": "PLA", "colorName": "Black", "hex": "#1A1A1A", "td": 1.0 },
+            { "id": "rosa3d-pla-white", "brand": "Rosa3D", "type": "PLA", "colorName": "White", "hex": "#F0F0F0", "td": 5.0 },
+            { "id": "rosa3d-pla-red", "brand": "Rosa3D", "type": "PLA", "colorName": "Red", "hex": "#C0392B", "td": 2.4 },
+            { "id": "rosa3d-pla-plus-natural", "brand": "Rosa3D", "type": "PLA+", "colorName": "Natural", "hex": "#F5E6C8", "td": 4.5 },
+            { "id": "rosa3d-pla-plus-orange", "brand": "Rosa3D", "type": "PLA+", "colorName": "Orange", "hex": "#E8820C", "td": 2.7 },
+            { "id": "rosa3d-pla-plus-blue", "brand": "Rosa3D", "type": "PLA+", "colorName": "Blue", "hex": "#2471A3", "td": 3.3 },
+            { "id": "spectrum-pla-black", "brand": "Spectrum", "type": "PLA Premium", "colorName": "Deep Black", "hex": "#0A0A0A", "td": 0.8 },
+            { "id": "spectrum-pla-white", "brand": "Spectrum", "type": "PLA Premium", "colorName": "Polar White", "hex": "#FEFEFE", "td": 5.3 },
+            { "id": "spectrum-pla-red", "brand": "Spectrum", "type": "PLA Premium", "colorName": "Traffic Red", "hex": "#D91E18", "td": 2.1 },
+            { "id": "spectrum-pla-blue", "brand": "Spectrum", "type": "PLA Premium", "colorName": "Signal Blue", "hex": "#003087", "td": 3.4 },
+            { "id": "azure-pla-black", "brand": "Azurefilms", "type": "PLA", "colorName": "Black", "hex": "#121212", "td": 1.0 },
+            { "id": "azure-pla-white", "brand": "Azurefilms", "type": "PLA", "colorName": "White", "hex": "#F8F8F8", "td": 5.0 }
+        ];
 
         /**
          * ========================================================================
@@ -351,33 +441,39 @@
 
                 const anim = () => { state.current.id = requestAnimationFrame(anim); r.render(s, c); }; anim();
                 if (onMount) onMount({ scene: s, reset: () => { state.current.theta = 45; state.current.phi = 65; state.current.radius = 200; update(); }, set: (t, p) => { state.current.theta = t; state.current.phi = p; update(); } });
-                return () => { cancelAnimationFrame(state.current.id); r.dispose(); mount.current.removeChild(r.domElement); };
+                return () => {
+                    cancelAnimationFrame(state.current.id);
+                    r.dispose();
+                    if (mount.current) mount.current.removeChild(r.domElement);
+                };
             }, []);
 
             return <div style={{ width: '100%', height: '100%', position: 'relative' }}>
                 <div ref={mount} style={{ width: '100%', height: '100%' }} />
-                {info && <div className="canvas-overlay" style={{ pointerEvents: 'none' }}><div className="canvas-info" dangerouslySetInnerHTML={{ __html: info }} /></div>}
-                {hint && <div className="canvas-hint">{hint}</div>}
+                {info && <div className="canvas-overlay" style={{ pointerEvents: 'none', background: 'none' }}><div className="canvas-info" style={{ background: 'rgba(0,0,0,0.6)', padding: '4px 12px', borderRadius: 8 }} dangerouslySetInnerHTML={{ __html: info }} /></div>}
+                {hint && <div className="canvas-hint" style={{ background: 'rgba(255,120,0,0.1)', color: 'var(--accent)', border: '1px solid var(--border-accent)', padding: '2px 8px', borderRadius: 4, height: 'auto' }}>{hint}</div>}
                 {children}
             </div>;
         };
 
         const LithophaneTool = () => {
             useEffect(() => { document.title = 'Lithophane Creator – 3Dwork'; }, []);
-            const [imgUrl, setImgUrl] = useState(null), [pix, setPix] = useState(null), [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
-            const [W, setW] = useState(100), [H, setH] = useState(100), [lock, setLock] = useState(true), [mode, setMode] = useState('fit');
-            const [bright, setBr] = useState(0.8), [contrast, setCt] = useState(1.0), [inv, setInv] = useState(false);
-            const [baseT, setBt] = useState(0.8), [maxT, setMt] = useState(3.0), [res, setRes] = useState(120), [geom, setGeom] = useState('flat');
-            const [back, setBack] = useState(false), [colors, setColors] = useState(20);
+            const [imgUrl, setImgUrl] = useState(null), [pix, setPix] = useState(null), [origImg, setOrigImg] = useState(null);
+            const [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
+            const [W, setW] = useState(100), [H, setH] = useState(100), [lock, setLock] = useState(true);
+            const [mode, setMode] = useState('fit'), [geom, setGeom] = useState('flat'), [viewMode, setViewMode] = useState('2D');
+            const [exposure, setExp] = useState(0), [contrast, setCt] = useState(1.0), [saturation, setSat] = useState(1.0), [inv, setInv] = useState(false);
+            const [baseT, setBt] = useState(0.8), [maxT, setMt] = useState(3.2), [res, setRes] = useState(120), [back, setBack] = useState(false), [colors, setColors] = useState(32);
             const sRef = useRef(null), mRef = useRef(null), gRef = useRef(null), api = useRef(null), lRef = useRef(null);
 
             const handleImg = (file) => {
                 if (!file) return; const i = new Image(); i.onload = () => {
-                    setImgW(i.width); setImgH(i.height); const r = i.width / i.height; setImgR(r);
-                    if (lock) setH(Math.round(W / r));
+                    const r = i.width / i.height; setImgR(r); setImgW(i.width); setImgH(i.height);
                     const c = document.createElement('canvas'); c.width = i.width; c.height = i.height;
                     const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0);
-                    setPix(ctx.getImageData(0, 0, i.width, i.height).data); setImgUrl(URL.createObjectURL(file));
+                    const d = ctx.getImageData(0, 0, i.width, i.height).data;
+                    setPix(d); setOrigImg(d); setImgUrl(URL.createObjectURL(file));
+                    if (lock) setH(Math.round(W / r));
                 }; i.src = URL.createObjectURL(file);
             };
 
@@ -387,94 +483,334 @@
             useEffect(() => {
                 if (!pix || !sRef.current) return;
                 const s = sRef.current; if (mRef.current) s.remove(mRef.current);
-                const g = STLExporter.buildLitho(pix, imgW, imgH, { width: W, height: H, baseT, maxT, bright, contrast, invert: inv, geom, res, numColors: colors, scaleMode: mode });
+                const g = STLExporter.buildLitho(pix, imgW, imgH, { width: W, height: H, baseT, maxT, bright: 1.0 + exposure * 0.5, contrast, invert: inv, geom, res, numColors: colors, scaleMode: mode });
                 const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: back ? 0xFFEFC0 : 0xE8E0D5, vertexColors: !back, roughness: back ? 0.3 : 0.7, metalness: 0.1, emissive: back ? new THREE.Color(0x331100) : new THREE.Color(0), emissiveIntensity: back ? 0.4 : 0 }));
                 const b = new THREE.Box3().setFromObject(m); const c = new THREE.Vector3(); b.getCenter(c); m.position.sub(c);
                 s.add(m); mRef.current = m; gRef.current = g;
-            }, [pix, W, H, mode, baseT, maxT, res, geom, colors, bright, contrast, inv, back]);
+            }, [pix, W, H, mode, baseT, maxT, res, geom, colors, exposure, contrast, inv, back]);
 
-            useEffect(() => {
-                if (!sRef.current) return;
-                if (lRef.current) { sRef.current.remove(lRef.current); lRef.current = null; }
-                if (back) {
-                    const pl = new THREE.PointLight(0xFFF5E0, 4, 300); pl.position.set(0, 0, -50);
-                    sRef.current.add(pl); lRef.current = pl;
-                }
-            }, [back]);
+            return <div className="tool-page"><div className="tool-layout" style={{ gridTemplateColumns: '320px 1fr', gap: 0 }}>
+                <div className="panel-left" style={{ width: 320, borderRight: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: 3, borderRadius: 8, margin: '10px 12px' }}>
+                        <button className={`nav-tab ${viewMode === '2D' ? 'active' : ''}`} style={{ flex: 1, height: 28, fontSize: 10 }} onClick={() => setViewMode('2D')}>2D PREP</button>
+                        <button className={`nav-tab ${viewMode === '3D' ? 'active' : ''}`} style={{ flex: 1, height: 28, fontSize: 10 }} onClick={() => setViewMode('3D')}>3D MESH</button>
+                    </div>
+                    {viewMode === '2D' ? (
+                        <div className="panel-body" style={{ height: 'calc(100vh - 140px)', overflowY: 'auto', padding: '0 12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                <span className="panel-title" style={{ fontSize: 10 }}>Image Prep</span>
+                                <button className="v-btn" style={{ fontSize: 9, padding: '2px 8px', height: 20 }} onClick={() => { setExp(0); setCt(1); setSat(1); }}>Reset</button>
+                            </div>
+                            <FilterSlider label="Exposure" value={exposure} min={-2} max={2} step={0.01} suffix="" onChange={setExp} onReset={() => setExp(0)} />
+                            <FilterSlider label="Contrast" value={contrast} min={0} max={3} step={0.01} suffix="" onChange={setCt} onReset={() => setCt(1)} />
+                            <div className="section-label" style={{ marginTop: 15 }}>Geometry Model</div>
+                            <div className="geo-btn-group" style={{ marginBottom: 15, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+                                {['flat', 'cylindrical', 'curved'].map(v => <button key={v} className={`geo-btn ${geom === v ? 'active' : ''}`} style={{ fontSize: 8, padding: 6 }} onClick={() => setGeom(v)}>{v.toUpperCase()}</button>)}
+                            </div>
+                            <div className="control-group" style={{ margin: 0 }}>
+                                <div className="control-label" style={{ marginBottom: 2 }}><span>Mesh Detail</span><span>{res}</span></div>
+                                <input type="range" min="60" max="250" step="10" value={res} onChange={e => setRes(parseInt(e.target.value))} />
+                            </div>
+                            <div className="toggle-row" style={{ marginTop: 10 }}><span style={{ fontSize: 10, opacity: 0.7 }}>Invert Heights</span><label className="toggle"><input type="checkbox" checked={inv} onChange={e => setInv(e.target.checked)} /><span className="toggle-slider"></span></label></div>
+                        </div>
+                    ) : (
+                        <div className="panel-body" style={{ height: 'calc(100vh - 140px)', overflowY: 'auto', padding: '0 12px' }}>
+                            <div className="section-label" style={{ marginTop: 0 }}>Thickness Analysis</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 15 }}>
+                                <div><label style={{ fontSize: 9 }}>Min Base (mm)</label><input type="number" step="0.1" className="dim-input" value={baseT} onChange={e => setBt(parseFloat(e.target.value))} /></div>
+                                <div><label style={{ fontSize: 9 }}>Max Relief (mm)</label><input type="number" step="0.1" className="dim-input" value={maxT} onChange={e => setMt(parseFloat(e.target.value))} /></div>
+                            </div>
 
-            return <div className="tool-page"><div className="tool-layout">
-                <div className="panel-left">
-                    <div className="panel-header"><span className="panel-title">LITHOPHANE SETUP</span></div>
-                    <div className="panel-body">
-                        <label className={`upload-zone ${imgUrl ? 'has-image' : ''}`}>{imgUrl ? <img src={imgUrl} /> : <><span>📷</span> Upload Image</>}<input type="file" accept="image/*" onChange={e => handleImg(e.target.files[0])} style={{ display: 'none' }} /></label>
-                        <div className="section-label">DIMENSIONS (mm)</div>
-                        <div className="dimension-inputs">
-                            <div><label>Width</label><input type="number" className="dim-input" value={W} onChange={e => upW(parseFloat(e.target.value))} /></div>
-                            <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)}>🔗</div>
-                            <div style={{ textAlign: 'right' }}><label>Height</label><input type="number" className="dim-input" value={H} onChange={e => upH(parseFloat(e.target.value))} /></div>
+                            <div className="section-label" style={{ marginTop: 0 }}>Output Dimensions</div>
+                            <div className="dimension-inputs" style={{ marginBottom: 15 }}>
+                                <div><label>W (mm)</label><input type="number" className="dim-input" value={W} onChange={e => upW(parseFloat(e.target.value))} /></div>
+                                <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)}>🔗</div>
+                                <div><label>H (mm)</label><input type="number" className="dim-input" value={H} onChange={e => upH(parseFloat(e.target.value))} /></div>
+                            </div>
+
+                            <div className="section-label" style={{ marginTop: 15 }}>Quantization</div>
+                            <div className="control-group" style={{ margin: 0, marginBottom: 15 }}>
+                                <div className="control-label" style={{ marginBottom: 2 }}><span>Color Steps</span><span>{colors}</span></div>
+                                <input type="range" min="2" max="64" step="1" value={colors} onChange={e => setColors(parseInt(e.target.value))} />
+                            </div>
+
+                            <div className="section-label">Filament Library Preview</div>
+                            <div className="filament-list" style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 20 }}>
+                                {FILAMENT_DATA.slice(0, 15).map(f => (
+                                    <div key={f.id} className="f-item" style={{ fontSize: 9, padding: '6px 8px', borderRadius: 4, marginBottom: 3, background: 'rgba(255,255,255,0.02)' }}>
+                                        <div style={{ width: 10, height: 10, background: f.hex, borderRadius: 2 }} />
+                                        <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.colorName} <span style={{ opacity: 0.4 }}>{f.brand}</span></div>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="tool-cta orange" style={{ width: '100%', padding: '12px', fontSize: 11 }} disabled={!pix} onClick={() => STLExporter.download(STLExporter.exportBinary(gRef.current), 'litho.stl')}>DOWNLOAD SOLID STL</button>
                         </div>
-                        <div style={{ marginTop: 10 }}>
-                            <label style={{ fontSize: 10, color: '#94A3B8' }}>SCALING MODE</label>
-                            <select className="dim-input" style={{ marginTop: 4, background: '#1E293B', color: 'white' }} value={mode} onChange={e => setMode(e.target.value)}>
-                                <option value="fit">Stretch to fit</option><option value="fill">Fill (Crop excess)</option>
-                            </select>
-                        </div>
-                        <div className="section-label">THICKNESS</div>
-                        <div className="thickness-grid">
-                            <div className="thickness-item"><label>Base (mm)</label><input type="number" step="0.1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={baseT} onChange={e => setBt(parseFloat(e.target.value))} /></div>
-                            <div className="thickness-item"><label>Max (mm)</label><input type="number" step="0.1" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={maxT} onChange={e => setMt(parseFloat(e.target.value))} /></div>
-                        </div>
-                        <div className="section-label">GEOMETRY</div>
-                        <div className="geo-btn-group">{['flat', 'cylindrical', 'curved'].map(v => <button key={v} className={`geo-btn ${geom === v ? 'active' : ''}`} onClick={() => setGeom(v)}>{v}</button>)}</div>
-                        <div className="section-label">MESH DETAIL</div>
-                        <input type="range" min="60" max="250" step="10" value={res} onChange={e => setRes(parseInt(e.target.value))} />
-                        <button className="download-btn" disabled={!pix} style={{ marginTop: 20 }} onClick={() => STLExporter.download(STLExporter.exportBinary(gRef.current), 'litho.stl')}>EXPORT SOLID STL</button>
-                    </div>
+                    )}
                 </div>
-                <div className="canvas-center">
-                    <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} hint="3D Preview" info={pix ? `Solid Block: ${W}x${H}mm` : "Waiting for image..."}>
-                        <div style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 10 }}>
-                            <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(15,23,42,0.8)', color: back ? 'black' : '#94A3B8', padding: '6px 12px', borderRadius: 20 }} onClick={() => setBack(!back)}>💡 {back ? 'Backlight ON' : 'Backlight OFF'}</button>
+                <div className="canvas-center" style={{ background: '#09090B', position: 'relative' }}>
+                    {viewMode === '2D' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ position: 'relative', maxWidth: '100%', maxHeight: '100%', boxShadow: '0 0 100px rgba(0,0,0,0.9)' }}>
+                                {imgUrl ? <img src={imgUrl} style={{ maxWidth: '100%', maxHeight: '70vh' }} /> : <label className="upload-zone" style={{ width: 450, height: 320, background: 'rgba(255,255,255,0.01)', border: '2px dashed rgba(255,255,255,0.05)' }}><input type="file" accept="image/*" onChange={e => handleImg(e.target.files[0])} style={{ display: 'none' }} /><span>📷 Drop image here</span></label>}
+                            </div>
                         </div>
-                        <div className="view-btns"><button className="v-btn" onClick={() => api.current.reset()}>Reset</button><button className="v-btn" onClick={() => api.current.set(0, 90)}>Top</button><button className="v-btn" onClick={() => api.current.set(0, 0)}>Front</button></div>
-                    </Canvas3D>
-                </div>
-                <div className="panel-right">
-                    <div className="panel-header"><span className="panel-title">ADJUSTMENTS</span></div>
-                    <div className="panel-body">
-                        <div className="section-label">IMAGE FILTER</div>
-                        <div className="control-group"><div className="control-label"><span>Brightness</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
-                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast}</span></div><input type="range" min="0" max="3" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
-                        <div className="toggle-row"><span className="toggle-label">Invert Heights</span><label className="toggle"><input type="checkbox" checked={inv} onChange={e => setInv(e.target.checked)} /><span className="toggle-slider"></span></label></div>
-                        <div className="section-label">COLOR / STEPS</div>
-                        <div className="control-group"><div className="control-label"><span>Simulated Colors</span><span>{colors}</span></div><input type="range" min="2" max="20" step="1" value={colors} onChange={e => setColors(parseInt(e.target.value))} /></div>
-                        <div className="palette-grid">{[...Array(Math.min(colors, 60))].map((_, i) => <div key={i} className="palette-swatch" style={{ background: `hsl(0,0%,${100 - (i / (colors - 1)) * 90}%)` }} />)}</div>
-                        <div className="section-label" style={{ marginTop: 20 }}>PRINT TIPS</div>
-                        <div style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.6 }}>
-                            • Use high-contrast images.<br />
-                            • 0.8mm base recommended.<br />
-                            • Max 3.2mm for good light transmission.<br />
-                            • 100% infill (rectilinear) is best.<br />
-                            • Print vertically for better detail.
-                        </div>
-                    </div>
+                    ) : (
+                        <Canvas3D onMount={o => { sRef.current = o.scene; api.current = o; }} hint="Lithophane Block Simulation" info={pix ? `${W}x${H}mm Solid Mesh` : "No model generated"}>
+                            <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)' }}>
+                                <button className={`v-btn ${back ? 'active' : ''}`} style={{ background: back ? 'var(--accent)' : 'rgba(0,0,0,0.6)', color: back ? 'black' : 'white', borderRadius: 40, padding: '4px 16px' }} onClick={() => setBack(!back)}>💡 LUX BLENDING {back ? 'ON' : 'OFF'}</button>
+                            </div>
+                            <div className="view-btns"><button className="v-btn" onClick={() => api.current.reset()}>Reset View</button></div>
+                        </Canvas3D>
+                    )}
                 </div>
             </div></div>;
         };
 
         const HueForgeTool = () => {
             useEffect(() => { document.title = 'HueForge Creator – 3Dwork'; }, []);
-            const [imgUrl, setImgUrl] = useState(null), [pix, setPix] = useState(null), [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
+            const [viewMode, setViewMode] = useState('2D');
+            const [imgUrl, setImgUrl] = useState(null), [origImg, setOrigImg] = useState(null);
+            const [pix, setPix] = useState(null), [imgW, setImgW] = useState(0), [imgH, setImgH] = useState(0), [imgR, setImgR] = useState(1);
             const [W, setW] = useState(100), [H, setH] = useState(100), [lock, setLock] = useState(true);
-            const [bright, setBr] = useState(1.0), [contrast, setCt] = useState(1.0), [blackP, setBp] = useState(0.0), [whiteP, setWp] = useState(1.0);
+
+            // Kromacut-like Filters
+            const [exposure, setExp] = useState(0); // stops
+            const [contrast, setCt] = useState(1.0);
+            const [highlights, setHigh] = useState(0);
+            const [shadows, setShad] = useState(0);
+            const [whites, setWhites] = useState(0);
+            const [blacks, setBlacks] = useState(0);
+            const [saturation, setSat] = useState(1.0);
+            const [vibrance, setVib] = useState(1.0);
+            const [hue, setHue] = useState(0);
+            const [temperature, setTemp] = useState(0);
+            const [tint, setTint] = useState(0);
+            const [clarity, setClar] = useState(0);
+
             const [baseT, setBt] = useState(0.48), [relT, setRt] = useState(1.8), [res, setRes] = useState(100), [lh, setLh] = useState(0.08);
-            const [maxH, setMaxH] = useState(2.4), [autoSort, setAutoSort] = useState(true), [tab, setTab] = useState('stack');
+            const [maxH, setMaxH] = useState(2.4), [autoSort, setAutoSort] = useState(true), [optColors, setOptColors] = useState(4);
+            const [allFilaments, setAllFilaments] = useState([]), [brands, setBrands] = useState([]), [selBrand, setSelBrand] = useState('All');
             const [layers, setLayers] = useState([
                 { id: 1, name: 'Black', hex: '#000000', td: 0.5, stop: 0.48 },
                 { id: 2, name: 'Gray', hex: '#555555', td: 1.5, stop: 1.2 },
                 { id: 3, name: 'White', hex: '#FFFFFF', td: 5.0, stop: 2.2 }
             ]);
-            const scene = useRef(null), mRef = useRef(null), api = useRef(null);
+
+            const [extractedPalette, setExtractedPalette] = useState([]);
+            const [filteredImg, setFilteredImg] = useState(null);
+            const [showOrig, setShowOrig] = useState(false);
+            const [origUrl, setOrigUrl] = useState(null);
+
+            const scene = useRef(null), mRef = useRef(null), api = useRef(null), canvasRef = useRef(null);
+            useEffect(() => {
+                const data = FILAMENT_DATA;
+                setAllFilaments(data);
+                const b = ['All', ...new Set(data.map(f => f.brand))].sort();
+                setBrands(b);
+            }, []);
+
+            const resetFilters = () => {
+                setExp(0); setCt(1.0); setHigh(0); setShad(0); setWhites(0); setBlacks(0);
+                setSat(1.0); setVib(1.0); setHue(0); setTemp(0); setTint(0); setClar(0);
+            };
+
+            const resetImage = () => {
+                resetFilters();
+                if (origImg) {
+                    const canvas = document.createElement('canvas'); canvas.width = imgW; canvas.height = imgH;
+                    const ctx = canvas.getContext('2d'); ctx.putImageData(new ImageData(origImg, imgW, imgH), 0, 0);
+                    setPix(origImg);
+                    setImgUrl(canvas.toDataURL());
+                }
+            };
+
+            const rotateImage = (dir) => {
+                if (!origImg) return;
+                const canvas = document.createElement('canvas');
+                // For 90 deg rotation, swap width/height
+                if (Math.abs(dir) === 90) { canvas.width = imgH; canvas.height = imgW; }
+                else { canvas.width = imgW; canvas.height = imgH; }
+                const ctx = canvas.getContext('2d');
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(dir * Math.PI / 180);
+                // Draw origImg data to a temp canvas first to use drawImage
+                const tmp = document.createElement('canvas'); tmp.width = imgW; tmp.height = imgH;
+                tmp.getContext('2d').putImageData(new ImageData(processPixels(origImg), imgW, imgH), 0, 0);
+                ctx.drawImage(tmp, -imgW / 2, -imgH / 2);
+
+                const newData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                setImgW(canvas.width); setImgH(canvas.height); setImgR(canvas.width / canvas.height);
+                setOrigImg(newData); setPix(newData); setImgUrl(canvas.toDataURL());
+            };
+
+            const autoIdentifyColors = () => {
+                if (!pix) return;
+                const sampled = [];
+                const step = Math.max(1, Math.floor(pix.length / (4 * 6500)));
+                for (let i = 0; i < pix.length; i += step * 4) {
+                    const r = pix[i], g = pix[i + 1], b = pix[i + 2];
+                    const lum = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+                    sampled.push({ r, g, b, lum });
+                }
+                sampled.sort((a, b) => a.lum - b.lum);
+                const identified = [];
+                const binSize = Math.floor(sampled.length / optColors);
+                for (let i = 0; i < optColors; i++) {
+                    const startIdx = i * binSize, endIdx = (i === optColors - 1) ? sampled.length : (i + 1) * binSize;
+                    const bin = sampled.slice(startIdx, endIdx);
+                    if (!bin.length) continue;
+                    const buckets = {};
+                    bin.forEach(p => {
+                        const k = (Math.floor(p.r / 32) << 16) | (Math.floor(p.g / 32) << 8) | Math.floor(p.b / 32);
+                        if (!buckets[k]) buckets[k] = { r: 0, g: 0, b: 0, count: 0 };
+                        buckets[k].count++; buckets[k].r += p.r; buckets[k].g += p.g; buckets[k].b += p.b;
+                    });
+                    let bestK = Object.keys(buckets).sort((a, b) => buckets[b].count - buckets[a].count)[0];
+                    const dom = buckets[bestK];
+                    const c = { r: dom.r / dom.count, g: dom.g / dom.count, b: dom.b / dom.count };
+                    let closest = { colorName: 'Custom', brand: '3Dwork', hex: "#FFFFFF", td: 2.5 };
+                    let minD = 999999;
+                    FILAMENT_DATA.forEach(f => {
+                        const fr = parseInt(f.hex.slice(1, 3), 16), fg = parseInt(f.hex.slice(3, 5), 16), fb = parseInt(f.hex.slice(5, 7), 16);
+                        const d = Math.sqrt((c.r - fr) ** 2 * 0.3 + (c.g - fg) ** 2 * 0.59 + (c.b - fb) ** 2 * 0.11);
+                        if (d < minD) { minD = d; closest = f; }
+                    });
+                    const stopHeight = i === 0 ? baseT : baseT + bin[0].lum * relT;
+                    identified.push({ ...closest, name: closest.colorName, id: Date.now() + i, stop: Math.round(stopHeight / lh) * lh });
+                }
+                for (let i = 1; i < identified.length; i++) if (identified[i].stop <= identified[i - 1].stop) identified[i].stop = identified[i - 1].stop + lh;
+                setLayers(identified);
+            };
+
+            const resetFilters = () => {
+                setExp(0); setCt(1); setSat(1); setVib(1); setHigh(0); setShad(0); setWhites(0); setBlacks(0); setHue(0); setTemp(0); setTint(0); setClar(0); setOptColors(4);
+            };
+
+            useEffect(() => {
+                if (!origImg) return;
+                const out = new Uint8ClampedArray(origImg.length);
+                const expFac = Math.pow(2, exposure);
+                const contrastFac = contrast;
+                const rTemp = temperature > 0 ? 1 + temperature / 100 : 1;
+                const bTemp = temperature < 0 ? 1 - temperature / 100 : 1;
+                const gTint = tint > 0 ? 1 + tint / 100 : 1;
+                const rTint = tint < 0 ? 1 - tint / 200 : 1;
+                const bTint = tint < 0 ? 1 - tint / 200 : 1;
+
+                for (let i = 0; i < origImg.length; i += 4) {
+                    let r = origImg[i] / 255, g = origImg[i + 1] / 255, b = origImg[i + 2] / 255;
+                    r *= expFac * rTemp * rTint;
+                    g *= expFac * gTint;
+                    b *= expFac * bTemp * bTint;
+                    const lum = r * 0.299 + g * 0.587 + b * 0.114;
+                    if (lum > 0.5) {
+                        const fac = (lum - 0.5) * 2 * (highlights / 100); r += fac; g += fac; b += fac;
+                    } else {
+                        const fac = (0.5 - lum) * 2 * (shadows / 100); r += fac; g += fac; b += fac;
+                    }
+                    r = (r - 0.5) * contrastFac + 0.5 + (whites / 200) + (blacks / 200);
+                    g = (g - 0.5) * contrastFac + 0.5 + (whites / 200) + (blacks / 200);
+                    b = (b - 0.5) * contrastFac + 0.5 + (whites / 200) + (blacks / 200);
+                    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+                    const sat = max === 0 ? 0 : (max - min) / max;
+                    const gray = r * 0.299 + g * 0.587 + b * 0.114;
+                    const finalSat = saturation + ((vibrance - 1) * (1 - sat));
+                    r = gray + (r - gray) * finalSat;
+                    g = gray + (g - gray) * finalSat;
+                    b = gray + (b - gray) * finalSat;
+                    if (clarity !== 0) {
+                        const cFac = clarity / 200, midDist = Math.abs(gray - 0.5), edgeShift = (gray - 0.5) * cFac * (1 - midDist);
+                        r += edgeShift; g += edgeShift; b += edgeShift;
+                    }
+                    out[i] = Math.max(0, Math.min(255, r * 255));
+                    out[i + 1] = Math.max(0, Math.min(255, g * 255));
+                    out[i + 2] = Math.max(0, Math.min(255, b * 255));
+                    out[i + 3] = origImg[i + 3];
+                }
+                setFilteredImg(out);
+            }, [exposure, contrast, saturation, vibrance, highlights, shadows, whites, blacks, hue, temperature, tint, clarity, origImg]);
+
+            useEffect(() => {
+                if (!filteredImg) return;
+                const extractPalette = (data, count) => {
+                    const samples = [];
+                    const step = Math.max(4, Math.floor(data.length / (4 * 1000)) * 4);
+                    for (let i = 0; i < data.length; i += step) samples.push([data[i], data[i + 1], data[i + 2]]);
+                    if (!samples.length) return [[128, 128, 128]];
+                    const cents = samples.slice(0, count).map(v => [...v]);
+                    for (let it = 0; it < 5; it++) {
+                        const clusters = Array.from({ length: count }, () => []);
+                        for (let s of samples) {
+                            let min = Infinity, idx = 0;
+                            for (let j = 0; j < count; j++) {
+                                const d = (s[0] - cents[j][0]) ** 2 + (s[1] - cents[j][1]) ** 2 + (s[2] - cents[j][2]) ** 2;
+                                if (d < min) { min = d; idx = j; }
+                            }
+                            clusters[idx].push(s);
+                        }
+                        for (let j = 0; j < count; j++) {
+                            if (clusters[j].length) {
+                                let r = 0, g = 0, b = 0;
+                                for (let s of clusters[j]) { r += s[0]; g += s[1]; b += s[2]; }
+                                cents[j] = [r / clusters[j].length, g / clusters[j].length, b / clusters[j].length];
+                            }
+                        }
+                    }
+                    return cents.map(c => [Math.round(c[0]), Math.round(c[1]), Math.round(c[2])]);
+                };
+                setExtractedPalette(extractPalette(filteredImg, optColors));
+            }, [filteredImg, optColors]);
+
+            useEffect(() => {
+                if (!filteredImg || !extractedPalette.length) return;
+                const out = new Uint8ClampedArray(filteredImg.length);
+                if (optColors < 32) {
+                    for (let i = 0; i < filteredImg.length; i += 4) {
+                        let r = filteredImg[i], g = filteredImg[i + 1], b = filteredImg[i + 2];
+                        let min = Infinity, bIdx = 0;
+                        for (let j = 0; j < extractedPalette.length; j++) {
+                            let c = extractedPalette[j];
+                            let d = (r - c[0]) ** 2 + (g - c[1]) ** 2 + (b - c[2]) ** 2;
+                            if (d < min) { min = d; bIdx = j; }
+                        }
+                        out[i] = extractedPalette[bIdx][0]; out[i + 1] = extractedPalette[bIdx][1]; out[i + 2] = extractedPalette[bIdx][2]; out[i + 3] = filteredImg[i + 3];
+                    }
+                } else {
+                    for (let i = 0; i < filteredImg.length; i++) out[i] = filteredImg[i];
+                }
+                const canvas = document.createElement('canvas'); canvas.width = imgW; canvas.height = imgH;
+                const ctx = canvas.getContext('2d'); ctx.putImageData(new ImageData(out, imgW, imgH), 0, 0);
+                setPix(out);
+                setImgUrl(canvas.toDataURL());
+            }, [filteredImg, extractedPalette, optColors, imgW, imgH]);
+
+            const handleImg = (file) => {
+                const i = new Image(); const objUrl = URL.createObjectURL(file);
+                i.onload = () => {
+                    const r = i.width / i.height; setImgR(r); setImgW(i.width); setImgH(i.height);
+                    const c = document.createElement('canvas'); c.width = i.width; c.height = i.height;
+                    const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0);
+                    const data = ctx.getImageData(0, 0, i.width, i.height).data;
+                    setOrigImg(data); setPix(data); setImgUrl(objUrl); setOrigUrl(objUrl);
+                    if (lock) setH(Math.round(W / r));
+                }; i.src = objUrl;
+            };
+
+            const computeStack = (current) => {
+                // This is the "General" auto-stack based on TD (Beer-Lambert physics)
+                let lastStop = baseT;
+                const updated = current.map((l, i) => {
+                    const transition = i === 0 ? Math.max(lh * 2, Math.round((l.td * 1.35) / lh) * lh) : Math.max(lh, Math.round((l.td * 0.45) / lh) * lh);
+                    lastStop += transition;
+                    return { ...l, stop: Math.round(lastStop / lh) * lh };
+                });
+                const total = updated[updated.length - 1].stop;
+                if (total > maxH) {
+                    const ratio = maxH / total;
+                    updated.forEach(l => l.stop = Math.round((l.stop * ratio) / lh) * lh);
+                }
+                return updated;
+            };
 
             const getLum = (hex) => {
                 const c = new THREE.Color(hex);
@@ -482,114 +818,50 @@
             };
 
             const autoStack = () => {
-                let current = [...layers];
-                if (autoSort) current.sort((a, b) => getLum(a.hex) - getLum(b.hex));
-
-                // Foundation zone: ~95% opaque -> TD * 1.35
-                let lastStop = baseT;
-                const updated = current.map((l, i) => {
-                    const transition = i === 0 ? Math.max(lh * 2, Math.round((l.td * 1.35) / lh) * lh) : Math.max(lh, Math.round((l.td * 0.45) / lh) * lh);
-                    lastStop += transition;
-                    return { ...l, stop: Math.round(lastStop / lh) * lh };
-                });
-
-                const total = updated[updated.length - 1].stop;
-                if (total > maxH) {
-                    const ratio = maxH / total;
-                    updated.forEach(l => l.stop = Math.round((l.stop * ratio) / lh) * lh);
-                }
-                setLayers(updated);
+                if (!imgUrl) return;
+                setLayers(computeStack([...layers]));
             };
 
             const moveLayer = (idx, dir) => {
-                const nl = [...layers];
-                const target = idx + dir;
+                const nl = [...layers], target = idx + dir;
                 if (target < 0 || target >= nl.length) return;
                 [nl[idx], nl[target]] = [nl[target], nl[idx]];
                 setLayers(nl);
-                if (autoSort) setAutoSort(false);
             };
 
             const export3MF = async () => {
                 if (!pix || !layers.length) return;
-                const zip = new JSZip();
-                const sorted = [...layers].sort((a, b) => a.stop - b.stop);
-                const gW = 100, gH = Math.round(100 / imgR);
-                const objects = [];
+                const zip = new JSZip(), sorted = [...layers].sort((a, b) => a.stop - b.stop);
+                const gW = 100, gH = Math.round(100 / imgR), objects = [];
+                const buildXML = (m) => `<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources><basematerials id="0">${m.map(x => `<base name="${x.name}" displaycolor="${x.color.toUpperCase()}FF"/>`).join('')}</basematerials>${m.map((x, i) => `<object id="${i + 1}" type="model" pid="0" pindex="${i}"><mesh><vertices>${x.v}</vertices><triangles>${x.t}</triangles></mesh></object>`).join('')}</resources><build>${m.map((x, i) => `<item objectid="${i + 1}"/>`).join('')}</build></model>`;
 
-                // Helper to build model XML with colors
-                const buildXML = (meshes) => {
-                    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:slic3rpe="http://schemas.slic3r.org/3mf/2017/06">\n<metadata name="Application">3Dwork HueForge</metadata>\n<resources>\n`;
-                    xml += `<basematerials id="0">\n`;
-                    meshes.forEach(m => xml += `<base name="${m.name}" displaycolor="${m.color.toUpperCase()}FF" />\n`);
-                    xml += `</basematerials>\n`;
-                    meshes.forEach((m, idx) => {
-                        xml += `<object id="${idx + 1}" type="model" pid="0" pindex="${idx}">\n<mesh>\n<vertices>\n${m.v}</vertices>\n<triangles>\n${m.t}</triangles>\n</mesh>\n</object>\n`;
-                    });
-                    xml += `</resources>\n<build>\n`;
-                    meshes.forEach((m, idx) => xml += `<item objectid="${idx + 1}" />\n`);
-                    xml += `</build>\n</model>`;
-                    return xml;
-                };
-
-                // Create segmented meshes
                 for (let lidx = 0; lidx < sorted.length; lidx++) {
-                    const prevStop = lidx === 0 ? 0 : sorted[lidx - 1].stop;
-                    const stop = sorted[lidx].stop;
-                    let vStr = '', tStr = '';
-                    let vCount = 0;
-
-                    for (let row = 0; row < gH; row++) {
-                        for (let col = 0; col < gW; col++) {
-                            const sample = (r, c) => {
-                                const px = Math.round((c / gW) * (imgW - 1)), py = Math.round((r / gH) * (imgH - 1));
-                                const bidx = (py * imgW + px) * 4;
-                                let b = (pix[bidx] * 0.299 + pix[bidx + 1] * 0.587 + pix[bidx + 2] * 0.114) / 255;
-                                b = Math.max(0, Math.min(1, (b - blackP) / (whiteP - blackP || 0.01)));
-                                b = (b - 0.5) * contrast + 0.5 + (bright - 1);
-                                const zTotal = baseT + Math.max(0, b) * relT;
-                                return Math.max(0, Math.min(zTotal, stop) - prevStop);
-                            };
-
-                            const z00 = sample(row, col), z10 = sample(row, col + 1), z01 = sample(row + 1, col), z11 = sample(row + 1, col + 1);
-                            const x = (col / gW - 0.5) * W, y = (0.5 - row / gH) * H, dx = W / gW, dy = H / gH;
-                            const x1 = x + dx, y1 = y - dy;
-
-                            if (z00 <= 0 && z10 <= 0 && z01 <= 0 && z11 <= 0) continue;
-
-                            vStr += `<vertex x="${x.toFixed(3)}" y="${y.toFixed(3)}" z="${z00.toFixed(3)}" />\n`;
-                            vStr += `<vertex x="${x1.toFixed(3)}" y="${y.toFixed(3)}" z="${z10.toFixed(3)}" />\n`;
-                            vStr += `<vertex x="${x.toFixed(3)}" y="${y1.toFixed(3)}" z="${z01.toFixed(3)}" />\n`;
-                            vStr += `<vertex x="${x1.toFixed(3)}" y="${y1.toFixed(3)}" z="${z11.toFixed(3)}" />\n`;
-                            tStr += `<triangle v1="${vCount}" v2="${vCount + 1}" v3="${vCount + 3}" />\n`;
-                            tStr += `<triangle v1="${vCount}" v2="${vCount + 3}" v3="${vCount + 2}" />\n`;
+                    let vStr = '', tStr = '', vCount = 0;
+                    const prevStop = lidx === 0 ? 0 : sorted[lidx - 1].stop, stop = sorted[lidx].stop;
+                    for (let r = 0; r < gH; r++) {
+                        for (let c = 0; c < gW; c++) {
+                            const px = Math.round((c / gW) * (imgW - 1)), py = Math.round((r / gH) * (imgH - 1));
+                            const bidx = (py * imgW + px) * 4;
+                            let b = (pix[bidx] * 0.299 + pix[bidx + 1] * 0.587 + pix[bidx + 2] * 0.114) / 255;
+                            const zTotal = baseT + b * relT;
+                            const thick = Math.max(0, Math.min(zTotal, stop) - prevStop);
+                            if (thick <= 0) continue;
+                            const x = (c / gW - 0.5) * W, y = (0.5 - r / gH) * H, dx = W / gW, dy = H / gH;
+                            vStr += `<vertex x="${x.toFixed(3)}" y="${y.toFixed(3)}" z="${thick.toFixed(3)}"/>`;
+                            vStr += `<vertex x="${(x + dx).toFixed(3)}" y="${y.toFixed(3)}" z="${thick.toFixed(3)}"/>`;
+                            vStr += `<vertex x="${x.toFixed(3)}" y="${(y - dy).toFixed(3)}" z="${thick.toFixed(3)}"/>`;
+                            vStr += `<vertex x="${(x + dx).toFixed(3)}" y="${(y - dy).toFixed(3)}" z="${thick.toFixed(3)}"/>`;
+                            tStr += `<triangle v1="${vCount}" v2="${vCount + 1}" v3="${vCount + 3}"/><triangle v1="${vCount}" v2="${vCount + 3}" v3="${vCount + 2}"/>`;
                             vCount += 4;
                         }
                     }
                     if (vCount > 0) objects.push({ v: vStr, t: tStr, color: sorted[lidx].hex, name: sorted[lidx].name });
                 }
-
                 zip.file("3D/3dmodel.model", buildXML(objects));
                 zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>`);
                 zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>`);
-
-                let configXml = `<?xml version="1.0" encoding="UTF-8"?>\n<config>\n`;
-                objects.forEach((o, i) => configXml += `<object id="${i + 1}"><metadata key="extruder" value="${i + 1}"/></object>\n`);
-                configXml += `</config>`;
-                zip.file("Metadata/model_settings.config", configXml);
-
                 const blob = await zip.generateAsync({ type: "blob" });
-                const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = 'project.3mf'; a.click();
-            };
-
-            const handleImg = (file) => {
-                const i = new Image(); i.onload = () => {
-                    const r = i.width / i.height; setImgR(r); setImgW(i.width); setImgH(i.height);
-                    if (lock) setH(Math.round(W / r));
-                    const c = document.createElement('canvas'); c.width = i.width; c.height = i.height;
-                    const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0);
-                    setPix(ctx.getImageData(0, 0, i.width, i.height).data); setImgUrl(URL.createObjectURL(file));
-                }; i.src = URL.createObjectURL(file);
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'project.3mf'; a.click();
             };
 
             const upW = (v) => { setW(v); if (lock) setH(Math.round(v / imgR)); };
@@ -607,27 +879,16 @@
                 for (let i = 0; i < pos.count; i++) {
                     const gx = (pos.getX(i) / W + 0.5) * (imgW - 1), gy = (0.5 - pos.getY(i) / H) * (imgH - 1);
                     const idx = (Math.round(gy) * imgW + Math.round(gx)) * 4;
-                    // Kromacut-like luminance mapping
-                    let b_lum = (pix[idx] * 0.299 + pix[idx + 1] * 0.587 + pix[idx + 2] * 0.114) / 255;
-                    b_lum = Math.max(0, Math.min(1, (b_lum - blackP) / Math.max(0.01, whiteP - blackP)));
-                    b_lum = Math.max(0, Math.min(1, (b_lum - 0.5) * contrast + 0.5 + (bright - 1)));
-
-                    // Discretize Z into layer heights
-                    const rawZ = baseT + b_lum * relT;
-                    const z = Math.round(rawZ / lh) * lh;
+                    const b_lum = (pix[idx] * 0.299 + pix[idx + 1] * 0.587 + pix[idx + 2] * 0.114) / 255;
+                    const z = Math.round((baseT + b_lum * relT) / lh) * lh;
                     pos.setZ(i, z);
-
-                    // Kromacut Beer-Lambert blending logic
                     let r = 0, g = 0, b_val = 0, prevStop = 0;
                     sorted.forEach((l, idx) => {
                         const start = prevStop, stop = (idx === sorted.length - 1) ? 100 : l.stop;
                         const thick = Math.max(0, Math.min(z, stop) - start);
                         if (thick > 0) {
-                            const lc = new THREE.Color(l.hex);
-                            const t = Math.pow(0.1, thick / Math.max(0.01, l.td));
-                            r = lc.r * (1 - t) + r * t;
-                            g = lc.g * (1 - t) + g * t;
-                            b_val = lc.b * (1 - t) + b_val * t;
+                            const lc = new THREE.Color(l.hex), t = Math.pow(0.1, thick / Math.max(0.01, l.td));
+                            r = lc.r * (1 - t) + r * t; g = lc.g * (1 - t) + g * t; b_val = lc.b * (1 - t) + b_val * t;
                         }
                         prevStop = stop;
                     });
@@ -637,125 +898,171 @@
                 geo.computeVertexNormals();
                 const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8 }));
                 scene.current.add(m); mRef.current = m;
-            }, [pix, layers, bright, contrast, blackP, whiteP, baseT, relT, W, H, res, lh]);
+            }, [pix, layers, baseT, relT, W, H, res, lh]);
 
-            return <div className="tool-page"><div className="tool-layout">
-                <div className="panel-left">
-                    <div className="panel-header"><span className="panel-title">IMAGE & DIMENSIONS</span></div>
-                    <div className="panel-body">
-                        <label className={`upload-zone ${imgUrl ? 'has-image' : ''}`}>{imgUrl ? <img src={imgUrl} /> : <><span>📷</span> Load Image</>}<input type="file" accept="image/*" onChange={e => handleImg(e.target.files[0])} style={{ display: 'none' }} /></label>
-                        <div className="section-label">SIZE (mm)</div>
-                        <div className="dimension-inputs">
-                            <div><label>Width</label><input type="number" className="dim-input" value={W} onChange={e => { setW(parseFloat(e.target.value)); if (lock) setH(Math.round(parseFloat(e.target.value) / imgR)); }} /></div>
-                            <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)}>🔗</div>
-                            <div><label>Height</label><input type="number" className="dim-input" value={H} onChange={e => { setH(parseFloat(e.target.value)); if (lock) setW(Math.round(parseFloat(e.target.value) * imgR)); }} /></div>
-                        </div>
-                        <div className="section-label">IMAGE FILTERS</div>
-                        <div className="control-group"><div className="control-label"><span>Exposure</span><span>{bright}</span></div><input type="range" min="0" max="2" step="0.01" value={bright} onChange={e => setBr(parseFloat(e.target.value))} /></div>
-                        <div className="control-group"><div className="control-label"><span>Contrast</span><span>{contrast}</span></div><input type="range" min="0" max="4" step="0.01" value={contrast} onChange={e => setCt(parseFloat(e.target.value))} /></div>
-                        <div className="thickness-grid">
-                            <div className="thickness-item"><label>Black Point</label><input type="range" min="0" max="1" step="0.01" value={blackP} onChange={e => setBp(parseFloat(e.target.value))} /></div>
-                            <div className="thickness-item"><label>White Point</label><input type="range" min="0" max="1" step="0.01" value={whiteP} onChange={e => setWp(parseFloat(e.target.value))} /></div>
-                        </div>
-                        <div className="section-label">MESH DETAIL & PRINT</div>
-                        <div className="thickness-grid">
-                            <div className="thickness-item" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <label>Mesh Detail</label>
-                                <input type="range" min="40" max="250" step="10" value={res} onChange={e => setRes(parseInt(e.target.value))} />
-                            </div>
-                            <div className="thickness-item">
-                                <label>Layer Height (mm)</label>
-                                <input type="number" step="0.01" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={lh} onChange={e => setLh(parseFloat(e.target.value))} />
-                            </div>
+            const FilterSlider = ({ label, value, min, max, step, suffix, onChange, onReset }) => (
+                <div style={{ marginBottom: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#94A3B8', marginBottom: 2 }}>
+                        <span>{label}</span>
+                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{value}{suffix}</span>
+                            <span onClick={onReset} style={{ cursor: 'pointer', fontSize: 10, opacity: 0.4 }}>↺</span>
                         </div>
                     </div>
+                    <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(parseFloat(e.target.value))} style={{ width: '100%', accentColor: 'var(--accent)', height: 14 }} />
                 </div>
-                <div className="canvas-center"><Canvas3D onMount={o => { scene.current = o.scene; api.current = o; }} hint="Painting Simulation Preview" info={imgUrl ? `Simulating ${layers.length} Layers` : "Load image to start"} /></div>
-                <div className="panel-right">
-                    <div className="panel-header" style={{ padding: 0, borderBottom: 'none' }}>
-                        <div style={{ display: 'flex', width: '100%' }}>
-                            <button className={`nav-tab ${tab === 'stack' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('stack')}>LAYER STACK</button>
-                            <button className={`nav-tab ${tab === 'help' ? 'active' : ''}`} style={{ borderBottom: 'none', borderRadius: 0, flex: 1, fontSize: 10 }} onClick={() => setTab('help')}>HOW IT WORKS</button>
-                        </div>
+            );
+
+            return <div className="tool-page"><div className="tool-layout" style={{ gridTemplateColumns: '320px 1fr', gap: 0 }}>
+                <div className="panel-left" style={{ width: 320, borderRight: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: 3, borderRadius: 8, margin: '10px 12px' }}>
+                        <button className={`nav-tab ${viewMode === '2D' ? 'active' : ''}`} style={{ flex: 1, height: 28, fontSize: 10 }} onClick={() => setViewMode('2D')}>2D IMAGE</button>
+                        <button className={`nav-tab ${viewMode === '3D' ? 'active' : ''}`} style={{ flex: 1, height: 28, fontSize: 10 }} onClick={() => setViewMode('3D')}>3D MESH</button>
                     </div>
-                    {tab === 'stack' ? (
-                        <div className="panel-body">
-                            <div className="thickness-grid">
-                                <div className="thickness-item"><label>Min Depth</label><input type="number" step="0.01" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={baseT} onChange={e => setBt(parseFloat(e.target.value))} /></div>
-                                <div className="thickness-item"><label>Max Print</label><input type="number" step="0.01" style={{ width: '100%', background: 'none', border: 'none', color: 'white' }} value={maxH} onChange={e => setMaxH(parseFloat(e.target.value))} /></div>
-                            </div>
 
-                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '10px 0' }}>
-                                <button className="download-btn" style={{ flex: 1, padding: 8, fontSize: 10, background: 'rgba(255,255,255,0.05)', color: 'var(--accent)', boxShadow: 'none', border: '1px solid var(--border-accent)' }} onClick={autoStack}>⚡ AUTO-CALC STACK</button>
-                                <label className="toggle-row" style={{ fontSize: 9, gap: 5, cursor: 'pointer' }} onClick={() => setAutoSort(!autoSort)}>
-                                    Sort <div className={`aspect-lock ${autoSort ? 'active' : ''}`} style={{ width: 20, height: 20, fontSize: 10 }}>A</div>
-                                </label>
-                            </div>
-
-                            <div className="layer-list" style={{ marginTop: 0 }}>
-                                {layers.map((l, i) => (
-                                    <div key={l.id} className="f-item" style={{ borderLeft: `6px solid ${l.hex}`, background: 'rgba(255,255,255,0.03)' }}>
-                                        <div className="f-details">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                                                <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                                                    <input type="color" value={l.hex} onChange={e => {
-                                                        const nl = [...layers]; nl[i].hex = e.target.value; setLayers(nl);
-                                                    }} style={{ width: 20, height: 20, border: 'none', padding: 0, background: 'none', cursor: 'pointer' }} />
-                                                    <b>{l.name}</b>
-                                                </div>
-                                                <div style={{ display: 'flex', gap: 2 }}>
-                                                    <button className="canvas-ctrl-btn" style={{ width: 18, height: 18 }} onClick={() => moveLayer(i, -1)}>↑</button>
-                                                    <button className="canvas-ctrl-btn" style={{ width: 18, height: 18 }} onClick={() => moveLayer(i, 1)}>↓</button>
-                                                </div>
-                                            </div>
-                                            <div className="control-group">
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ fontSize: 9 }}>Swap at: {l.stop}mm</span>
-                                                    <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>TD: <input type="number" step="0.1" value={l.td} onChange={e => {
-                                                        const nl = [...layers]; nl[i].td = parseFloat(e.target.value); setLayers(nl);
-                                                    }} style={{ width: 30, background: 'none', border: 'none', color: 'var(--accent)', fontSize: 9 }} /></div>
-                                                </div>
-                                                <input type="range" min="0" max={maxH} step={lh} value={l.stop} onChange={e => {
-                                                    const nl = [...layers]; nl[i].stop = parseFloat(e.target.value); setLayers(nl);
+                    {viewMode === '2D' ? (
+                        <div className="panel-body" style={{ height: 'calc(100vh - 140px)', overflowY: 'auto', padding: '0 12px' }}>
+                            <div className="section-label" style={{ marginTop: 0, marginBottom: 8 }}>Quantization</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+                                <div>
+                                    <label style={{ fontSize: 9, color: '#94A3B8' }}>Palette</label>
+                                    <select style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border)', color: 'white', padding: '4px 6px', borderRadius: 4, marginTop: 2, fontSize: 10 }}>
+                                        <option>Auto</option>
+                                    </select>
+                                </div>
+                                <div className="control-group" style={{ margin: 0 }}>
+                                    <div className="control-label" style={{ marginBottom: 2 }}><span>Number of Colors</span><span>{optColors < 32 ? optColors : 'Max'}</span></div>
+                                    <input type="range" min="2" max="32" step="1" value={optColors} onChange={e => setOptColors(parseInt(e.target.value))} style={{ height: 16 }} />
+                                </div>
+                                {optColors < 32 && (
+                                    <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap', gridColumn: 'span 2' }}>
+                                        {extractedPalette.map((c, i) => (
+                                            <div key={i} style={{ width: 18, height: 18, borderRadius: 4, background: `rgb(${c[0]},${c[1]},${c[2]})`, border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer' }}
+                                                title="Click to change color"
+                                                onClick={() => {
+                                                    const hex = '#' + c.map(x => x.toString(16).padStart(2, '0')).join('');
+                                                    const nh = prompt(`Change color (current: ${hex}):\nWarning: Auto-Extraction will overwrite this if sliders are adjusted.`, hex);
+                                                    if (nh && /^#[0-9A-F]{6}$/i.test(nh)) {
+                                                        const np = [...extractedPalette];
+                                                        np[i] = [parseInt(nh.substring(1, 3), 16), parseInt(nh.substring(3, 5), 16), parseInt(nh.substring(5, 7), 16)];
+                                                        setExtractedPalette(np);
+                                                    }
                                                 }} />
-                                            </div>
-                                        </div>
-                                        <button onClick={() => setLayers(layers.filter(x => x.id !== l.id))}>×</button>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                             </div>
-                            <div className="section-label" style={{ marginTop: 15 }}>QUICK LIBRARY</div>
-                            <div className="filament-list" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5 }}>
-                                {[{ name: 'Black', hex: '#000000', td: 0.5 }, { name: 'White', hex: '#FFFFFF', td: 5.0 }, { name: 'Red', hex: '#FF0000', td: 2.5 }, { name: 'Blue', hex: '#0000FF', td: 1.8 }, { name: 'Yellow', hex: '#FFFF00', td: 4.0 }, { name: 'Gray', hex: '#888888', td: 2.0 }].map(f => (
-                                    <div key={f.name} className="f-item" style={{ margin: 0, fontSize: 10, padding: 4 }} onClick={() => setLayers([...layers, { ...f, id: Date.now(), stop: (layers[layers.length - 1]?.stop || 0) + 0.4 }])}>
-                                        <div style={{ width: 12, height: 12, background: f.hex, borderRadius: 2 }} /> {f.name}
-                                    </div>
-                                ))}
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 8 }}>
+                                <span className="panel-title" style={{ fontSize: 10, opacity: 0.7 }}>Adjustments</span>
+                                <button className="v-btn" style={{ fontSize: 9, padding: '2px 8px', height: 20, background: 'rgba(34, 197, 94, 0.1)', color: '#22C55E' }} onClick={resetFilters}>Reset All</button>
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 20 }}>
-                                <button className="download-btn" style={{ background: 'rgba(59,130,246,0.1)', color: '#93C5FD', margin: 0, fontSize: 11, border: '1px solid rgba(59,130,246,0.3)' }} disabled={!imgUrl} onClick={() => {
-                                    const txt = `HUEFORGE PAINTING INSTRUCTIONS\n=============================\nBase Height: ${baseT}mm\nRelief Height: ${relT}mm\nLayer Height: ${lh}mm\n\nSwap Heights (Bottom to Top):\n` + [...layers].sort((a, b) => a.stop - b.stop).map(l => `- ${l.name} (${l.hex}): Swap at ${l.stop}mm`).join('\n');
-                                    const bl = new Blob([txt], { type: 'text/plain' });
-                                    const u = URL.createObjectURL(bl); const a = document.createElement('a'); a.href = u; a.download = 'instructions.txt'; a.click();
-                                }}>TEXT GUIDE</button>
-                                <button className="download-btn" style={{ background: 'var(--accent)', color: 'black', margin: 0, fontSize: 11 }} disabled={!imgUrl} onClick={export3MF}>PROJECT 3MF</button>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0px' }}>
+                                <FilterSlider label="Exposure" value={exposure} min={-4} max={4} step={0.01} suffix="" onChange={setExp} onReset={() => setExp(0)} />
+                                <FilterSlider label="Contrast" value={contrast} min={0} max={3} step={0.01} suffix="" onChange={setCt} onReset={() => setCt(1)} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <FilterSlider label="Highlights" value={highlights} min={-100} max={100} step={1} suffix="" onChange={setHigh} onReset={() => setHigh(0)} />
+                                    <FilterSlider label="Shadows" value={shadows} min={-100} max={100} step={1} suffix="" onChange={setShad} onReset={() => setShad(0)} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <FilterSlider label="Whites" value={whites} min={-100} max={100} step={1} suffix="" onChange={setWhites} onReset={() => setWhites(0)} />
+                                    <FilterSlider label="Blacks" value={blacks} min={-100} max={100} step={1} suffix="" onChange={setBlacks} onReset={() => setBlacks(0)} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <FilterSlider label="Saturation" value={saturation} min={0} max={2} step={0.01} suffix="" onChange={setSat} onReset={() => setSat(1)} />
+                                    <FilterSlider label="Vibrance" value={vibrance} min={0} max={2} step={0.01} suffix="" onChange={setVib} onReset={() => setVib(1)} />
+                                </div>
+                                <FilterSlider label="Hue" value={hue} min={-180} max={180} step={1} suffix="°" onChange={setHue} onReset={() => setHue(0)} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                    <FilterSlider label="Temp" value={temperature} min={-100} max={100} step={1} suffix="" onChange={setTemp} onReset={() => setTemp(0)} />
+                                    <FilterSlider label="Tint" value={tint} min={-100} max={100} step={1} suffix="" onChange={setTint} onReset={() => setTint(0)} />
+                                </div>
+                                <FilterSlider label="Clarity" value={clarity} min={-100} max={100} step={1} suffix="" onChange={setClar} onReset={() => setClar(0)} />
                             </div>
                         </div>
                     ) : (
-                        <div className="panel-body help-box" style={{ fontSize: 11, lineHeight: 1.6, color: 'var(--text-dim)', overflowY: 'auto' }}>
-                            <h4 style={{ color: 'white', marginBottom: 10 }}>How it works (step by step)</h4>
-                            <ol style={{ paddingLeft: 15, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <li><b>Define filaments</b> — Add colors and Transmission Distances (TD). TD controls how light blends through the layer.</li>
-                                <li><b>Filament ordering</b> — By default filaments are sorted by luminance (darkest bottom, lightest top). Use the 'Sort' toggle to auto-order.</li>
-                                <li><b>Transition calculation</b> — For each pair, the algorithm simulates Beer-Lambert logic. The first filament gets a foundation ~95% opaque (TD × 1.35).</li>
-                                <li><b>Height compression</b> — If total height exceeds <b>Max Print</b>, zones are compressed to fit while maintaining color ratios.</li>
-                                <li><b>Virtual swatch sampling</b> — Layers are sampled at each <b>Layer Height</b> increment to drive the 3D preview and instructions.</li>
-                            </ol>
-                            <div style={{ marginTop: 20, padding: 10, borderRadius: 8, background: 'rgba(255,120,0,0.05)', border: '1px solid var(--border-accent)' }}>
-                                <p style={{ color: 'var(--accent)', fontWeight: 700, marginBottom: 5 }}>Pro Tip:</p>
-                                Toggle <b>⚡ AUTO-CALC STACK</b> after adding new filaments to immediately get a optimized prediction.
+                        <div className="panel-body" style={{ height: 'calc(100vh - 140px)', overflowY: 'auto', padding: '0 12px' }}>
+                            <div className="section-label" style={{ marginTop: 0 }}>Dimensions</div>
+                            <div className="dimension-inputs" style={{ marginBottom: 15 }}>
+                                <div><label>W (mm)</label><input type="number" className="dim-input" value={W} onChange={e => upW(parseFloat(e.target.value))} style={{ fontSize: 11, padding: '4px 6px' }} /></div>
+                                <div className={`aspect-lock ${lock ? 'active' : ''}`} onClick={() => setLock(!lock)} style={{ height: 28 }}>🔗</div>
+                                <div><label>H (mm)</label><input type="number" className="dim-input" value={H} onChange={e => upH(parseFloat(e.target.value))} style={{ fontSize: 11, padding: '4px 6px' }} /></div>
+                            </div>
+
+                            <div className="thickness-grid" style={{ marginBottom: 15, gap: 8 }}>
+                                <div className="thickness-item"><label style={{ fontSize: 8 }}>Base (mm)</label><input type="number" step="0.01" className="dim-input" value={baseT} onChange={e => setBt(parseFloat(e.target.value))} style={{ fontSize: 10, padding: '4px' }} /></div>
+                                <div className="thickness-item"><label style={{ fontSize: 8 }}>Relief (mm)</label><input type="number" step="0.01" className="dim-input" value={relT} onChange={e => setRt(parseFloat(e.target.value))} style={{ fontSize: 10, padding: '4px' }} /></div>
+                            </div>
+
+                            <div className="section-label" style={{ marginTop: 0 }}>Mesh Settings</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 15 }}>
+                                <div><label style={{ fontSize: 9, opacity: 0.6 }}>Pixel Size (XY)</label><input type="number" step="0.1" value={0.1} className="dim-input" readOnly style={{ fontSize: 10, padding: '4px 6px' }} /></div>
+                                <div><label style={{ fontSize: 9, opacity: 0.6 }}>Layer Height</label><input type="number" step="0.01" value={lh} onChange={e => setLh(parseFloat(e.target.value))} className="dim-input" style={{ fontSize: 10, padding: '4px 6px' }} /></div>
+                            </div>
+
+                            <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span>Slice Heights (mm)</span>
+                                <span style={{ opacity: 0.5, fontWeight: 400 }}>{layers.length} Layers</span>
+                            </div>
+                            <div className="layer-list" style={{ marginTop: 5, maxHeight: '200px', overflowY: 'auto' }}>
+                                {layers.sort((a, b) => a.stop - b.stop).map((l, i) => (
+                                    <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, background: 'rgba(255,255,255,0.02)', padding: '4px 8px', borderRadius: 6 }}>
+                                        <div style={{ width: 12, height: 12, background: l.hex, borderRadius: 2, border: '1px solid rgba(255,255,255,0.1)' }} />
+                                        <input type="range" min={baseT} max={maxH} step={lh} value={l.stop} onChange={e => {
+                                            const nl = [...layers]; nl[i].stop = parseFloat(e.target.value); setLayers(nl);
+                                        }} style={{ flex: 1, accentColor: 'var(--accent)', height: 12 }} />
+                                        <span style={{ fontSize: 9, width: 35, textAlign: 'right', opacity: 0.6 }}>{l.stop}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 }}>
+                                <span>Filament Library</span>
+                                <select value={selBrand} onChange={e => setSelBrand(e.target.value)} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: 9, cursor: 'pointer' }}>
+                                    {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                                </select>
+                            </div>
+                            <div className="filament-list" style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 15 }}>
+                                {allFilaments.filter(f => selBrand === 'All' || f.brand === selBrand).map(f => (
+                                    <div key={f.id} className="f-item" style={{ fontSize: 9, padding: '6px 8px', borderRadius: 4, marginBottom: 3, background: 'rgba(255,255,255,0.02)' }} onClick={() => setLayers([...layers, { ...f, name: f.colorName, id: Date.now(), stop: (layers[layers.length - 1]?.stop || 0) + 0.4 }])}>
+                                        <div style={{ width: 10, height: 10, background: f.hex, borderRadius: 2 }} />
+                                        <div style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.colorName} <span style={{ opacity: 0.4 }}>{f.brand}</span></div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button className="download-btn" style={{ width: '100%', padding: 8, fontSize: 10, marginBottom: 8 }} disabled={!imgUrl} onClick={autoIdentifyColors}>⚡ AUTO-IDENTIFY COLORS</button>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+                                <button className="download-btn" style={{ margin: 0, padding: '10px', background: 'var(--accent)', color: '#000', fontSize: 11, fontWeight: 700 }} disabled={!imgUrl} onClick={export3MF}>EXPORT 3MF</button>
+                                <button className="download-btn" style={{ margin: 0, padding: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', fontSize: 10 }} disabled={!imgUrl} onClick={() => {
+                                    const txt = `PAINTING INSTRUCTIONS\n====================\nLayer Height: ${lh}mm\n\n` + [...layers].sort((a, b) => a.stop - b.stop).map(l => `- ${l.stop}mm: ${l.name} (${l.brand})`).join('\n');
+                                    const bl = new Blob([txt], { type: 'text/plain' });
+                                    const u = URL.createObjectURL(bl); const a = document.createElement('a'); a.href = u; a.download = 'instructions.txt'; a.click();
+                                }}>TEXT GUIDE</button>
                             </div>
                         </div>
+                    )}
+                </div>
+
+                <div className="canvas-center" style={{ background: '#09090B', position: 'relative', borderRight: viewMode === '3D' ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 10, fontSize: 9, color: 'var(--accent)', background: 'rgba(0,0,0,0.6)', padding: '3px 8px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
+                        {viewMode === '2D' ? `IMAGE: ${imgW}×${imgH}` : `MESH: ${W}×${H}×${maxH}mm`}
+                    </div>
+                    {viewMode === '2D' ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                            <div style={{ position: 'relative', maxWidth: '100%', maxHeight: '100%', boxShadow: '0 0 100px rgba(0,0,0,0.9)' }}>
+                                {imgUrl ? <img src={showOrig && origUrl ? origUrl : imgUrl} style={{ maxWidth: '100%', maxHeight: '75vh', borderRadius: 0 }} /> : <label className="upload-zone" style={{ width: 450, height: 320, background: 'rgba(255,255,255,0.01)', border: '2px dashed rgba(255,255,255,0.05)' }}><input type="file" accept="image/*" onChange={e => handleImg(e.target.files[0])} style={{ display: 'none' }} /><span>📷 Drop image here to start</span></label>}
+                            </div>
+                            {imgUrl && <div style={{ display: 'flex', gap: 10, marginTop: 24, padding: '8px 16px', background: 'rgba(0,0,0,0.5)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', margin: '0 4px', alignSelf: 'center' }} />
+                                <button className="v-btn" style={{ width: 32, height: 32, color: '#F87171', fontSize: 16 }} onClick={resetFilters} title="Reset Settings">↺</button>
+                                <button className="v-btn" style={{ width: 32, height: 32, color: '#60A5FA', fontSize: 16 }} onMouseDown={() => setShowOrig(true)} onMouseUp={() => setShowOrig(false)} onMouseLeave={() => setShowOrig(false)} onTouchStart={() => setShowOrig(true)} onTouchEnd={() => setShowOrig(false)} title="Hold to see Original">👁</button>
+                            </div>}
+                        </div>
+                    ) : (
+                        <Canvas3D onMount={o => { scene.current = o.scene; api.current = o; }} hint="3D Preview Simulation" />
                     )}
                 </div>
             </div></div>;
@@ -830,7 +1137,10 @@
                         </div>
                         <div className="tools-grid">
                             <div className="tool-entry-card litho" onClick={() => setView('litho')}>
-                                <div className="tool-badge orange">3D Creation</div>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                    <div className="tool-badge orange">3D Creation</div>
+                                    <div className="tool-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>LABS</div>
+                                </div>
                                 <div className="tool-entry-icon orange">🖼️</div>
                                 <div className="tool-entry-info">
                                     <h2>Lithophane Creator</h2>
@@ -845,7 +1155,10 @@
                             </div>
 
                             <div className="tool-entry-card hueforge" onClick={() => setView('hue')}>
-                                <div className="tool-badge blue">Filament Painting</div>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                    <div className="tool-badge blue">Filament Painting</div>
+                                    <div className="tool-badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#EF4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}>LABS</div>
+                                </div>
                                 <div className="tool-entry-icon blue">🎨</div>
                                 <div className="tool-entry-info">
                                     <h2>HueForge Creator</h2>
